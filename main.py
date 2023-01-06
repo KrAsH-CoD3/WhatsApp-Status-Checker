@@ -1,3 +1,4 @@
+import contextlib
 import datetime
 from random import randint
 import pytz
@@ -60,7 +61,7 @@ start = int(perf_counter())
 output_TimeStart = int(perf_counter())
 imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue = [False for _ in range(4)]
 
-statusUploaderName:str = "OG Yungtee" # Ijk Kazmpire NaijaTwitterSavage Crypto Base
+statusUploaderName:str = "Mato" # Ijk Kazmpire NaijaTwitterSavage Crypto Base
 barsXpath:str = '//div[@class="sZBni"]'
 ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
@@ -105,10 +106,10 @@ def runCode():
     search_field.clear()
     search_field.send_keys(statusUploaderName)
     sleep(5)
-    
+
     while True:
         statusTypeMsg: str = ""
-        try:
+        with contextlib.suppress(Exception):
             # Status Circle around profile picture
             bot.find_element(By.XPATH, ppsXpath)
 
@@ -120,42 +121,34 @@ def runCode():
             total_status: int = len(bot.find_elements(By.XPATH, '//div[@class="sZBni"]'))
             viewed_status: int = total_status - unviewed_status
             loop_range: list = range(1, unviewed_status+1)
-            statusTypeMsg += f"\n{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n\n"
+            statusTypeMsg += f"\n{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
 
             for status_idx in loop_range:
                 check_Status = checkstatusTypeMsg()
                 try:
                     if imgStatusValue == check_Status["imgStatusValue"]:
                         if status_idx == 1: # First status
-                            print(
-                                f"Viewed {status_idx} out of {unviewed_status}.")
-                        if status_idx != loop_range[-1]:  # Not the last
-                            print(f"{status_idx}. Status is an Image.")
-                            statusTypeMsg += f"{status_idx}. Status is an Image.\n"
+                            print(statusTypeMsg)
 
-                            # Click the pause button
-                            bot.find_element(
-                                By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
+                        print(f"{status_idx}. Status is an Image.")
+                        statusTypeMsg += f"{status_idx}. Status is an Image.\n"
 
-                            # Click next Status
+                        # Click the pause button
+                        bot.find_element(
+                            By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
+
+                        if status_idx != loop_range[-1]:  # Click next Status
                             bot.find_elements(By.XPATH, barsXpath)[
                                 viewed_status+1].click()
-                        else:  # Last Status is an Image.
-                            print(
-                                f"{status_idx}. Status is an Image.")
-                            statusTypeMsg += f"{status_idx}. Status is an Image.\n"
-                            
-                            # Click the pause button
-                            bot.find_element(
-                                By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
 
                         # Return the value to False to not always excecute this if the first viewed status is an image
                         imgStatusValue = False
-                except:
+                except Exception:
                     try:
                         if videoStatusValue == check_Status["videoStatusValue"]:
                             if status_idx == 1: # First status
-                                print(f"Viewed {status_idx} out of {unviewed_status}.")
+                                print(statusTypeMsg)
+                                
                             if status_idx != loop_range[-1]:  # Not the last Status
                                 print(f"{status_idx}. Status is a Video.")
                                 statusTypeMsg += f"{status_idx}. Status is a Video.\n"
@@ -193,12 +186,12 @@ def runCode():
                                     sleep(1)
                             # Return the value to False to not always excecute this if the first viewed status is an Video
                             videoStatusValue = False
-                    except: 
+                    except Exception: 
                         try:
                             if txtStatusValue == check_Status["txtStatusValue"]: 
                                 if status_idx == 1: # First status
                                     print(
-                                        f"Viewed {status_idx} out of {unviewed_status}.")                                                 
+                                        f"Viewed {viewed_status} out of {total_status}.")                                                 
                                 if status_idx != loop_range[-1]:  # Not last Status
                                     print(f"{status_idx}. Status is Just a Text.")
                                     statusTypeMsg += f"{status_idx}. Status is a Text.\n"
@@ -218,9 +211,11 @@ def runCode():
                                         By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
                                 # Return the value to False to not always excecute this if the first viewed status is an Text
                                 txtStatusValue = False
-                        except:
+                        except Exception:
                             try: 
                                 if old_messageValue == check_Status["old_messageValue"]:
+                                    if status_idx == 1:
+                                        print(f"Viewed {viewed_status} out of {total_status}.")
                                     if status_idx != loop_range[-1]:  # Not the last status
                                         print(
                                             f"{status_idx}. Status is an Old Whatsapp Version.")
@@ -242,8 +237,6 @@ def runCode():
                                         # Click the pause button
                                         bot.find_element(
                                             By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-                                    print(
-                                        f"Viewed {status_idx} out of {unviewed_status}.\nStatus is an Old Whatsapp Version.")
                                     # Return the value to False to not always excecute this if the first viewed status is an Text
                                     old_messageValue = False
                             except Exception as e: 
@@ -256,9 +249,6 @@ def runCode():
 
             # Send to MySelf
             wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime()}")
-        
-        except Exception:
-            pass #  Cus No Status Found
         
         
 if __name__ == "__main__":
