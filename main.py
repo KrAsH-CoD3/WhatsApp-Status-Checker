@@ -1,46 +1,36 @@
-import contextlib
-import datetime
-from random import randint
 import pytz
-from whatsappcloud import Whatsapp
+import datetime
+import contextlib
+from random import randint
 from selenium import webdriver
+from whatsappcloud import Whatsapp
 from time import sleep, perf_counter
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import TimeoutException, WebDriverException, \
-    NoSuchElementException, ElementClickInterceptedException, NoSuchWindowException, \
-    StaleElementReferenceException, InvalidSessionIdException
 
 driverpath = "C:\\Users\\Administrator\\Documents\\Boss\\assest\\driver\\chromedriver.exe"
-# driverpath = "C:\\Users\\Administrator\\Documents\\Boss\\assest\\driver\\geckodriver.exe"
-# driverpath = "C:\\Users\\LmAo\\Documents\\AAA Testing\\Boss\\assest\\driver\\chromedriver.exe" # 127.0.0.1
 
 service = Service(executable_path=driverpath)
 options = Options()
-# options.headless = True
 options.add_argument("--disable-gpu")
-options.add_argument('--disable-blink-features=AutomationControlled') # Check what did is 
-# options.add_argument("--disable-infobars")
+options.add_argument('--disable-blink-features=AutomationControlled') # CHECK WHAT THIS IS
 options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
-# options.add_argument('user-data-dir=C:\\Users\\LmAo\\AppData\\Local\\Google\\Chrome\\User Data\\Default') # 127.0.0.1
 options.add_experimental_option(
     "excludeSwitches", ["enable-automation", 'enable-logging'])
 options.add_experimental_option('useAutomationExtension', False)
 options.add_argument('--profile-directory=BoT Profile')
-# options.add_experimental_option("debuggerAddress", "localhost:9222") # for using existing opened Chrome instance
 bot = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(bot, 30)
 action = ActionChains(bot)
 bot.maximize_window()
 
-
 wa = Whatsapp("Temp STR in WA Obj", preview_url=False)
 timeZones = pytz.all_timezones  # All Time zone
-# chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\BoT Chrome Profile" "--profile-directory=BoT Profile" https://bot.incolumitas.com/#browserData
 
 bot.get("https://web.whatsapp.com")
 try:
@@ -61,7 +51,7 @@ start = int(perf_counter())
 output_TimeStart = int(perf_counter())
 imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue = [False for _ in range(4)]
 
-statusUploaderName:str = "Mato" # Ijk Kazmpire NaijaTwitterSavage Crypto Base
+statusUploaderName:str = "ContactName" # As it is saved on your phone(Case Sensitive)
 barsXpath:str = '//div[@class="sZBni"]'
 ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'

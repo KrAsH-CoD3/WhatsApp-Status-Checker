@@ -1,0 +1,4 @@
+# REQUIRED PIP INSTALLATIONS
+
+pip install selenium
+pip install whatsappcloud
