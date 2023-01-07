@@ -53,8 +53,10 @@ imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue = [False for 
 
 statusUploaderName:str = "ContactName" # As it is saved on your phone(Case Sensitive)
 barsXpath:str = '//div[@class="sZBni"]'
-ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
-ppXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
+ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
+    div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
+ppXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
+    div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
 
 def gmtTime():
