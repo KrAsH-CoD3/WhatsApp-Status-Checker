@@ -66,25 +66,21 @@ def checkstatusTypeMsg():
     
     try: # Image Status
         bot.find_element(By.XPATH, '//div[@class="_26Q83"]//img')
-        # imgStatusValue = True
         return {"imgStatusValue": True}
-    except Exception:
+    except NoSuchElementException:
         try: # Video Status
             bot.find_element(By.XPATH, '//div[@class="_26Q83"]//video')
-            # videoStatusValue = True
             return {"videoStatusValue": True}
-        except Exception:
+        except NoSuchElementException:
             try:
-                try: # If it contain any of the Text Status Type
+                try: # Text Status
                     bot.find_element(By.XPATH, '//div[contains(@class, "_3KpnX")]')
-                    # txtStatusValue = True
                     return {"txtStatusValue": True}
-                except Exception:# Check if the status type is OLD WHATSAPP MSG
+                except NoSuchElementException:# OLD WHATSAPP MSG
                     bot.find_element(By.XPATH, '//div[@class="_3Rxrh"]')
-                    # old_messageValue = True
                     return {"old_messageValue": True}
-            except Exception:
-                print("Neither can Image/Video/Text/'Old whatsapp' be found.")
+            except NoSuchElementException as e:
+                print(f"Neither can Image/Video/Text/'Old whatsapp' be found.\n{e}")
 
 
 def runCode():
@@ -130,35 +126,21 @@ def runCode():
                     if check_Status["imgStatusValue"]:
                         print(f"{status_idx}. Status is an Image.")
                         statusTypeMsg += f"{status_idx}. Status is an Image.\n"
-
-                        # # Return the value to False to not always excecute this if the first viewed status is an image
-                        # imgStatusValue = False
                 except KeyError:
                     try:
                         if check_Status["videoStatusValue"]:
                             print(f"{status_idx}. Status is a Video.")
                             statusTypeMsg += f"{status_idx}. Status is a Video.\n"
-                                    
-                            sleep(2) # To register the video as viewed
-
-                            # # Return the value to False to not always excecute this if the first viewed status is an Video
-                            # videoStatusValue = False
                     except KeyError: 
                         try:
                             if check_Status["txtStatusValue"]:
                                 print(f"{status_idx}. Status is a Text.")
                                 statusTypeMsg += f"{status_idx}. Status is a Text.\n"
-
-                                # # Return the value to False to not always excecute this if the first viewed status is an Text
-                                # txtStatusValue = False
                         except KeyError:
                             try: 
                                 if check_Status["old_messageValue"]:
                                     print(f"{status_idx}. Status is an Old Whatsapp Version.")
                                     statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
-  
-                                    # # Return the value to False to not always excecute this if the first viewed status is an Text
-                                    # old_messageValue = False
                             except KeyError as e: 
                                 print(f'Failed! -> {e}')
                 finally:
@@ -170,7 +152,6 @@ def runCode():
                             viewed_status].click()
                     else: # Exit status
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
-                        print("Exited Status.")
 
             # Send to MySelf
             wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime()}")
@@ -180,5 +161,5 @@ if __name__ == "__main__":
     try:
         runCode()
     except Exception as e:
-        print(f"Main While Exception\n{e}")
+        print(f"Main Exception\n{e}")
         wa.text("Window Closed 🤦‍♀️")
