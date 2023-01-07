@@ -47,10 +47,6 @@ except TimeoutException:
     wa.text("Took too long to login.")
     bot.quit()
 
-start = int(perf_counter())
-output_TimeStart = int(perf_counter())
-imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue = [False for _ in range(4)]
-
 statusUploaderName:str = "ContactName" # As it is saved on your phone(Case Sensitive)
 barsXpath:str = '//div[@class="sZBni"]'
 ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
@@ -86,7 +82,6 @@ def checkstatusTypeMsg():
 
 
 def runCode():
-    global imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue
 
     search_field = bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
     search_field.clear()
@@ -132,6 +127,7 @@ def runCode():
                         if check_Status["videoStatusValue"]:
                             print(f"{status_idx}. Status is a Video.")
                             statusTypeMsg += f"{status_idx}. Status is a Video.\n"
+                            # sleep(2)
                     except KeyError: 
                         try:
                             if check_Status["txtStatusValue"]:
