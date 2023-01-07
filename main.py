@@ -84,7 +84,7 @@ def checkstatusTypeMsg():
 
 
 def runCode():
-    global counter, output_TimeStart, imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue
+    global imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue
 
     search_field = bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
     search_field.clear()
@@ -118,7 +118,6 @@ def runCode():
                 # Click the pause button
                 bot.find_element(
                     By.XPATH, '//span[@data-icon="status-media-controls-pause"]').click()
-
 
                 check_Status = checkstatusTypeMsg()
 
