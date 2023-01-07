@@ -57,36 +57,34 @@ ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-si
 ppXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
 
-def gmtTime(): 
+def gmtTime():
     return datetime.datetime.now(
     pytz.timezone("Africa/Lagos")).strftime("%H : %M : %S")
 
 
-def checkstatusTypeMsg():  # sourcery skip: do-not-use-bare-except, extract-duplicate-method, inline-variable
-    global imgStatusValue, videoStatusValue, txtStatusValue, old_messageValue
+def checkstatusTypeMsg():
     
     try: # Image Status
         bot.find_element(By.XPATH, '//div[@class="_26Q83"]//img')
-        imgStatusValue = True
-        return {"imgStatusValue": imgStatusValue}
+        # imgStatusValue = True
+        return {"imgStatusValue": True}
     except Exception:
         try: # Video Status
             bot.find_element(By.XPATH, '//div[@class="_26Q83"]//video')
-            videoStatusValue = True
-            return {"videoStatusValue": videoStatusValue}
-        except:
+            # videoStatusValue = True
+            return {"videoStatusValue": True}
+        except Exception:
             try:
                 try: # If it contain any of the Text Status Type
                     bot.find_element(By.XPATH, '//div[contains(@class, "_3KpnX")]')
-                    txtStatusValue = True
-                    return {"txtStatusValue": txtStatusValue}
-                except:# Check if the status type is OLD WHATSAPP MSG
-                    old_message = bot.find_element(
-                        By.XPATH, '//div[@class="_3Rxrh"]')
-                    old_messageValue = True
-                    return {"old_messageValue": old_messageValue}
-            except:
-                print("Neither can Image/Video/Text and even 'Old whatsapp' could be found.")
+                    # txtStatusValue = True
+                    return {"txtStatusValue": True}
+                except Exception:# Check if the status type is OLD WHATSAPP MSG
+                    bot.find_element(By.XPATH, '//div[@class="_3Rxrh"]')
+                    # old_messageValue = True
+                    return {"old_messageValue": True}
+            except Exception:
+                print("Neither can Image/Video/Text/'Old whatsapp' be found.")
 
 
 def runCode():
@@ -106,7 +104,7 @@ def runCode():
             # Click Profile Picture to view Status
             bot.find_element(By.XPATH, ppXpath).click()
             sleep(1)
-
+            
             unviewed_status: int = len(bot.find_elements(By.XPATH, '//div[@class="_3f8oh _1A2HZ"]')) + 1
             total_status: int = len(bot.find_elements(By.XPATH, '//div[@class="sZBni"]'))
             viewed_status: int = total_status - unviewed_status
@@ -114,128 +112,65 @@ def runCode():
             statusTypeMsg += f"\n{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
 
             for status_idx in loop_range:
-                check_Status = checkstatusTypeMsg()
-                try:
-                    if imgStatusValue == check_Status["imgStatusValue"]:
-                        if status_idx == 1: # First status
-                            print(statusTypeMsg)
+                if status_idx == 1: # First status
+                    print(statusTypeMsg)
 
+                check_Status = checkstatusTypeMsg()
+
+                try:
+                    if check_Status["imgStatusValue"]:
                         print(f"{status_idx}. Status is an Image.")
                         statusTypeMsg += f"{status_idx}. Status is an Image.\n"
 
-                        # Click the pause button
-                        bot.find_element(
-                            By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-
-                        if status_idx != loop_range[-1]:  # Click next Status
-                            bot.find_elements(By.XPATH, barsXpath)[
-                                viewed_status+1].click()
-
-                        # Return the value to False to not always excecute this if the first viewed status is an image
-                        imgStatusValue = False
-                except Exception:
+                        # # Return the value to False to not always excecute this if the first viewed status is an image
+                        # imgStatusValue = False
+                except KeyError:
                     try:
-                        if videoStatusValue == check_Status["videoStatusValue"]:
-                            if status_idx == 1: # First status
-                                print(statusTypeMsg)
-                                
-                            if status_idx != loop_range[-1]:  # Not the last Status
-                                print(f"{status_idx}. Status is a Video.")
-                                statusTypeMsg += f"{status_idx}. Status is a Video.\n"
+                        if check_Status["videoStatusValue"]:
+                            print(f"{status_idx}. Status is a Video.")
+                            statusTypeMsg += f"{status_idx}. Status is a Video.\n"
 
-                                # Wait for loading icon to disabled
-                                try:
-                                    wait.until(EC.invisibility_of_element_located(
-                                        (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
-                                    sleep(1)
-                                except: # Passing cus the loading icon is disabled.
-                                    pass
-                                finally:
-                                    # Click the pause button
-                                    bot.find_element(
-                                        By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-                                    sleep(1)
+                            # Wait for loading icon to disabled
+                            with contextlib.suppress(Exception):
+                                wait.until(EC.invisibility_of_element_located(
+                                    (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
+                                    
+                            sleep(2) # To register the video as viewed
 
-                                    # Click Next Status
-                                    bot.find_elements(By.XPATH, barsXpath)[
-                                        viewed_status+1].click()
-                            else:  # Last Status
-                                print(
-                                    f"{status_idx}. Status is a Video.")
-                                statusTypeMsg += f"{status_idx}. Status is a Video.\n"
-
-                                try:
-                                    wait.until(EC.invisibility_of_element_located(
-                                        (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
-                                except: # Passing cus the loading icon is disabled.
-                                    pass
-                                finally:
-                                    # Click the pause button
-                                    bot.find_element(
-                                        By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-                                    sleep(1)
-                            # Return the value to False to not always excecute this if the first viewed status is an Video
-                            videoStatusValue = False
-                    except Exception: 
+                            # # Return the value to False to not always excecute this if the first viewed status is an Video
+                            # videoStatusValue = False
+                    except KeyError: 
                         try:
-                            if txtStatusValue == check_Status["txtStatusValue"]: 
-                                if status_idx == 1: # First status
-                                    print(
-                                        f"Viewed {viewed_status} out of {total_status}.")                                                 
-                                if status_idx != loop_range[-1]:  # Not last Status
-                                    print(f"{status_idx}. Status is Just a Text.")
-                                    statusTypeMsg += f"{status_idx}. Status is a Text.\n"
+                            if check_Status["txtStatusValue"]:
+                                print(f"{status_idx}. Status is a Text.")
+                                statusTypeMsg += f"{status_idx}. Status is a Text.\n"
 
-                                    # Click the pause button
-                                    bot.find_element(
-                                        By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-
-                                    # Click next status
-                                    bot.find_elements(By.XPATH, barsXpath)[
-                                        viewed_status+1].click()
-                                else:  # Last Status is a Text.
-                                    print(f"{status_idx}. Status is a Text.")
-                                    statusTypeMsg += f"{status_idx}. Status is a Text.\n"
-                                    # Click the pause button
-                                    bot.find_element(
-                                        By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-                                # Return the value to False to not always excecute this if the first viewed status is an Text
-                                txtStatusValue = False
-                        except Exception:
+                                # # Return the value to False to not always excecute this if the first viewed status is an Text
+                                # txtStatusValue = False
+                        except KeyError:
                             try: 
-                                if old_messageValue == check_Status["old_messageValue"]:
-                                    if status_idx == 1:
-                                        print(f"Viewed {viewed_status} out of {total_status}.")
-                                    if status_idx != loop_range[-1]:  # Not the last status
-                                        print(
-                                            f"{status_idx}. Status is an Old Whatsapp Version.")
-                                        statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
-
-                                        # Click the pause button
-                                        bot.find_element(
-                                            By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-                                        # sleep(1)
-
-                                        # Click next status
-                                        bot.find_elements(By.XPATH, barsXpath)[
-                                            viewed_status+1].click()
-                                    else:  # Last Status
-                                        print(
-                                            f"{status_idx}. Status is an Old Whatsapp Version.")
-                                        statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
-
-                                        # Click the pause button
-                                        bot.find_element(
-                                            By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-                                    # Return the value to False to not always excecute this if the first viewed status is an Text
-                                    old_messageValue = False
-                            except Exception as e: 
-                                print(f'Failed {e}')
+                                if check_Status["old_messageValue"]:
+                                    print(f"{status_idx}. Status is an Old Whatsapp Version.")
+                                    statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
+  
+                                    # # Return the value to False to not always excecute this if the first viewed status is an Text
+                                    # old_messageValue = False
+                            except KeyError as e: 
+                                print(f'Failed! -> {e}')
                 finally:
-                    if status_idx != loop_range[-1]: # Increment Viewed Status
+                    # # Click the pause button
+                    # bot.find_element(
+                    #     By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
+
+                    if status_idx != loop_range[-1]:
                         viewed_status += 1
+
+                        # Click Next Status
+                        bot.find_elements(By.XPATH, barsXpath)[ 
+                            viewed_status].click()
                     else: # Exit status
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
+                        print("Exited Status.")
 
             # Send to MySelf
             wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime()}")
