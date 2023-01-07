@@ -13,7 +13,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-driverpath = "C:\\Users\\Administrator\\Documents\\Boss\\assest\\driver\\chromedriver.exe"
+driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\assest\\driver\\chromedriver.exe"
 
 service = Service(executable_path=driverpath)
 options = Options()
