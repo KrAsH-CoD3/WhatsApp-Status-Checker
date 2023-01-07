@@ -9,9 +9,9 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 driverpath = "C:\\Users\\Administrator\\Documents\\Boss\\assest\\driver\\chromedriver.exe"
 
@@ -103,7 +103,6 @@ def runCode():
 
             # Click Profile Picture to view Status
             bot.find_element(By.XPATH, ppXpath).click()
-            sleep(1)
             
             unviewed_status: int = len(bot.find_elements(By.XPATH, '//div[@class="_3f8oh _1A2HZ"]')) + 1
             total_status: int = len(bot.find_elements(By.XPATH, '//div[@class="sZBni"]'))
@@ -114,6 +113,16 @@ def runCode():
             for status_idx in loop_range:
                 if status_idx == 1: # First status
                     print(statusTypeMsg)
+                    sleep(1)
+                    
+                # Wait for loading icon to be disabled
+                wait.until(EC.invisibility_of_element_located(
+                    (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
+                
+                # Click the pause button
+                bot.find_element(
+                    By.XPATH, '//span[@data-icon="status-media-controls-pause"]').click()
+
 
                 check_Status = checkstatusTypeMsg()
 
@@ -129,11 +138,6 @@ def runCode():
                         if check_Status["videoStatusValue"]:
                             print(f"{status_idx}. Status is a Video.")
                             statusTypeMsg += f"{status_idx}. Status is a Video.\n"
-
-                            # Wait for loading icon to disabled
-                            with contextlib.suppress(Exception):
-                                wait.until(EC.invisibility_of_element_located(
-                                    (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
                                     
                             sleep(2) # To register the video as viewed
 
@@ -158,10 +162,6 @@ def runCode():
                             except KeyError as e: 
                                 print(f'Failed! -> {e}')
                 finally:
-                    # # Click the pause button
-                    # bot.find_element(
-                    #     By.XPATH, '//div[@class="lyrceosr bx7g2weo i94gqilv bmot90v7 lxozqee9"]').click()
-
                     if status_idx != loop_range[-1]:
                         viewed_status += 1
 
