@@ -30,7 +30,7 @@ action = ActionChains(bot)
 bot.maximize_window()
 
 wa = Whatsapp("Temp STR in WA Obj", preview_url=False)
-timeZones = pytz.all_timezones  # All Time zone
+timeZones: list = pytz.all_timezones  # All Time zone
 
 bot.get("https://web.whatsapp.com")
 try:
@@ -47,11 +47,11 @@ except TimeoutException:
     wa.text("Took too long to login.")
     bot.quit()
 
-statusUploaderName:str = "ContactName" # As it is saved on your phone(Case Sensitive)
-barsXpath:str = '//div[@class="sZBni"]'
-ppsXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+barsXpath: str = '//div[@class="sZBni"]'
+ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
-ppXpath:str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
+ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
 
@@ -106,10 +106,9 @@ def runCode():
                 \nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
 
             for status_idx in loop_range:
-                if status_idx == 1: # First status
-                    print(statusTypeMsg)
-                    sleep(1)
-                else: sleep(.5)
+                if status_idx == 1: print(statusTypeMsg[:-1])
+
+                sleep(1)
                     
                 # Wait for loading icon to be disabled
                 wait.until(EC.invisibility_of_element_located(
@@ -119,7 +118,7 @@ def runCode():
                 bot.find_element(
                     By.XPATH, '//span[@data-icon="status-media-controls-pause"]').click()
 
-                check_Status = checkstatusTypeMsg()
+                check_Status: dict = checkstatusTypeMsg()
 
                 try:
                     if check_Status["imgStatusValue"]:
@@ -155,7 +154,7 @@ def runCode():
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to MySelf
-            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime()}")
+            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime()}.")
         
         
 if __name__ == "__main__":
