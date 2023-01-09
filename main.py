@@ -101,12 +101,15 @@ def runCode():
             total_status: int = len(bot.find_elements(By.XPATH, '//div[@class="sZBni"]'))
             viewed_status: int = total_status - unviewed_status
             loop_range: list = range(1, unviewed_status+1)
-            statusTypeMsg += f"\n{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
+            block_line: str = "-"*38    
+            statusTypeMsg += f"{statusUploaderName}\
+                \nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
 
             for status_idx in loop_range:
                 if status_idx == 1: # First status
                     print(statusTypeMsg)
                     sleep(1)
+                else: sleep(.5)
                     
                 # Wait for loading icon to be disabled
                 wait.until(EC.invisibility_of_element_located(
@@ -127,7 +130,7 @@ def runCode():
                         if check_Status["videoStatusValue"]:
                             print(f"{status_idx}. Status is a Video.")
                             statusTypeMsg += f"{status_idx}. Status is a Video.\n"
-                            # sleep(2)
+                            sleep(1)
                     except KeyError: 
                         try:
                             if check_Status["txtStatusValue"]:
@@ -148,6 +151,7 @@ def runCode():
                         bot.find_elements(By.XPATH, barsXpath)[ 
                             viewed_status].click()
                     else: # Exit status
+                        print(block_line)
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to MySelf
