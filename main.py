@@ -18,7 +18,7 @@ driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\asse
 service = Service(executable_path=driverpath)
 options = Options()
 options.add_argument("--disable-gpu")
-options.add_argument('--disable-blink-features=AutomationControlled') # CHECK WHAT THIS IS
+options.add_argument('--disable-blink-features=AutomationControlled')
 options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
 options.add_experimental_option(
     "excludeSwitches", ["enable-automation", 'enable-logging'])
@@ -47,7 +47,7 @@ except TimeoutException:
     wa.text("Took too long to login.")
     bot.quit()
 
-statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "ConatctName" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="sZBni"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
