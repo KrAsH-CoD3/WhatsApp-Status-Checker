@@ -47,12 +47,12 @@ except TimeoutException:
     wa.text("Took too long to login.")
     bot.quit()
 
-statusUploaderName: str = "ConatctName" # As it is saved on your phone(Case Sensitive)
-barsXpath: str = '//div[@class="sZBni"]'
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
-    div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
+    div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
-    div[@class="_2EU3r"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
+    div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
 
 def gmtTime():
@@ -63,16 +63,16 @@ def gmtTime():
 def checkstatusTypeMsg():
     
     try: # Image Status
-        bot.find_element(By.XPATH, '//div[@class="_26Q83"]//img')
+        bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img')
         return {"imgStatusValue": True}
     except NoSuchElementException:
         try: # Video Status
-            bot.find_element(By.XPATH, '//div[@class="_26Q83"]//video')
+            bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//video')
             return {"videoStatusValue": True}
         except NoSuchElementException:
             try:
                 try: # Text Status
-                    bot.find_element(By.XPATH, '//div[contains(@class, "_3KpnX")]')
+                    bot.find_element(By.XPATH, '//div[@data-testid="status-v3-text"]')
                     return {"txtStatusValue": True}
                 except NoSuchElementException:# OLD WHATSAPP MSG
                     bot.find_element(By.XPATH, '//div[@class="_3Rxrh"]')
@@ -97,8 +97,8 @@ def runCode():
             # Click Profile Picture to view Status
             bot.find_element(By.XPATH, ppXpath).click()
             
-            unviewed_status: int = len(bot.find_elements(By.XPATH, '//div[@class="_3f8oh _1A2HZ"]')) + 1
-            total_status: int = len(bot.find_elements(By.XPATH, '//div[@class="sZBni"]'))
+            unviewed_status: int = len(bot.find_elements(By.XPATH, '//div[contains(@class, "mjomr7am")]')) + 1
+            total_status: int = len(bot.find_elements(By.XPATH, barsXpath))
             viewed_status: int = total_status - unviewed_status
             loop_range: list = range(1, unviewed_status+1)
             block_line: str = "-"*38    
