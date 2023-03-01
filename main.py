@@ -17,7 +17,8 @@ driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\asse
 
 service = Service(executable_path=driverpath)
 options = Options()
-options.add_argument("--disable-gpu")
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument("--disable-gpu") 
 options.add_argument('--disable-blink-features=AutomationControlled')
 options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
 options.add_experimental_option(
@@ -25,11 +26,11 @@ options.add_experimental_option(
 options.add_experimental_option('useAutomationExtension', False)
 options.add_argument('--profile-directory=BoT Profile')
 bot = webdriver.Chrome(service=service, options=options)
-wait = WebDriverWait(bot, 30)
+wait = WebDriverWait(bot, 60)
 action = ActionChains(bot)
-bot.maximize_window()
+bot.set_window_position(680, 0)
 
-wa = Whatsapp("Temp STR in WA Obj", preview_url=False)
+wa = Whatsapp("Temp STR in WA Object", preview_url=False)
 timeZones: list = pytz.all_timezones  # All Time zone
 
 bot.get("https://web.whatsapp.com")
@@ -37,7 +38,7 @@ try:
     # Giving it time to load up "Whatsapp" Text and wait until it disabled.
     sleep(2)
     wait.until(EC.visibility_of_element_located(
-        (By.XPATH, '//div[@class="_26aja _1dEQH"]')))
+        (By.XPATH, '//div[@class="_1dEQH _26aja"]'))) # WhatsApp Text
     print("\nLogging in ...💿")
     wait.until(EC.invisibility_of_element(
         (By.XPATH, '//div[@class="_2dfCc"]')))
@@ -61,7 +62,6 @@ def gmtTime():
 
 
 def checkstatusTypeMsg():
-    
     try: # Image Status
         bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img')
         return {"imgStatusValue": True}
@@ -70,15 +70,19 @@ def checkstatusTypeMsg():
             bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//video')
             return {"videoStatusValue": True}
         except NoSuchElementException:
-            try:
-                try: # Text Status
-                    bot.find_element(By.XPATH, '//div[@data-testid="status-v3-text"]')
-                    return {"txtStatusValue": True}
-                except NoSuchElementException:# OLD WHATSAPP MSG
-                    bot.find_element(By.XPATH, '//div[@class="_3Rxrh"]')
-                    return {"old_messageValue": True}
-            except NoSuchElementException as e:
-                print(f"Neither can Image/Video/Text/'Old whatsapp' be found.\n{e}")
+            try: # Text Status
+                bot.find_element(By.XPATH, '//div[@data-testid="status-v3-text"]')
+                return {"txtStatusValue": True}
+            except NoSuchElementException:
+                try:
+                    try:  # Audio Status
+                        bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ggj6brxn"]')
+                        return {"audioStatusValue": True}
+                    except NoSuchElementException: # OLD WHATSAPP MSG
+                            bot.find_element(By.XPATH, '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx"]')
+                            return {"old_messageValue": True}
+                except NoSuchElementException:
+                    print("Neither can Image/Video/Text/'Old whatsapp' be found.")
 
 
 def runCode():
@@ -108,16 +112,8 @@ def runCode():
             for status_idx in loop_range:
                 if status_idx == 1: print(statusTypeMsg[:-1])
 
-                sleep(1)
+                sleep(1) # A second sleep
                     
-                # Wait for loading icon to be disabled
-                wait.until(EC.invisibility_of_element_located(
-                    (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
-                
-                # Click the pause button
-                bot.find_element(
-                    By.XPATH, '//span[@data-icon="status-media-controls-pause"]').click()
-
                 check_Status: dict = checkstatusTypeMsg()
 
                 try:
@@ -127,21 +123,34 @@ def runCode():
                 except KeyError:
                     try:
                         if check_Status["videoStatusValue"]:
+                            # Wait for loading icon to be disabled
+                            wait.until(EC.invisibility_of_element_located(
+                                (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
+                            sleep(7)
+
+                            # Click the pause button
+                            bot.find_element(
+                                By.XPATH, '//span[@data-icon="status-media-controls-pause"]').click()
+
                             print(f"{status_idx}. Status is a Video.")
                             statusTypeMsg += f"{status_idx}. Status is a Video.\n"
-                            sleep(1)
                     except KeyError: 
                         try:
                             if check_Status["txtStatusValue"]:
                                 print(f"{status_idx}. Status is a Text.")
                                 statusTypeMsg += f"{status_idx}. Status is a Text.\n"
                         except KeyError:
-                            try: 
-                                if check_Status["old_messageValue"]:
-                                    print(f"{status_idx}. Status is an Old Whatsapp Version.")
-                                    statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
-                            except KeyError as e: 
-                                print(f'Failed! -> {e}')
+                            try:
+                                if check_Status["audioStatusValue"]:
+                                    print(f"{status_idx}. Status is an Audio.")
+                                    statusTypeMsg += f"{status_idx}. Status is an Audio.\n"
+                            except KeyError:
+                                try: 
+                                    if check_Status["old_messageValue"]:
+                                        print(f"{status_idx}. Status is an Old Whatsapp Version.")
+                                        statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
+                                except KeyError as e: 
+                                    print(f'Failed! -> {e}')
                 finally:
                     if status_idx != loop_range[-1]:
                         viewed_status += 1
