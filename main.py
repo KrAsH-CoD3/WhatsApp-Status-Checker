@@ -190,8 +190,8 @@ def runCode():
         
         
 if __name__ == "__main__":
-    try:pass
-        # runCode()
+    try:
+        runCode()
     except Exception as e:
         print(f"Main Exception\n{e}")
         wa.text("Window Closed 🤦‍♀️")
