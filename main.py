@@ -1,10 +1,10 @@
 import pytz
-import datetime
 import contextlib
+from time import sleep
 from random import randint
+from datetime import datetime
 from selenium import webdriver
 from whatsappcloud import Whatsapp
-from time import sleep, perf_counter
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -28,7 +28,7 @@ options.add_argument('--profile-directory=BoT Profile')
 bot = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(bot, 60)
 action = ActionChains(bot)
-bot.set_window_position(680, 0)
+bot.set_window_position(676, 0)
 
 wa = Whatsapp("Temp STR in WA Object", preview_url=False)
 timeZones: list = pytz.all_timezones  # All Time zone
@@ -56,12 +56,25 @@ ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-si
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
 
-def gmtTime():
-    return datetime.datetime.now(
-    pytz.timezone("Africa/Lagos")).strftime("%H : %M : %S")
+def gmtTime(tz) -> str:
+    """
+    Information
+    -----------
+    For some reason, the returned value for some African Timezone from
+    the pytz module are 6 hours early which made me revalidate it to 
+    the correct time.
+    """
+    temp_gmtTime: list = datetime.now(
+    pytz.timezone(tz)).strftime("%H : %M : %S").split(":")
+    hrs: int = int(temp_gmtTime[0])
+    if hrs in range(7):
+        return f"{hrs + 6} : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+    else:
+        return f"{hrs - 6} : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
 
+print(gmtTime("Africa/Lagos"))
 
-def checkstatusTypeMsg():
+def checkstatusTypeMsg() -> dict:
     try: # Image Status
         bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img')
         return {"imgStatusValue": True}
@@ -163,7 +176,7 @@ def runCode():
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to MySelf
-            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime()}.")
+            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime('Africa/Lagos')}.")
         
         
 if __name__ == "__main__":
