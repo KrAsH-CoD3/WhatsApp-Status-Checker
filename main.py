@@ -55,22 +55,32 @@ ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-s
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
-
 def gmtTime(tz) -> str:
     """
     Information
     -----------
     For some reason, the returned value for some African Timezone from
-    the pytz module are 6 hours early which made me revalidate it to 
+    the datetime module are 6 hours late which made me revalidate it to 
     the correct time.
     """
     temp_gmtTime: list = datetime.now(
     pytz.timezone(tz)).strftime("%H : %M : %S").split(":")
     hrs: int = int(temp_gmtTime[0])
-    if hrs in range(7):
+    if hrs in range(17):
         return f"{hrs + 6} : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-    else:
-        return f"{hrs - 6} : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+    elif hrs in range(18, 24):
+        if hrs == 18:
+            return f"00 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+        elif hrs == 19:
+            return f"01 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+        elif hrs == 20:
+            return f"02 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+        elif hrs == 21:
+            return f"03 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+        elif hrs == 22:
+            return f"04 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
+        elif hrs == 23:
+            return f"05: {temp_gmtTime[1]} : {temp_gmtTime[2]}"
 
 print(gmtTime("Africa/Lagos"))
 
@@ -180,8 +190,8 @@ def runCode():
         
         
 if __name__ == "__main__":
-    try:
-        runCode()
+    try:pass
+        # runCode()
     except Exception as e:
         print(f"Main Exception\n{e}")
         wa.text("Window Closed 🤦‍♀️")
