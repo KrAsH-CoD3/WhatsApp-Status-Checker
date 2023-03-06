@@ -14,7 +14,7 @@ Download or clone this project, open command prompt from the folder and run the 
 
 `pip install -r requirements.txt`
 
-[WhatsAppCloud] was used for WhatsApp message, PLEASE READ!
+[WhatsAppCloud] was used for WhatsApp message, **PLEASE READ!**
 
 ## Bug with WhatsAppCloud config
 
