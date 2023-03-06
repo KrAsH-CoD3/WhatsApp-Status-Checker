@@ -2,7 +2,7 @@
 
 ![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
 
-The WhatsApp Status Viewer is a Python project that allows you to view a specific contact's WhatsApp status as soon as it is uploaded and send you a WhatsApp message of what status type was uploaded(Image, Video, Text, Audio).
+The WhatsApp Status Viewer is a Python project which enables you to view a specific WhatsApp contact status as soon as it is uploaded and send a WhatsApp message about what status type was uploaded(Image, Video, Text, or  Audio) and the time of which it is viewed.
 
 # Requirements
 
@@ -54,6 +54,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 ## Errors
 
 **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
+**Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isnt sent to your test Number within 24hours, you would not also recieve.
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com>
@@ -61,3 +62,4 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 [ChromeDriver]: <https://chromedriver.chromium.org/downloads>
 [WhatsApp Business Cloud API]:<https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
+
