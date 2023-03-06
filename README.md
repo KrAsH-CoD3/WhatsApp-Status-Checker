@@ -54,7 +54,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 ## Errors
 
 **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
-**Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isnt sent to your test Number within 24hours, you would not also recieve.
+**Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test Number within 24hours, you would not also recieve. 
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com>
