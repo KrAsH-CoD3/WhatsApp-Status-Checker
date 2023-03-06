@@ -49,7 +49,7 @@ except TimeoutException:
     bot.quit()
 
 timezone = "Africa/Lagos"
-statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
