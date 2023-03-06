@@ -51,10 +51,19 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
   - Edit `ContactName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive).
   - Open command prompt and run `py main.py`
 
-## Errors
+## Errors and Fix
 
 **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
-**Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test Number within 24hours, you would not also recieve. 
+**Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test number within 24hours, you would not recieve message. 
+
+## Update(s)
+
+[WhatsApp Business Cloud API] released an update which apply from 1 April, 2023 saying
+  
+    Starting from 1 April, free-tier conversations can only be initiated by your customers. If you want to start a conversation with your customers after 1 April, you will need to add a payment method. Learn more about free-tier conversations.
+
+    When using a test phone number, we will still allow developers to send messages to up to five recipient phone numbers without incurring charges.
+
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com>
@@ -62,4 +71,3 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 [ChromeDriver]: <https://chromedriver.chromium.org/downloads>
 [WhatsApp Business Cloud API]:<https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
-
