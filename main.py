@@ -17,14 +17,14 @@ driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\asse
 
 service = Service(executable_path=driverpath)
 options = Options()
-options.add_argument('--disable-dev-shm-usage')
 options.add_argument("--disable-gpu") 
-options.add_argument('--disable-blink-features=AutomationControlled')
+options.add_argument('--disable-dev-shm-usage')
+options.add_argument(r'--profile-directory=BoT Profile')
 options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
+options.add_experimental_option('useAutomationExtension', False)
 options.add_experimental_option(
     "excludeSwitches", ["enable-automation", 'enable-logging'])
-options.add_experimental_option('useAutomationExtension', False)
-options.add_argument('--profile-directory=BoT Profile')
+options.add_argument('--disable-blink-features=AutomationControlled')
 bot = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(bot, 60)
 action = ActionChains(bot)
@@ -48,7 +48,8 @@ except TimeoutException:
     wa.text("Took too long to login.")
     bot.quit()
 
-statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+timezone = "Africa/Lagos"
+statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
@@ -82,7 +83,7 @@ def gmtTime(tz) -> str:
         elif hrs == 23:
             return f"05: {temp_gmtTime[1]} : {temp_gmtTime[2]}"
 
-print(gmtTime("Africa/Lagos"))
+print(gmtTime(timezone))
 
 def checkstatusTypeMsg() -> dict:
     try: # Image Status
@@ -135,7 +136,7 @@ def runCode():
             for status_idx in loop_range:
                 if status_idx == 1: print(statusTypeMsg[:-1])
 
-                sleep(1) # A second sleep
+                sleep(1)
                     
                 check_Status: dict = checkstatusTypeMsg()
 
@@ -186,7 +187,7 @@ def runCode():
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to MySelf
-            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime('Africa/Lagos')}.")
+            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.")
         
         
 if __name__ == "__main__":
