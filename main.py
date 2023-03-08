@@ -49,40 +49,15 @@ except TimeoutException:
     bot.quit()
 
 timezone: str = "Africa/Lagos"
-statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 
-def gmtTime(tz) -> str:
-    """
-    Information
-    -----------
-    For some reason, the returned value for some African Timezone from
-    the datetime module are 6 hours late which made me revalidate it to 
-    the correct time.
-    """
-    temp_gmtTime: list = datetime.now(
-    pytz.timezone(tz)).strftime("%H : %M : %S").split(":")
-    hrs: int = int(temp_gmtTime[0])
-    if hrs in range(17):
-        return f"{hrs + 6} : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-    elif hrs in range(18, 24):
-        if hrs == 18:
-            return f"00 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-        elif hrs == 19:
-            return f"01 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-        elif hrs == 20:
-            return f"02 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-        elif hrs == 21:
-            return f"03 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-        elif hrs == 22:
-            return f"04 : {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-        elif hrs == 23:
-            return f"05: {temp_gmtTime[1]} : {temp_gmtTime[2]}"
-
+gmtTime: str = lambda tz: datetime.now(
+    pytz.timezone(tz)).strftime("%H : %M : %S")
 print(gmtTime(timezone))
 
 def checkstatusTypeMsg() -> dict:
