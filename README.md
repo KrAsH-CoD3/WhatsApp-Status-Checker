@@ -70,4 +70,4 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 [WhatsAppCloud]: <https://github.com/PFython/WhatsAppCloud>
 [ChromeDriver]: <https://chromedriver.chromium.org/downloads>
 [WhatsApp Business Cloud API]:<https://developers.facebook.com/products/whatsapp/>
-[WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
+[WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard
