@@ -1,10 +1,10 @@
 import pytz
 import contextlib
-from time import sleep, perf_counter
 from random import randint
 from datetime import datetime
 from selenium import webdriver
 from whatsappcloud import Whatsapp
+from time import sleep, perf_counter
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
