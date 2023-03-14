@@ -2,7 +2,7 @@
 
 ![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
 
-The WhatsApp Status Viewer is a Python project which enables you to view a specific WhatsApp contact status as soon as it is uploaded and send a WhatsApp message about what status type was uploaded(Image, Video, Text, or  Audio) and the time of which it is viewed.
+The WhatsApp Status Viewer enables you to view a specific WhatsApp contact status as soon as it is uploaded, send a WhatsApp message about the status type(Image, Video, Text, or  Audio) and the time at which it was viewed OR alternatively always check and notify you if a status is uploaded. You get notified every 30minutes, 1hour, 3hours or 6 hours depending on your choice.
 
 # Requirements
 
@@ -42,7 +42,8 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 
   - Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
   - Download [ChromeDriver] that is of the same version as your Chrome browser. goto `chrome://version/` to check your Chrome Version.
-  - After this, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See your [WhatsApp Business Cloud API Dashboard]. Remember the given token expires after 24hrs.
+  - After this, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See your [WhatsApp Business Cloud API Dashboard]. 
+  > **REMEMBER** THE GENERATED TOKEN EXPIRES EVERY 24HOURS.
   - Then navigate to this project folder, open `main.py`.
   - Edit `driverpath` variable to your driver path.
   - Edit `timezone` variable to your location time zone.
