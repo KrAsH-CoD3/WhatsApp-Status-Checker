@@ -1,5 +1,5 @@
 # REQUIRED PIP INSTALLATIONS
 
 pytz==2021.3
-selenium
-whatsappcloud
+selenium==4.8.2
+whatsappcloud==0.0.5

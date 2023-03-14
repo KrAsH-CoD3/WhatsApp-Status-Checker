@@ -33,7 +33,7 @@ while True:
         Enter "Y" to get notified or "N" to view them automatically: ').upper()
 
 timezone: str = "Africa/Lagos"
-statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "Bernice" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
@@ -191,7 +191,7 @@ def reminderFn(ttime_diff: float, sstart: float) -> float:
 def getNotified() -> None:
     start = float("{:.2f}".format(perf_counter()))
     while True:
-        with contextlib.suppress(NoSuchElementException):
+        with contextlib(NoSuchElementException):
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
@@ -200,6 +200,7 @@ def getNotified() -> None:
             else:
                 start = reminderFn(time_diff, start)  # Reset time
 
+                
 if __name__ == "__main__":
     try:
         if answer == "Y":
