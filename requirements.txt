@@ -1,4 +1,6 @@
 # REQUIRED PIP INSTALLATIONS
 
-pip install selenium
-pip install whatsappcloud
+# REQUIRED PIP INSTALLATIONS
+
+selenium==4.8.2
+whatsappcloud==0.0.5
