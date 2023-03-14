@@ -1,10 +1,10 @@
 import pytz
 import contextlib
-from time import sleep, perf_counter
 from random import randint
 from datetime import datetime
 from selenium import webdriver
 from whatsappcloud import Whatsapp
+from time import sleep, perf_counter
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -15,11 +15,12 @@ from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
 driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\assest\\driver\\chromedriver.exe"
 
+answer = input('\nDo you want to get notified about status or view them automatically?\n\
+Enter "Y" to get notified or "N" to view them automatically: ').upper()
+
 while True:
-    answer = input("\nDo you want to get notified about status or view them automatically?\n\
-    Enter \"Y\" to get notified or \"N\" to view them automatically: ").upper()
     if answer in {"Y", "N"}:
-        if answer =="N": break
+        if answer == "N": break
         while True:
             reminderTime = int(input("\nHow often do you want to be notified?\n1. Enter \"1\" for 30 Mins\n2. Enter \"2\" for 1 Hour\n3. Enter \"3\" for 3 Hours\n4. Enter \"4\" for 6 Hours\nI want: "))
             if reminderTime in {1, 2, 3, 4}: break
@@ -28,6 +29,8 @@ while True:
         break
     else:
         print("\nYou had one job to do! \"Y\" or \"N\" 🥱".upper())
+        answer = input('\nDo you want to get notified about status or view them automatically?\n\
+        Enter "Y" to get notified or "N" to view them automatically: ').upper()
 
 timezone: str = "Africa/Lagos"
 statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
@@ -39,7 +42,8 @@ ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-si
 
 service = Service(executable_path=driverpath)
 options = Options()
-options.add_argument("--disable-gpu") 
+options.add_argument("--disable-gpu")
+options.add_argument("--no-first-run")
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument(r'--profile-directory=BoT Profile')
 options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
@@ -74,7 +78,6 @@ gmtTime: str = lambda tz: datetime.now(
     pytz.timezone(tz)).strftime("%H : %M : %S")
 print(gmtTime(timezone))
 
-statusTypeMsg: str = ""
 search_field = bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
 search_field.clear()
 search_field.send_keys(statusUploaderName)
@@ -105,7 +108,7 @@ def checkStatusType() -> dict:
                 except NoSuchElementException:
                     print("Neither can Image/Video/Text/'Old whatsapp' be found.")
     
-def autoViewStatus() -> None:
+def autoViewStatus(statusTypeMsg: str = "") -> None:
     while True:
         with contextlib.suppress(Exception):
             checkStatus()
@@ -114,10 +117,10 @@ def autoViewStatus() -> None:
             total_status: int = len(bot.find_elements(By.XPATH, barsXpath))
             viewed_status: int = total_status - unviewed_status
             loop_range: list = range(1, unviewed_status+1)
-            block_line: str = "-"*38    
-            statusTypeMsg += f"{statusUploaderName}\
-                \nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
-
+            block_line: str = "-"*38  
+            try:  
+                statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
+            except Exception as ecxd:print(ecxd)
             for status_idx in loop_range:
                 if status_idx == 1: print(statusTypeMsg[:-1])
 
@@ -171,7 +174,7 @@ def autoViewStatus() -> None:
                         print(block_line)
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
-            # Send to MySelf
+            # Send to Self
             wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.")
 
 def reminderFn(ttime_diff: float, sstart: float) -> float:
@@ -188,7 +191,7 @@ def reminderFn(ttime_diff: float, sstart: float) -> float:
 def getNotified() -> None:
     start = float("{:.2f}".format(perf_counter()))
     while True:
-        try:
+        with contextlib.suppress(NoSuchElementException):
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
@@ -196,9 +199,7 @@ def getNotified() -> None:
                 wa.text(f"{statusUploaderName} has a status.\n{gmtTime(timezone)}")
             else:
                 start = reminderFn(time_diff, start)  # Reset time
-        except NoSuchElementException: pass 
-        
-        
+
 if __name__ == "__main__":
     try:
         if answer == "Y":

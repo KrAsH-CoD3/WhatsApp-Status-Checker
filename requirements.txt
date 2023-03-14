@@ -1,4 +1,5 @@
 # REQUIRED PIP INSTALLATIONS
 
-pip install selenium
-pip install whatsappcloud
+pytz==2021.3
+selenium
+whatsappcloud
