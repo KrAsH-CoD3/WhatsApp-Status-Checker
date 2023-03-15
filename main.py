@@ -118,9 +118,7 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
             viewed_status: int = total_status - unviewed_status
             loop_range: list = range(1, unviewed_status+1)
             block_line: str = "-"*38  
-            try:  
-                statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
-            except Exception as ecxd:print(ecxd)
+            statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
             for status_idx in loop_range:
                 if status_idx == 1: print(statusTypeMsg[:-1])
 
