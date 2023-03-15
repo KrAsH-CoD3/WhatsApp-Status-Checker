@@ -23,7 +23,7 @@ while True:
         if answer == "N": break
         while True:
             reminderTime = int(input("\nHow often do you want to be notified?\n1. Enter \"1\" for 30 Mins\n2. Enter \"2\" for 1 Hour\n3. Enter \"3\" for 3 Hours\n4. Enter \"4\" for 6 Hours\nI want: "))
-            if reminderTime in {1, 2, 3, 4}: break
+            if reminderTime in {1, 2, 3, 4}: break;
             else:
                 print("You have to choose between \"1\", \"2\", \"3\" or \"4\" 🥱")
         break
@@ -33,7 +33,7 @@ while True:
         Enter "Y" to get notified or "N" to view them automatically: ').upper()
 
 timezone: str = "Africa/Lagos"
-statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "Scott" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
