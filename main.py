@@ -189,7 +189,7 @@ def reminderFn(ttime_diff: float, sstart: float) -> float:
 def getNotified() -> None:
     start = float("{:.2f}".format(perf_counter()))
     while True:
-        with contextlib(NoSuchElementException):
+        with contextlib.suppress(NoSuchElementException):
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
