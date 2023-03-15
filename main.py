@@ -2,16 +2,20 @@ import pytz
 import contextlib
 from datetime import datetime
 from selenium import webdriver
-from whatsappcloud import Whatsapp
 from time import sleep, perf_counter
+from os import environ as env_variable
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
+from python_whatsapp_bot import Whatsapp, Inline_keyboard
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
+NUMBER: str = env_variable.get("MY_NUMBER")  # Your Number e.g: 234xxxxxxxxxx
+NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
+TOKEN: str =  env_variable.get("TOKEN")  # Token
 
 answer = input('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ').upper()
@@ -31,6 +35,7 @@ while True:
         print("\nYou had one job to do! \"Y\" or \"N\" 🥱".upper())
         answer = input('\nDo you want to get notified about status or view them automatically?\n\
         Enter "Y" to get notified or "N" to view them automatically: ').upper()
+
 
 timezone: str = "Africa/Lagos"
 statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
@@ -57,8 +62,7 @@ bot = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(bot, 60)
 action = ActionChains(bot)
 bot.set_window_position(676, 0)
-
-wa = Whatsapp("Temp STR in WA Object", preview_url=False)
+wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
 
 bot.get("https://web.whatsapp.com")
 try:
@@ -71,8 +75,7 @@ try:
         (By.XPATH, '//div[@class="_2dfCc"]')))
     print("Logged in successfully.✌")
 except TimeoutException:
-    print("Took too long to login.")
-    wa.text("Took too long to login.")
+    wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
     bot.quit()
 
 gmtTime: str = lambda tz: datetime.now(
@@ -174,7 +177,7 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to Self
-            wa.text(f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.")
+            wa_bot.send_message(NUMBER, f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.", reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
 
 def reminderFn(ttime_diff: float, sstart: float) -> float:
     if (
@@ -192,7 +195,8 @@ def getNotified() -> None:
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
-            if time_diff <= 0.2: wa.text(f"{statusUploaderName} has a status.\n{gmtTime(timezone)}")
+            if time_diff <= 0.2:
+                wa_bot.send_message(NUMBER, f"{statusUploaderName} has a status.\n{gmtTime(timezone)}", reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
             else:
                 start = reminderFn(time_diff, start)  # Reset time
 
@@ -203,4 +207,5 @@ if __name__ == "__main__":
         elif answer == "N": autoViewStatus()
     except Exception as e:
         print(f"Main Exception\n{e}")
-        wa.text("Window Closed 🤦‍♀️")
+        wa_bot.send_message(NUMBER, "Window Closed 🤦‍♀️", reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
+        
