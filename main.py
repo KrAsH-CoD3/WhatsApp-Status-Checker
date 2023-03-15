@@ -1,6 +1,5 @@
 import pytz
 import contextlib
-from random import randint
 from datetime import datetime
 from selenium import webdriver
 from whatsappcloud import Whatsapp
@@ -13,7 +12,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\assest\\driver\\chromedriver.exe"
 
 answer = input('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ').upper()
@@ -22,10 +20,12 @@ while True:
     if answer in {"Y", "N"}:
         if answer == "N": break
         while True:
-            reminderTime = int(input("\nHow often do you want to be notified?\n1. Enter \"1\" for 30 Mins\n2. Enter \"2\" for 1 Hour\n3. Enter \"3\" for 3 Hours\n4. Enter \"4\" for 6 Hours\nI want: "))
-            if reminderTime in {1, 2, 3, 4}: break
-            else:
-                print("You have to choose between \"1\", \"2\", \"3\" or \"4\" 🥱")
+            try:
+                reminderTime = int(input("\nHow often do you want to be notified?\n1. Enter \"1\" for 30 Mins\n2. Enter \"2\" for 1 Hour\n3. Enter \"3\" for 3 Hours\n4. Enter \"4\" for 6 Hours\nI want: "))
+                if reminderTime in {1, 2, 3, 4}: break
+            except ValueError: 
+                print("\nYou have to choose between \"1\", \"2\", \"3\" or \"4\" 🥱".upper())
+                continue
         break
     else:
         print("\nYou had one job to do! \"Y\" or \"N\" 🥱".upper())
@@ -33,12 +33,13 @@ while True:
         Enter "Y" to get notified or "N" to view them automatically: ').upper()
 
 timezone: str = "Africa/Lagos"
-statusUploaderName: str = "Scott" # As it is saved on your phone(Case Sensitive)
-barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
+barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
+driverpath = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\assest\\driver\\chromedriver.exe"
 
 service = Service(executable_path=driverpath)
 options = Options()
@@ -136,7 +137,7 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                             # Wait for loading icon to be disabled
                             wait.until(EC.invisibility_of_element_located(
                                 (By.XPATH, '//div[@class="_1xAJD EdAF7 loading"]')))
-                            sleep(7)
+                            sleep(7)  # Longer sleep (making sure the view is registered) 
 
                             # Click the pause button
                             bot.find_element(
@@ -178,13 +179,11 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
 def reminderFn(ttime_diff: float, sstart: float) -> float:
     if (
        reminderTime == 1 and ttime_diff >= 1_800  # Every 30 Mins
-       or reminderTime != 1 and reminderTime == 2 and ttime_diff >= 3_600  # Every 1 Hour
-       or reminderTime != 1 and reminderTime != 2 and reminderTime == 3 and ttime_diff >= 10_800  # Every 3 Hours
-       or reminderTime != 1 and reminderTime != 2 and reminderTime != 3 and reminderTime == 4 and ttime_diff >= 21_600  # Every 6 Hours
-    ):
-        return float("{:.2f}".format(perf_counter()))
-    else:
-        return sstart
+       or reminderTime == 2 and ttime_diff >= 3_600  # Every 1 Hour
+       or reminderTime == 3 and ttime_diff >= 10_800  # Every 3 Hours
+       or reminderTime == 4 and ttime_diff >= 21_600  # Every 6 Hours
+    ): return float("{:.2f}".format(perf_counter()))
+    else: return sstart
 
 def getNotified() -> None:
     start = float("{:.2f}".format(perf_counter()))
@@ -193,18 +192,15 @@ def getNotified() -> None:
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
-            if time_diff <= 0.2:
-                wa.text(f"{statusUploaderName} has a status.\n{gmtTime(timezone)}")
+            if time_diff <= 0.2: wa.text(f"{statusUploaderName} has a status.\n{gmtTime(timezone)}")
             else:
                 start = reminderFn(time_diff, start)  # Reset time
 
                 
 if __name__ == "__main__":
     try:
-        if answer == "Y":
-            getNotified()
-        elif answer == "N":
-            autoViewStatus()
+        if answer == "Y": getNotified()
+        elif answer == "N": autoViewStatus()
     except Exception as e:
         print(f"Main Exception\n{e}")
         wa.text("Window Closed 🤦‍♀️")
