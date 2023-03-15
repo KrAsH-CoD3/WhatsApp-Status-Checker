@@ -33,7 +33,7 @@ while True:
         Enter "Y" to get notified or "N" to view them automatically: ').upper()
 
 timezone: str = "Africa/Lagos"
-statusUploaderName: str = "Bernice" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "Scott" # As it is saved on your phone(Case Sensitive)
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
@@ -118,9 +118,7 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
             viewed_status: int = total_status - unviewed_status
             loop_range: list = range(1, unviewed_status+1)
             block_line: str = "-"*38  
-            try:  
-                statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
-            except Exception as ecxd:print(ecxd)
+            statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
             for status_idx in loop_range:
                 if status_idx == 1: print(statusTypeMsg[:-1])
 
@@ -191,7 +189,7 @@ def reminderFn(ttime_diff: float, sstart: float) -> float:
 def getNotified() -> None:
     start = float("{:.2f}".format(perf_counter()))
     while True:
-        with contextlib(NoSuchElementException):
+        with contextlib.suppress(NoSuchElementException):
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
