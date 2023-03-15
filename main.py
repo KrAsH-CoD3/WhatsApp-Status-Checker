@@ -23,7 +23,7 @@ while True:
         if answer == "N": break
         while True:
             reminderTime = int(input("\nHow often do you want to be notified?\n1. Enter \"1\" for 30 Mins\n2. Enter \"2\" for 1 Hour\n3. Enter \"3\" for 3 Hours\n4. Enter \"4\" for 6 Hours\nI want: "))
-            if reminderTime in {1, 2, 3, 4}: break;
+            if reminderTime in {1, 2, 3, 4}: break
             else:
                 print("You have to choose between \"1\", \"2\", \"3\" or \"4\" 🥱")
         break
@@ -191,7 +191,7 @@ def reminderFn(ttime_diff: float, sstart: float) -> float:
 def getNotified() -> None:
     start = float("{:.2f}".format(perf_counter()))
     while True:
-        with contextlib.suppress(NoSuchElementException):
+        with contextlib(NoSuchElementException):
             checkStatus()
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
@@ -200,6 +200,7 @@ def getNotified() -> None:
             else:
                 start = reminderFn(time_diff, start)  # Reset time
 
+                
 if __name__ == "__main__":
     try:
         if answer == "Y":
