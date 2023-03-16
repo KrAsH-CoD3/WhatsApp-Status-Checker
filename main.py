@@ -8,10 +8,10 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
-from python_whatsapp_bot import Whatsapp, Inline_keyboard
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from python_whatsapp_bot import Whatsapp, Inline_keyboard, Inline_list, List_item
 
 NUMBER: str = env_variable.get("MY_NUMBER")  # Your Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
@@ -38,7 +38,7 @@ while True:
 
 
 timezone: str = "Africa/Lagos"
-statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
@@ -75,7 +75,7 @@ try:
         (By.XPATH, '//div[@class="_2dfCc"]')))
     print("Logged in successfully.✌")
 except TimeoutException:
-    wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
+    wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
     bot.quit()
 
 gmtTime: str = lambda tz: datetime.now(
@@ -177,7 +177,7 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to Self
-            wa_bot.send_message(NUMBER, f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.", reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
+            wa_bot.send_message(NUMBER, f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.", reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
 
 def reminderFn(ttime_diff: float, sstart: float) -> float:
     if (
@@ -196,7 +196,7 @@ def getNotified() -> None:
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
             if time_diff <= 0.2:
-                wa_bot.send_message(NUMBER, f"{statusUploaderName} has a status.\n{gmtTime(timezone)}", reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
+                wa_bot.send_message(NUMBER, f"{statusUploaderName} has a status.\n{gmtTime(timezone)}", reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
             else:
                 start = reminderFn(time_diff, start)  # Reset time
 
@@ -207,5 +207,5 @@ if __name__ == "__main__":
         elif answer == "N": autoViewStatus()
     except Exception as e:
         print(f"Main Exception\n{e}")
-        wa_bot.send_message(NUMBER, "Window Closed 🤦‍♀️", reply_markup=Inline_keyboard(['Nice one 👌', 'Thanks ✨', 'GGs 🤞']))
+        wa_bot.send_message(NUMBER, "Window Closed 🤦‍♀️", reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
         
