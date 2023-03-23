@@ -25,7 +25,7 @@ pip install -r requirements.txt
   - Login and choose your created App.
   - On the left side bar, click "WhatsApp".
   - From the dropdown, select "Getting started".
-  - Here is a [video demostration](https://youtu.be/yQZsrGnJfcg)
+  - Here is a [video demonstration](https://youtu.be/yQZsrGnJfcg)
 
 You should see a screen like this 
 
