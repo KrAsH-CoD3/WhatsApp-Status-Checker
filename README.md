@@ -12,21 +12,20 @@ Check [requirements.txt]
 
 Download or clone this project, open command prompt from the folder and run the below command
 
-`pip install -r requirements.txt`
+```python
+pip install -r requirements.txt
+```
 
-[WhatsAppCloud] was used for WhatsApp message, **PLEASE READ!**
+## WhatsApp Messenger
 
-## Bug with WhatsAppCloud config
+[Python-WhatsApp-Bot] was used for WhatsApp message, **PLEASE READ!**
 
-After installation, navigate to your config, it should be in this path: `C:\Users\YOUR-PC-NAME\AppData\Local\Programs\Python\Python311\Lib\site-packages\whatsappcloud\whatsappcloud_config.py`
-
-When this README was made, [WhatsAppCloud] comes with a config file of which the variable ```ENDPOINT``` had `f"https://graph.facebook.com/v13.0/{PHONE_ID}/messages"`. You need to update the `V13.0` to the Updated Version. To know the latest version; 
-
-### WhatsApp Business Cloud API Dashboard
+## WhatsApp Business Cloud API Dashboard
   - Go to [WhatsApp Business Cloud API].
   - Login and choose your created App.
   - On the left side bar, click "WhatsApp".
   - From the dropdown, select "Getting started".
+  - Here is a [video demostration](https://youtu.be/yQZsrGnJfcg)
 
 You should see a screen like this 
 
@@ -68,7 +67,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com>
-[WhatsAppCloud]: <https://github.com/PFython/WhatsAppCloud>
+[Python-WhatsApp-Bot]: <https://github.com/Radi-dev/python-whatsapp-bot>
 [ChromeDriver]: <https://chromedriver.chromium.org/downloads>
 [WhatsApp Business Cloud API]:<https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
