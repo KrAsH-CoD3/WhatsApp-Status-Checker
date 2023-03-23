@@ -43,7 +43,7 @@ while True:
         Enter "Y" to get notified or "N" to view them automatically: ')).upper()
 
 
-timezone: str = "Africa/Lagos"  
+timezone: str = "Africa/Lagos"  # Your timezone
 statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
