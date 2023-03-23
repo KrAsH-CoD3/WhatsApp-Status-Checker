@@ -5,40 +5,46 @@ from selenium import webdriver
 from time import sleep, perf_counter
 from os import environ as env_variable
 from selenium.webdriver.common.by import By
+from art import tprint, set_default, text2art
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
+from python_whatsapp_bot import Whatsapp, Inline_list, List_item
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from python_whatsapp_bot import Whatsapp, Inline_keyboard, Inline_list, List_item
 
 NUMBER: str = env_variable.get("MY_NUMBER")  # Your Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
 TOKEN: str =  env_variable.get("TOKEN")  # Token
 
-answer = input('\nDo you want to get notified about status or view them automatically?\n\
-Enter "Y" to get notified or "N" to view them automatically: ').upper()
+
+set_default("fancy99")
+tprint("WhatsApp Status Viewer", 'rectangles')
+tprint('\nDo you want to get notified about status or view them automatically?\n\
+Enter "Y" to get notified or "N" to view them automatically: ')
+
+answer = input('===> ').strip().upper()
 
 while True:
     if answer in {"Y", "N"}:
         if answer == "N": break
         while True:
             try:
-                reminderTime = int(input("\nHow often do you want to be notified?\n1. Enter \"1\" for 30 Mins\n2. Enter \"2\" for 1 Hour\n3. Enter \"3\" for 3 Hours\n4. Enter \"4\" for 6 Hours\nI want: "))
+                reminderTime = int(input(text2art('\nHow often do you want to be notified?\n1. Enter "1" for 30 Mins\n2. Enter "2" for 1 Hour\n3. Enter "3" for 3 Hours\n4. Enter "4" for 6 Hours\nI want: ')))
                 if reminderTime in {1, 2, 3, 4}: break
             except ValueError: 
-                print("\nYou have to choose between \"1\", \"2\", \"3\" or \"4\" 🥱".upper())
+                print(text2art('\nYou have to choose between "1", "2", "3" or "4"', "fancy56"), '🥱')
                 continue
         break
     else:
-        print("\nYou had one job to do! \"Y\" or \"N\" 🥱".upper())
-        answer = input('\nDo you want to get notified about status or view them automatically?\n\
-        Enter "Y" to get notified or "N" to view them automatically: ').upper()
+        print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56"), '🥱')
+        answer = input(text2art('\nDo you want to get notified about status or view them automatically?\n\
+        Enter "Y" to get notified or "N" to view them automatically: ')).upper()
 
 
-timezone: str = "Africa/Lagos"
-statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
+timezone: str = "Africa/Lagos"  
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
@@ -70,17 +76,18 @@ try:
     sleep(2)
     wait.until(EC.visibility_of_element_located(
         (By.XPATH, '//div[@class="_1dEQH _26aja"]'))) # WhatsApp Text
-    print("\nLogging in ...💿")
+    print(text2art("\nLogging in..."), "💿")
     wait.until(EC.invisibility_of_element(
         (By.XPATH, '//div[@class="_2dfCc"]')))
-    print("Logged in successfully.✌")
+    print(text2art("Logged in successfully."), "✌")
 except TimeoutException:
-    wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
+    wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_list("Show list", \
+        list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
     bot.quit()
 
 gmtTime: str = lambda tz: datetime.now(
     pytz.timezone(tz)).strftime("%H : %M : %S")
-print(gmtTime(timezone))
+tprint(f'Logged in at {gmtTime(timezone)}')
 
 search_field = bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
 search_field.clear()
@@ -110,7 +117,7 @@ def checkStatusType() -> dict:
                             bot.find_element(By.XPATH, '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx"]')
                             return {"old_messageValue": True}
                 except NoSuchElementException:
-                    print("Neither can Image/Video/Text/'Old whatsapp' be found.")
+                    tprint("Neither can Image/Video/Text/'Old whatsapp' be found.")
     
 def autoViewStatus(statusTypeMsg: str = "") -> None:
     while True:
@@ -119,12 +126,12 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
             bot.find_element(By.XPATH, ppXpath).click()  # Click Profile Picture to view Status
             unviewed_status: int = len(bot.find_elements(By.XPATH, '//div[contains(@class, "mjomr7am")]')) + 1
             total_status: int = len(bot.find_elements(By.XPATH, barsXpath))
-            viewed_status: int = total_status - unviewed_status
-            loop_range: list = range(1, unviewed_status+1)
             block_line: str = "-"*38  
+            loop_range: list = range(1, unviewed_status+1)
+            viewed_status: int = total_status - unviewed_status
             statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
             for status_idx in loop_range:
-                if status_idx == 1: print(statusTypeMsg[:-1])
+                if status_idx == 1: tprint(statusTypeMsg[:-1])
 
                 sleep(1)
                     
@@ -132,7 +139,7 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
 
                 try:
                     if check_Status["imgStatusValue"]:
-                        print(f"{status_idx}. Status is an Image.")
+                        tprint(f"{status_idx}. Status is an Image.")
                         statusTypeMsg += f"{status_idx}. Status is an Image.\n"
                 except KeyError:
                     try:
@@ -146,25 +153,25 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                             bot.find_element(
                                 By.XPATH, '//span[@data-icon="status-media-controls-pause"]').click()
 
-                            print(f"{status_idx}. Status is a Video.")
+                            tprint(f"{status_idx}. Status is a Video.")
                             statusTypeMsg += f"{status_idx}. Status is a Video.\n"
                     except KeyError: 
                         try:
                             if check_Status["txtStatusValue"]:
-                                print(f"{status_idx}. Status is a Text.")
+                                tprint(f"{status_idx}. Status is a Text.")
                                 statusTypeMsg += f"{status_idx}. Status is a Text.\n"
                         except KeyError:
                             try:
                                 if check_Status["audioStatusValue"]:
-                                    print(f"{status_idx}. Status is an Audio.")
+                                    tprint(f"{status_idx}. Status is an Audio.")
                                     statusTypeMsg += f"{status_idx}. Status is an Audio.\n"
                             except KeyError:
                                 try: 
                                     if check_Status["old_messageValue"]:
-                                        print(f"{status_idx}. Status is an Old Whatsapp Version.")
+                                        tprint(f"{status_idx}. Status is an Old Whatsapp Version.")
                                         statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
                                 except KeyError as e: 
-                                    print(f'Failed! -> {e}')
+                                    tprint(f'Failed! -> {e}')
                 finally:
                     if status_idx != loop_range[-1]:
                         viewed_status += 1
@@ -173,7 +180,8 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                         bot.find_elements(By.XPATH, barsXpath)[ 
                             viewed_status].click()
                     else: # Exit status
-                        print(block_line)
+                        tprint(block_line)
+                        statusTypeMsg: str = ""
                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
 
             # Send to Self
@@ -196,6 +204,7 @@ def getNotified() -> None:
             time_diff = float("{:.2f}".format(perf_counter())) - start
             
             if time_diff <= 0.2:
+                tprint(f"\n{statusUploaderName} has a status.\n{gmtTime(timezone)}")
                 wa_bot.send_message(NUMBER, f"{statusUploaderName} has a status.\n{gmtTime(timezone)}", reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
             else:
                 start = reminderFn(time_diff, start)  # Reset time
@@ -206,6 +215,7 @@ if __name__ == "__main__":
         if answer == "Y": getNotified()
         elif answer == "N": autoViewStatus()
     except Exception as e:
-        print(f"Main Exception\n{e}")
-        wa_bot.send_message(NUMBER, "Window Closed 🤦‍♀️", reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
+        tprint(f"Main Exception\n{e}")
+        wa_bot.send_message(NUMBER, "Window Closed 🤦‍♀️", reply_markup=Inline_list("Show list", \
+            list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
         

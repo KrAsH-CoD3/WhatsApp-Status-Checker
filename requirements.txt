@@ -1,5 +1,6 @@
 # REQUIRED PIP INSTALLATIONS
 
+art==5.9
 pytz==2021.3
 selenium==4.8.2
 whatsappcloud==0.0.5
