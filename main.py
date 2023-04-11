@@ -24,14 +24,14 @@ tprint("WhatsApp Status Viewer", 'rectangles')
 tprint('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ')
 
-answer = input('===> ').strip().upper()
+answer: str = input('===> ').strip().upper()
 
-input_count = 1
+input_count: int = 1
 while True:
     if answer not in {"YES", "NO", "Y", "N"}:
         print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56")); print('🥱')
         tprint('Do you want to get notified about status or view them automatically?')
-        answer = input(text2art('Enter "Y" to get notified or "N" to view them automatically: ')).upper()
+        answer: str = input(text2art('Enter "Y" to get notified or "N" to view them automatically: ')).upper()
     else:
         if answer in ("N", "NO"): break
         while True:
