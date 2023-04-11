@@ -53,12 +53,14 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 
 ## Screenshots
 #
-### First Time Logging In
+### Terminal | First Time Logging In
 ![WhatsApp first time log in](static/images/WhatsApp%20first%20time%20log%20in.png)
 #
-### Viewed Contact Status 
+### Terminal | Viewed Contact Status 
 ![WhatsApp subsequent log in view status 2](static/images/WhatsApp%20subsequent%20log%20in%20view%20status%202.png)
-
+#
+### WhatsApp Message | Status Notification
+![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
 ### For other Screenshots, [Click here](static/images)
 
 ## Errors and Fix
