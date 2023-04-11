@@ -41,7 +41,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 
   - Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
   - Download [ChromeDriver] that is of the same version as your Chrome browser. goto `chrome://version/` to check your Chrome Version.
-  - After this, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See your [WhatsApp Business Cloud API Dashboard]. 
+  - After this, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
   > **REMEMBER** THE GENERATED TOKEN EXPIRES EVERY 24HOURS.
   - Then navigate to this project folder, open `main.py`.
   - Edit `driverpath` variable to your driver path.
@@ -49,7 +49,17 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
   - Edit `options.add_argument(r'user-data-dir=YOUR-USER-DATA-DIR')`.
   - Edit `options.add_argument(r'--profile-directory=YOUR-PROFILE-DIR')`.
   - Edit `ContactName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive).
-  - Open command prompt and run `py main.py`
+  - Open command prompt in the same folder and run `py main.py`
+
+## Screenshots
+#
+### First Time Logging In
+![WhatsApp first time log in](static/images/WhatsApp%20first%20time%20log%20in.png)
+#
+### Viewed Contact Status 
+![WhatsApp subsequent log in view status 2](static/images/WhatsApp%20subsequent%20log%20in%20view%20status%202.png)
+
+### For other Screenshots, [Click here](static/images)
 
 ## Errors and Fix
 
