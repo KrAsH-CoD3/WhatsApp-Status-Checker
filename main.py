@@ -14,7 +14,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from python_whatsapp_bot import Whatsapp, Inline_list, List_item
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 
-NUMBER: str = env_variable.get("MY_NUMBER")  # Your Number e.g: 234xxxxxxxxxx
+NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
 TOKEN: str =  env_variable.get("TOKEN")  # Token
 
@@ -26,20 +26,24 @@ Enter "Y" to get notified or "N" to view them automatically: ')
 
 answer = input('===> ').strip().upper()
 
+input_count = 1
 while True:
-    if answer in {"Y", "N"}:
-        if answer == "N": break
-        while True:
-            try:
-                reminderTime = int(input(text2art('\nHow often do you want to be notified?\n1. Enter "1" for 30 Mins\n2. Enter "2" for 1 Hour\n3. Enter "3" for 3 Hours\n4. Enter "4" for 6 Hours\nI want: ')))
-                if reminderTime in {1, 2, 3, 4}: break
-            except ValueError: 
-                print(text2art('\nYou have to choose between "1", "2", "3" or "4"', "fancy56"), '🥱')
-        break
+    if answer not in {"YES", "NO", "Y", "N"}:
+        print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56")); print('🥱')
+        tprint('Do you want to get notified about status or view them automatically?')
+        answer = input(text2art('Enter "Y" to get notified or "N" to view them automatically: ')).upper()
     else:
-        print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56"), '🥱')
-        answer = input(text2art('\nDo you want to get notified about status or view them automatically?\n\
-        Enter "Y" to get notified or "N" to view them automatically: ')).upper()
+        if answer in ("N", "NO"): break
+        while True:
+            with contextlib.suppress(ValueError):
+                if input_count == 1:
+                    reminderTime: int = int(input(text2art('\nHow often do you want to be notified?\n1. Enter "1" for 30 Mins\n2. Enter "2" for 1 Hour\n3. Enter "3" for 3 Hours\n4. Enter "4" for 6 Hours\nI want: ')))
+                else: 
+                    print(text2art('\nYou have to choose between "1", "2", "3" or "4"', "fancy56"))#; print('', end="")
+                    reminderTime: int = int(input('🥱 ===> '))
+                if reminderTime in {1, 2, 3, 4}: break
+            input_count += 1
+        break
 
 timezone: str = "Africa/Lagos"  # Your timezone
 statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
@@ -67,35 +71,51 @@ options.add_argument('--disable-blink-features=AutomationControlled')
 
 bot = webdriver.Chrome(service=service, options=options)
 wait = WebDriverWait(bot, 60)
+wait3secs = WebDriverWait(bot, 3)
 action = ActionChains(bot)
 bot.set_window_position(676, 0)
 wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
 
 bot.get("https://web.whatsapp.com")
+
+
+gmtTime: str = lambda tz: datetime.now(
+    pytz.timezone(tz)).strftime("%H : %M : %S")
+
 try:
-    # Giving it time to load up "Whatsapp" Text and wait until it disabled.
-    sleep(2)
-    wait.until(EC.visibility_of_element_located(
-        (By.XPATH, '//div[@class="_1dEQH _26aja"]'))) # WhatsApp Text
     print(text2art("\nLogging in..."), "💿")
-    wait.until(EC.invisibility_of_element(
-        (By.XPATH, '//div[@class="_2dfCc"]')))
+    login_count: int = 1
+    while True:
+        try:
+            bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
+            break
+        except NoSuchElementException:  # Log in page (Scan QRCode)
+            with contextlib.suppress(TimeoutException):
+                wait3secs.until(EC.visibility_of_element_located(
+                    (By.XPATH, '//div[@class="_3AjBo"]')))  # WhatsApp list login instructions
+                if login_count == 1:
+                    print(text2art("Please scan the QRCODE to log in"), "🔑")
+                    login_count += 1
+                wait3secs.until(EC.invisibility_of_element(
+                    (By.XPATH, '//div[@class="_3AjBo"]')))  # WhatsApp list login instructions
+                wait3secs.until(EC.visibility_of_element_located(
+                    (By.XPATH, '//div[@class="_1dEQH _26aja"]'))) # WhatsApp: Text
+                wait3secs.until(EC.invisibility_of_element(
+                    (By.XPATH, '//div[@class="_2dfCc"]')))  # Loading your chat
+                break
     print(text2art("Logged in successfully."), "✌")
+    tprint(f'Logged in at {gmtTime(timezone)}\n')
 except TimeoutException:
     wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_list("Show list", \
         list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
     bot.quit()
-
-gmtTime: str = lambda tz: datetime.now(
-    pytz.timezone(tz)).strftime("%H : %M : %S")
-tprint(f'Logged in at {gmtTime(timezone)}')
 
 search_field = bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
 search_field.clear()
 search_field.send_keys(statusUploaderName)
 while True:
     with contextlib.suppress(TimeoutException):
-        WebDriverWait(bot, 3).until(EC.invisibility_of_element_located(  # SEARCH LOADING SVG ICON
+        WebDriverWait(bot, 3).until(EC.invisibility_of_element_located(  # SEARCH BAR LOADING SVG ICON
             (By.XPATH, '//*[local-name()="svg" and @class="gdrnme8s hbnrezoj f8mos8ky tkmeqcnu b9fczbqn"]')))
         sleep(5)
         break
