@@ -254,8 +254,8 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                 
 if __name__ == "__main__":
     try:
-        if answer == "Y": getNotified()
-        elif answer == "N": autoViewStatus()
+        if answer in ["Y", "YES"]: getNotified()
+        elif answer in ["N", "NO"]: autoViewStatus()
     except Exception as e:
         tprint(f"Main Exception\n{e}")
         wa_bot.send_message(NUMBER, "Window Closed 🤦‍♀️", reply_markup=Inline_list("Show list", \
