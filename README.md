@@ -35,13 +35,14 @@ You should see a screen like this
 
 It is recommended you create/use another instance of your Chrome browser with a specific profile for just this software. To create new profile, please check YouTube. 
     
-**NOTE:** *Remember your profile-directory and user-data-dir after you've created the new chrome browser instance*
+**NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser instance*
 
 To check for `profile-directory` and `user-data-dir` in your new instance, goto `chrome://version/`
 
   - Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
   - Download [ChromeDriver] that is of the same version as your Chrome browser. goto `chrome://version/` to check your Chrome Version.
-  - After this, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
+  - Extract chromedriver from the zip into this folder `assest/driver`
+  - Afterwards, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
   > **REMEMBER** THE GENERATED TOKEN EXPIRES EVERY 24HOURS.
   - Then navigate to this project folder, open `main.py`.
   - Edit `driverpath` variable to your driver path.
