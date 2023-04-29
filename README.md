@@ -49,7 +49,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
   - Edit `timezone` variable to your location time zone.
   - Edit `options.add_argument(r'user-data-dir=YOUR-USER-DATA-DIR')`.
   - Edit `options.add_argument(r'--profile-directory=YOUR-PROFILE-DIR')`.
-  - Edit `ContactName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive).
+  - Edit `statusUploaderName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive)).
   - Open command prompt in the same folder and run `py main.py`
 
 ## Screenshots
@@ -62,7 +62,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 #
 ### WhatsApp Message | Status Notification
 ![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
-### For other Screenshots, [Click here](static/images)
+### See other Screenshots, [Click here](static/images)
 
 ## Errors and Fix
 
