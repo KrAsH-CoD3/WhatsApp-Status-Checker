@@ -55,6 +55,10 @@ barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppl
 barXpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg"]'
 barVA_Xpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg velocity-animating"]'
 driverpath: str = "C:\\Users\\Administrator\\Documents\\WhatsApp Status Checker\\assest\\driver\\chromedriver.exe"
+img_status_xpath: str = '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img'
+video_status_xpath: str = '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//video'
+text_status_xpath: str = '//div[@data-testid="status-v3-text"]'
+audio_status_xpath: str = '//div[@class="g0rxnol2 ggj6brxn"]'
 
 service = Service(executable_path=driverpath)
 options = Options()
@@ -124,20 +128,20 @@ checkStatus = lambda : bot.find_element(By.XPATH, ppsXpath)  # Status Circle aro
 
 def checkStatusType() -> dict:
     try: # Image Status
-        bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img')
+        bot.find_element(By.XPATH, img_status_xpath)
         return {"imgStatusValue": True}
     except NoSuchElementException:
         try: # Video Status
-            bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//video')
+            bot.find_element(By.XPATH, video_status_xpath)
             return {"videoStatusValue": True}
         except NoSuchElementException:
             try: # Text Status
-                bot.find_element(By.XPATH, '//div[@data-testid="status-v3-text"]')
+                bot.find_element(By.XPATH, text_status_xpath)
                 return {"txtStatusValue": True}
             except NoSuchElementException:
                 try:
                     try:  # Audio Status
-                        bot.find_element(By.XPATH, '//div[@class="g0rxnol2 ggj6brxn"]')
+                        bot.find_element(By.XPATH, audio_status_xpath)
                         return {"audioStatusValue": True}
                     except NoSuchElementException: # OLD WHATSAPP MSG
                             bot.find_element(By.XPATH, '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx"]')
@@ -168,6 +172,7 @@ def getNotified() -> None:
                 start = reminderFn(time_diff, start)  # Reset time
 
 def autoViewStatus(statusTypeMsg: str = "") -> None:
+    status_links: list = []
     while True:
         with contextlib.suppress(Exception):
             checkStatus()
@@ -208,7 +213,6 @@ def autoViewStatus(statusTypeMsg: str = "") -> None:
                                     finally:
                                         WebDriverWait(bot, 0.1).until(EC.invisibility_of_element_located(
                                             (By.XPATH, '//button[@class="icon-media-disabled"]')))
-                                        # print(f"counter {counter}. Finally BAR"); counter += 1
                                         loading_icon = False
                                         break
                             # Click the pause button
