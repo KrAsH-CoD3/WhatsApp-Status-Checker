@@ -35,20 +35,21 @@ You should see a screen like this
 
 It is recommended you create/use another instance of your Chrome browser with a specific profile for just this software. To create new profile, please check YouTube. 
     
-**NOTE:** *Remember your profile-directory and user-data-dir after you've created the new chrome browser instance*
+**NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser instance*
 
 To check for `profile-directory` and `user-data-dir` in your new instance, goto `chrome://version/`
 
   - Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
   - Download [ChromeDriver] that is of the same version as your Chrome browser. goto `chrome://version/` to check your Chrome Version.
-  - After this, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
+  - Extract chromedriver from the zip into this folder `assest/driver`
+  - Afterwards, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
   > **REMEMBER** THE GENERATED TOKEN EXPIRES EVERY 24HOURS.
   - Then navigate to this project folder, open `main.py`.
   - Edit `driverpath` variable to your driver path.
   - Edit `timezone` variable to your location time zone.
   - Edit `options.add_argument(r'user-data-dir=YOUR-USER-DATA-DIR')`.
   - Edit `options.add_argument(r'--profile-directory=YOUR-PROFILE-DIR')`.
-  - Edit `ContactName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive).
+  - Edit `statusUploaderName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive)).
   - Open command prompt in the same folder and run `py main.py`
 
 ## Screenshots
@@ -61,7 +62,7 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 #
 ### WhatsApp Message | Status Notification
 ![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
-### For other Screenshots, [Click here](static/images)
+### See other Screenshots, [Click here](static/images)
 
 ## Errors and Fix
 
