@@ -64,7 +64,7 @@ tempStatusThumbnail: str = f'//span[@title="{statusUploaderName}"]//..//..//..//
 img_status_xpath: str = '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img'
 video_status_xpath: str = '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//video'
 text_status_xpath: str = '//div[@data-testid="status-v3-text"]'
-audio_status_xpath: str = '//div[@class="g0rxnol2 ggj6brxn"]'
+audio_status_xpath: str = '//div[@class="ajgl1lbb"]'
 oldMessage_status_xpath: str = '//div[contains(@class, "qfejxiq4 b6f1x6w7 m62443ks")]'
 caption_xpath: str = '//div[@class="tvsr5v2h mz6luxmp clw8hvz5 p2tfx3a3 holukk2e cw3vfol9"]//\
     span[@class="_11JPr" and @dir="auto" and @aria-label]'
@@ -74,6 +74,7 @@ service = Service(executable_path=driverpath)
 options = Options()
 options.add_argument("--disable-gpu")
 options.add_argument("--no-first-run")
+options.add_argument("--single-process")
 options.add_argument('--disable-dev-shm-usage')
 options.add_argument(r'--profile-directory=BoT Profile')
 options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
@@ -195,7 +196,7 @@ def checkStatusType(xpath) -> Optional[Dict[str, bool]]:
             elif 'status-v3-text"]' in xpath:
                 kill = True
                 return {"txtStatusValue": True}
-            elif 'g0rxnol2 ggj6brxn"]' in xpath:
+            elif 'ajgl1lbb"]' in xpath:
                 kill = True
                 return {"audioStatusValue": True}
             elif 'b6f1x6w7 m62443ks")]' in xpath:
