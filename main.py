@@ -6,6 +6,7 @@ from time import sleep, perf_counter
 from os import environ as env_variable
 from selenium.webdriver.common.by import By
 from art import tprint, set_default, text2art
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
@@ -90,6 +91,7 @@ action = ActionChains(bot)
 bot.set_window_size(700, 730)
 bot.set_window_position(676, 0)
 wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
+pyautogui.FAILSAFE = False
 pyautogui.press('esc')
 
 gmtTime: str = lambda tz: datetime.now(
@@ -196,7 +198,8 @@ def checkStatusType(xpath) -> Optional[Dict[str, bool]]:
             elif 'status-v3-text"]' in xpath:
                 kill = True
                 return {"txtStatusValue": True}
-            elif 'ajgl1lbb"]' in xpath:
+            elif 'FixMeAudio' in xpath:
+            # elif 'ajgl1lbb"]' in xpath:
                 kill = True
                 return {"audioStatusValue": True}
             elif 'b6f1x6w7 m62443ks")]' in xpath:
@@ -224,6 +227,15 @@ def autoViewStatus(
             except TimeoutException: ...
             except NoSuchElementException: break  # ALREADY PAUSED
 
+    def img_txt_pause():
+        try:
+            WebDriverWait(bot, 1).until(EC.invisibility_of_element_located(
+                (By.XPATH, '//button[@class="icon-media-disabled"]')))
+            bot.find_element(By.XPATH, pause_btn_xpath).click()
+        except Exception: return
+        # except (TimeoutException, NoSuchElementException): return
+        ##  Add StaleElement to the above(Fix this)
+    
     global kill
     kill = False
 
@@ -263,6 +275,9 @@ def autoViewStatus(
         statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
         statusType_xpaths = [img_status_xpath, video_status_xpath, text_status_xpath, audio_status_xpath, oldMessage_status_xpath]
         for status_idx in loop_range:
+
+            img_txt_pause()
+
             if status_idx == 1: tprint(statusTypeMsg[:-1])
 
             with ThreadPoolExecutor(5) as pool:
@@ -275,12 +290,8 @@ def autoViewStatus(
 
             try:
                 if check_Status["imgStatusValue"]:
-                    while True:
-                        with contextlib.suppress(TimeoutException):
-                            wait.until(EC.presence_of_element_located(
-                                        (By.XPATH, pause_btn_xpath)))
-                            break
-                    bot.find_element(By.XPATH, pause_btn_xpath).click()
+                    try: bot.find_element(By.XPATH, pause_btn_xpath).click()
+                    except NoSuchElementException: ...  # ALREADY CLCIKED
                     tprint(f"{status_idx}. Status is an Image.")
                     statusTypeMsg += f"{status_idx}. Status is an Image.\n"
             except KeyError:
@@ -306,10 +317,15 @@ def autoViewStatus(
                                         bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
                                         scroll(statusUploaderName)
                                         bot.find_element(By.XPATH, scrolled_viewed_person_xpath).click()
-                                    elif all([(0 <= float(video_progress) <= 30), loading_icon, total_status > 1]): # Not the only Status
-                                        _backnforward()
+                                    # while not loading_icon:
+                                    if all([(0 <= float(video_progress) <= 30), loading_icon, total_status > 1]): # Not the only Status
+                                        _backnforward(); continue
+                                    # Continous loopback till loading_icon = False
                                     if all([(30 <= float(video_progress) <= 100), loading_icon]): continue
-                                    click_pause()  # THE VIDEO IS DEF. CAHCED/LOADED (_backnforward OR SCROLLING TO STATUS)
+                                    # try: click_pause()  # THE VIDEO IS DEF. CAHCED/LOADED (_backnforward OR SCROLLING TO STATUS)
+                                    # except NoSuchElementException: ...
+                                    try: bot.find_element(By.XPATH, pause_btn_xpath).click()
+                                    except NoSuchElementException: ...  # ALREADY CLCIKED                                    
                                     tprint(f"{status_idx}. Status is a Video.")
                                     statusTypeMsg += f"{status_idx}. Status is a Video.\n"
                                     loading_icon = False
@@ -317,7 +333,8 @@ def autoViewStatus(
                 except KeyError: 
                     try:
                         if check_Status["txtStatusValue"]:
-                            bot.find_element(By.XPATH, pause_btn_xpath).click()
+                            try: bot.find_element(By.XPATH, pause_btn_xpath).click()
+                            except NoSuchElementException: ...  # ALREADY CLCIKED
                             tprint(f"{status_idx}. Status is a Text.")
                             statusTypeMsg += f"{status_idx}. Status is a Text.\n"
                     except KeyError:
@@ -340,8 +357,14 @@ def autoViewStatus(
                     # Click Next Status
                     bot.find_elements(By.XPATH, barsXpath)[viewed_status].click()
                 else: # Exit status
-                    bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
-                    tprint(block_line)
+                    try:
+                        bot.find_element(By.XPATH, '//span[@data-icon="x-viewer"]').click()
+                    except NoSuchElementException:
+                        sleep(3)
+                        with contextlib.suppress(NoSuchElementException):
+                            bot.find_element(By.XPATH, f'//span[@title="{statusUploaderName}"]//span')
+                    tprint(block_line); sleep(1)
+                    bot.find_element(By.XPATH, '//div[@title="Status"]').send_keys(Keys.ESCAPE)
 
         # Send to Self
         wa_bot.send_message(NUMBER, f"{statusTypeMsg}\n{statusUploaderName} at {gmtTime(timezone)}.", \
