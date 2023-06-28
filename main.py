@@ -373,11 +373,11 @@ def autoViewStatus(
 
                 
 if __name__ == "__main__":
-    # try:
-    if answer in ["Y", "YES"]: getNotified()
-    elif answer in ["N", "NO"]: autoViewStatus()
-    # except Exception as e:
-    #     tprint(f"Main Exception\n{e}")
-    #     wa_bot.send_message(NUMBER, f"ERROR OCCURED 🤦‍♀️:\n{e}", reply_markup=Inline_list("Show list", \
-    #         list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
+    try:
+        if answer in ["Y", "YES"]: getNotified()
+        elif answer in ["N", "NO"]: autoViewStatus()
+    except Exception as e:
+        tprint(f"Main Exception\n{e}")
+        wa_bot.send_message(NUMBER, f"ERROR OCCURED 🤦‍♀️:\n{e}", reply_markup=Inline_list("Show list", \
+            list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
         
