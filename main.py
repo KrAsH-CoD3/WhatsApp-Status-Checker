@@ -372,7 +372,7 @@ if __name__ == "__main__":
     bot.set_window_position(676, 0)
     wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
     pyautogui.FAILSAFE = False
-pyautogui.press('esc')
+    pyautogui.press('esc')
 
     # try:
     if answer in ["Y", "YES"]: getNotified()
