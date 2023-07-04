@@ -26,30 +26,9 @@ tprint("WhatsApp Status Viewer", 'rectangles')
 tprint('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ')
 
-answer: str = input('===> ').strip().upper()
-
-input_count: int = 1
-while True:
-    if answer not in {"YES", "NO", "Y", "N"}:
-        print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56")); print('🥱')
-        tprint('Do you want to get notified about status or view them automatically?')
-        answer: str = input(text2art('Enter "Y" to get notified or "N" to view them automatically: ')).upper()
-    else:
-        if answer in ("N", "NO"): break
-        while True:
-            with contextlib.suppress(ValueError):
-                if input_count == 1:
-                    reminderTime: int = int(input(text2art('\nHow often do you want to be notified?\n1. Enter "1" for 30 Mins\n2. Enter "2" for 1 Hour\n3. Enter "3" for 3 Hours\n4. Enter "4" for 6 Hours\nI want: ')))
-                else: 
-                    print(text2art('\nYou have to choose between "1", "2", "3" or "4"', "fancy56"))#; print('', end="")
-                    reminderTime: int = int(input('🥱 ===> '))
-                if reminderTime in {1, 2, 3, 4}: break
-            input_count += 1
-        break
-
 timezone: str = "Africa/Lagos"  # Your timezone
 pause_btn_xpath:str = '//span[@data-icon="status-media-controls-pause"]'
-statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
@@ -71,28 +50,6 @@ caption_xpath: str = '//div[@class="tvsr5v2h mz6luxmp clw8hvz5 p2tfx3a3 holukk2e
     span[@class="_11JPr" and @dir="auto" and @aria-label]'
 read_more_caption_xpath: str = f'{caption_xpath}//following-sibling::strong'
 
-service = Service(executable_path=driverpath)
-options = Options()
-options.add_argument("--disable-gpu")
-options.add_argument("--no-first-run")
-options.add_argument("--single-process")
-options.add_argument('--disable-dev-shm-usage')
-options.add_argument(r'--profile-directory=BoT Profile')
-options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
-options.add_experimental_option('useAutomationExtension', False)
-options.add_experimental_option(
-    "excludeSwitches", ["enable-automation", 'enable-logging'])
-options.add_argument('--disable-blink-features=AutomationControlled')
-
-bot = webdriver.Chrome(service=service, options=options)
-wait = WebDriverWait(bot, 60)
-wait3secs = WebDriverWait(bot, 3)
-action = ActionChains(bot)
-bot.set_window_size(700, 730)
-bot.set_window_position(676, 0)
-wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
-pyautogui.FAILSAFE = False
-pyautogui.press('esc')
 
 gmtTime: str = lambda tz: datetime.now(
     pytz.timezone(tz)).strftime("%H : %M : %S")
@@ -373,11 +330,55 @@ def autoViewStatus(
 
                 
 if __name__ == "__main__":
-    try:
-        if answer in ["Y", "YES"]: getNotified()
-        elif answer in ["N", "NO"]: autoViewStatus()
-    except Exception as e:
-        tprint(f"Main Exception\n{e}")
-        wa_bot.send_message(NUMBER, f"ERROR OCCURED 🤦‍♀️:\n{e}", reply_markup=Inline_list("Show list", \
-            list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
+
+    input_count: int = 1
+    while True:
+        if answer not in {"YES", "NO", "Y", "N"}:
+            print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56")); print('🥱')
+            tprint('Do you want to get notified about status or view them automatically?')
+            answer: str = input(text2art('Enter "Y" to get notified or "N" to view them automatically: ')).upper()
+        else:
+            if answer in ("N", "NO"): break
+            while True:
+                with contextlib.suppress(ValueError):
+                    if input_count == 1:
+                        reminderTime: int = int(input(text2art('\nHow often do you want to be notified?\n1. Enter "1" for 30 Mins\n2. Enter "2" for 1 Hour\n3. Enter "3" for 3 Hours\n4. Enter "4" for 6 Hours\nI want: ')))
+                    else: 
+                        print(text2art('\nYou have to choose between "1", "2", "3" or "4"', "fancy56"))#; print('', end="")
+                        reminderTime: int = int(input('🥱 ===> '))
+                    if reminderTime in {1, 2, 3, 4}: break
+                input_count += 1
+            break
+
+
+    service = Service(executable_path=driverpath)
+    options = Options()
+    options.add_argument("--disable-gpu")
+    options.add_argument("--no-first-run")
+    options.add_argument("--single-process")
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument(r'--profile-directory=BoT Profile')
+    options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
+    options.add_experimental_option('useAutomationExtension', False)
+    options.add_experimental_option(
+        "excludeSwitches", ["enable-automation", 'enable-logging'])
+    options.add_argument('--disable-blink-features=AutomationControlled')
+
+    bot = webdriver.Chrome(service=service, options=options)
+    wait = WebDriverWait(bot, 60)
+    wait3secs = WebDriverWait(bot, 3)
+    action = ActionChains(bot)
+    bot.set_window_size(700, 730)
+    bot.set_window_position(676, 0)
+    wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
+    pyautogui.FAILSAFE = False
+pyautogui.press('esc')
+
+    # try:
+    if answer in ["Y", "YES"]: getNotified()
+    elif answer in ["N", "NO"]: autoViewStatus()
+    # except Exception as e:
+    #     tprint(f"Main Exception\n{e}")
+    #     wa_bot.send_message(NUMBER, f"ERROR OCCURED 🤦‍♀️:\n{e}", reply_markup=Inline_list("Show list", \
+    #         list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
         
