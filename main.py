@@ -331,6 +331,8 @@ def autoViewStatus(
                 
 if __name__ == "__main__":
 
+    answer: str = input('===> ').strip().upper()
+
     input_count: int = 1
     while True:
         if answer not in {"YES", "NO", "Y", "N"}:
@@ -349,7 +351,6 @@ if __name__ == "__main__":
                     if reminderTime in {1, 2, 3, 4}: break
                 input_count += 1
             break
-
 
     service = Service(executable_path=driverpath)
     options = Options()
