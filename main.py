@@ -28,7 +28,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
 
 timezone: str = "Africa/Lagos"  # Your timezone
 pause_btn_xpath:str = '//span[@data-icon="status-media-controls-pause"]'
-statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
+statusUploaderName: str = "Scott" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
 ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
@@ -213,16 +213,16 @@ def autoViewStatus(
                 sleep(5)
                 bot.find_element(By.XPATH, ppXpath).click()  # Click Profile Picture to view Status
                 break
-            except (TimeoutException, NoSuchElementException): continue
+            # except (TimeoutException, NoSuchElementException): continue
             ######     DEBUGGING PURPOSE     ######
-            # except TimeoutException: continue  # STARTING FROM THE
-            # except NoSuchElementException:     # TIMEOUTEXECPTION TO
-            #     if counter > 1:                # THE LAST BREAK SHOULD
-            #         return                     # BE REMOVED CUS IT'S
-            #     scroll(statusUploaderName)     # FOR VIEWING VIEWED STATUS
-            #     wait.until(EC.invisibility_of_element((By.XPATH, tempStatusThumbnail)))
-            #     bot.find_element(By.XPATH, scrolled_viewed_person_xpath).click()
-            #     break
+            except TimeoutException: continue  # STARTING FROM THE
+            except NoSuchElementException:     # TIMEOUTEXECPTION TO
+                if counter > 1:                # THE LAST BREAK SHOULD
+                    return                     # BE REMOVED CUS IT'S
+                scroll(statusUploaderName)     # FOR VIEWING VIEWED STATUS
+                wait.until(EC.invisibility_of_element((By.XPATH, tempStatusThumbnail)))
+                bot.find_element(By.XPATH, scrolled_viewed_person_xpath).click()
+                break
 
         unviewed_status: int = len(bot.find_elements(By.XPATH, '//div[contains(@class, "mjomr7am")]')) + 1
         total_status: int = len(bot.find_elements(By.XPATH, barsXpath))
