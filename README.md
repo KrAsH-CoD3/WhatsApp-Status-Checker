@@ -8,6 +8,7 @@ The WhatsApp Status Viewer view a specific WhatsApp contact status as soon as it
 
 Check [requirements.txt]
 
+
 # Installation
   - Download or clone this project, open command prompt from the folder and run the below command
   - Open CMD from the project folder 
