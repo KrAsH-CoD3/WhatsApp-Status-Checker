@@ -1,5 +1,9 @@
 # REQUIRED PIP INSTALLATIONS
 
+# Enter the command in your termial in this project folder
+# python -m venv wa-viewer-env
+# pip install -r requirements.txt
+
 art==5.9
 pyautogui
 pytz==2021.3
