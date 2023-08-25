@@ -43,7 +43,7 @@ tempStatusThumbnail: str = f'//span[@title="{statusUploaderName}"]//..//..//..//
     div[@class="t3g6t33p sxl192xd qnwaluaf g9p5wyxn i0tg5vk9 aoogvgrq o2zu3hjb gfz4du6o r7fjleex lniyxyh2 qssinsw9 rx2toazg"]'
 img_status_xpath: str = '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//img'
 video_status_xpath: str = '//div[@class="g0rxnol2 ln8gz9je ppled2lx gfz4du6o r7fjleex"]//video'
-text_status_xpath: str = '//div[@data-testid="status-v3-text"]'
+text_status_xpath: str = '//div[contains(@class, "lhggkp7q l3hfgdr1 qk2y3tb3 myeiuhv9")]'
 audio_status_xpath: str = '//div[@class="ajgl1lbb"]'
 oldMessage_status_xpath: str = '//div[contains(@class, "qfejxiq4 b6f1x6w7 m62443ks")]'
 caption_xpath: str = '//div[@class="tvsr5v2h mz6luxmp clw8hvz5 p2tfx3a3 holukk2e cw3vfol9"]//\
@@ -89,7 +89,7 @@ def open_WhatsApp()-> None:
         login_count: int = 1
         while True:
             try:  # 
-                bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
+                bot.find_element(By.XPATH, '//div[@id="pane-side"]')
                 break
             except NoSuchElementException:  # Log in page (Scan QRCode)
                 with contextlib.suppress(TimeoutException):
@@ -152,7 +152,7 @@ def checkStatusType(xpath) -> Optional[Dict[str, bool]]:
             elif 'r7fjleex"]//video' in xpath:
                 kill = True
                 return {"videoStatusValue": True}
-            elif 'status-v3-text"]' in xpath:
+            elif 'l3hfgdr1 qk2y3tb3 myeiuhv9")]' in xpath:
                 kill = True
                 return {"txtStatusValue": True}
             elif 'FixMeAudio' in xpath:
@@ -198,7 +198,7 @@ def autoViewStatus(
 
     open_WhatsApp()
 
-    search_field = bot.find_element(By.XPATH, '//div[@data-testid="chat-list-search"]')
+    search_field = bot.find_element(By.XPATH, '//p[@class="selectable-text copyable-text iq0m558w g0rxnol2"]')
     search_field.send_keys(statusUploaderName)
 
     counter = 0
