@@ -5,6 +5,7 @@
 # pip install -r requirements.txt
 
 art==5.9
+ipykernel
 pyautogui
 pytz==2021.3
 selenium==4.8.2
