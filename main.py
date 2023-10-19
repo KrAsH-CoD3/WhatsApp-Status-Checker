@@ -28,10 +28,10 @@ Enter "Y" to get notified or "N" to view them automatically: ')
 
 timezone: str = "Africa/Lagos"  # Your timezone
 pause_btn_xpath:str = '//span[@data-icon="status-media-controls-pause"]'
-statusUploaderName: str = "Ijk" # As it is saved on your phone(Case Sensitive)
-ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
+statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
+ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]'
-ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//preceding-sibling::\
+ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//..//preceding-sibling::\
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 barXpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg"]'
