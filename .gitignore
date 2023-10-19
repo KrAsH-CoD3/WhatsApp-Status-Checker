@@ -1,4 +1,5 @@
 .vscode
 assest
 ignoreGIT
-wa-viewer-env
+wsc_venv
+test.py
