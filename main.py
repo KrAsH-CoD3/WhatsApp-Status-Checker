@@ -52,7 +52,7 @@ read_more_caption_xpath: str = f'{caption_xpath}//following-sibling::strong'
 
 
 gmtTime: str = lambda tz: datetime.now(
-    pytz.timezone(tz)).strftime("%H : %M : %S")
+    pytz.timezone(tz)).strftime("%I:%M:%S %p")
 
 checkStatus = lambda : bot.find_element(By.XPATH, ppsXpath)  # Status Circle around profile picture
 
