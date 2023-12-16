@@ -72,14 +72,6 @@ To check for `profile-directory` and `user-data-dir` in your new instance, goto 
 - **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
 - **Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test number within 24hours, you would not recieve message. 
 
-## Update(s)
-
-[WhatsApp Business Cloud API] released an update which apply from 1 April, 2023 saying
-  
-    Starting from 1 April, free-tier conversations can only be initiated by your customers. If you want to start a conversation with your customers after 1 April, you will need to add a payment method. Learn more about free-tier conversations.
-
-    When using a test phone number, we will still allow developers to send messages to up to five recipient phone numbers without incurring charges.
-
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com>
