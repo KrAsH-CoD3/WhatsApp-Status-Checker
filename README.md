@@ -4,11 +4,11 @@
 
 The WhatsApp Status Viewer view a specific WhatsApp contact status as soon as it is uploaded, send a WhatsApp message about the status type(Image, Video, Text, or  Audio) and the time at which it was viewed OR alternatively always check and notify you if a status is uploaded. You get notified every 30minutes, 1hour, 3hours or 6 hours depending on your choice.
 
-**NOTE:** WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe.
+> _**NOTE:** WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe._
 
 # Requirements
 
-Check [requirements.txt]
+See [requirements.txt]
 
 
 # Installation
@@ -36,19 +36,23 @@ You should see a screen like this
 
 ![WhatsApp Business Cloud API Dashboard Image](static/images/WhatsApp%20Business%20Cloud%20API%20Dashboard.png)
 
+> Pay attention to the version. `v15.0` was the version at the time of making this package. Use the correct version.
+
 # How to use
 
 It is recommended you create/use another instance of your Chrome browser with a specific profile for just this software. To create new profile, please check YouTube. 
     
-**NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser instance*
+> **NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser profile/instance*
 
-To check for `profile-directory` and `user-data-dir` on your new instance, goto `chrome://version/`
+> To check for `profile-directory` and `user-data-dir` on your new instance, goto `chrome://version/`
 
   - Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
   - Download [ChromeDriver] that is of the same version as your Chrome browser. Navigate to `chrome://version/` to check your Chrome Version.
   - Extract chromedriver from the zip into this folder `assest/driver`
   - Afterwards, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
   > **REMEMBER** THE GENERATED TOKEN EXPIRES EVERY 24HOURS.
+  
+  > If you need a permenent token, let me know.
   - Then navigate to this project folder, open `main.py`.
   - Edit `driverpath` variable to your driver path.
   - Edit `timezone` variable to your location time zone.
@@ -73,6 +77,7 @@ To check for `profile-directory` and `user-data-dir` on your new instance, goto 
 ## Errors and Fix
 
 - **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
+  > Preferrable use a more stable internet.
 - **Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test number within 24hours, you would not recieve message. 
 
 
