@@ -229,7 +229,7 @@ def autoViewStatus(
         block_line: str = "-"*38
         loop_range: list = range(1, unviewed_status+1)
         viewed_status: int = total_status - unviewed_status
-        statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues is/are {unviewed_status} out of {total_status}.\n"
+        statusTypeMsg += f"{statusUploaderName}\nUnviewed Statues " + "is" if unviewed_status == 1 else "are" + f" {unviewed_status} out of {total_status}.\n"
         statusType_xpaths = [img_status_xpath, video_status_xpath, text_status_xpath, audio_status_xpath, oldMessage_status_xpath]
         for status_idx in loop_range:
 
@@ -243,7 +243,7 @@ def autoViewStatus(
                 for future in as_completed(tasks):
                     if all([future.done(), future.result() is not None]):
                         check_Status = future.result()
-                kill = False
+                kill = False # Reset kill to False
 
             try:
                 if check_Status["imgStatusValue"]:
