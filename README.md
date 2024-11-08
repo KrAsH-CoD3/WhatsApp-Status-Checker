@@ -77,7 +77,7 @@ It is recommended you create/use another instance of your Chrome browser with a 
 ## Errors and Fix
 
 - **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
-  > Preferrable use a more stable internet.
+  > Preferrably, use a more stable internet.
 - **Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test number within 24hours, you would not recieve message. 
 
 
