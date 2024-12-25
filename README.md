@@ -40,7 +40,7 @@ You should see a screen like this
 
 # How to use
 
-It is recommended you create/use another instance of your Chrome browser with a specific profile for just this software. To create new profile, please check YouTube. 
+It is recommended you create/use another instance of your Chrome browser with a specific profile for just this package. To create new profile, please check YouTube. 
     
 > **NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser profile/instance*
 
@@ -74,20 +74,31 @@ It is recommended you create/use another instance of your Chrome browser with a 
 ![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
 ### See other Screenshots, [Click here](static/images)
 
-## Errors and Fix
+## Errors and Fixes
 
 - **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
   > Preferrably, use a more stable internet.
-- **Not Receiving WhatsApp Message:** Send a message to your Test Number. If a message isn't sent to your test number within 24hours, you would not recieve message.
+- **Not Receiving WhatsApp Message:** Send a message to your Test Number.
+  > If a message isn't sent to your test number within 24hours, you would not recieve message.
 
 ## Support and Contribute
-- Fork, do your thing and create a PR.
+- [Fork], do your thing and create a PR.
 - Please star 🌟 to encourage developer(s).
 
+## TODO
+- [ ] Create a package and publish to pypi.
+- [ ] Automatically
+  - [ ] Handle Chromedriver
+    - [ ] Download chromedriver (based on the Google Chrome version installed).
+    - [ ] Extract and move to `assest/driver` folder.
+  - [ ] Handle dedicated Chrome profile (if not previously done)
+    - [ ] Create a new chrome profile.
+    - [ ] Use the new chrome profile.
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com>
+[Fork]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/fork>
 [Python-WhatsApp-Bot]: <https://github.com/Radi-dev/python-whatsapp-bot>
-[ChromeDriver]: <https://chromedriver.chromium.org/downloads>
-[WhatsApp Business Cloud API]:<https://developers.facebook.com/products/whatsapp/>
+[ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
+[WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
