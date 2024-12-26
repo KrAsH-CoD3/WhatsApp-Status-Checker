@@ -86,7 +86,7 @@ It is recommended you create/use another instance of your Chrome browser with a 
 - Please star 🌟 to encourage developer(s).
 
 ## TODO
-- [ ] Create a package and publish to pypi.
+- [ ] Create a package and publish to PyPi.
 - [ ] Automatically
   - [ ] Handle Chromedriver
     - [ ] Download chromedriver (based on the Google Chrome version installed).
