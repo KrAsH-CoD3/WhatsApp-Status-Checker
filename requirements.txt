@@ -8,6 +8,7 @@ art==5.9
 ipykernel
 pyautogui
 pytz==2021.3
+python-dotenv
 selenium==4.8.2
+python-whatsapp-bot
 whatsappcloud==0.0.5
-python-whatsapp-bot==0.0.91

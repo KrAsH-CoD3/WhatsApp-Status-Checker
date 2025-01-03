@@ -3,5 +3,5 @@ assest
 ignoreGIT
 wsc_venv
 test.py
-.env
 __pycache__
+.env
