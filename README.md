@@ -90,7 +90,7 @@ It is recommended you create/use another instance of your Chrome browser with a 
 - [ ] Automatically
   - [ ] Handle Chromedriver
     - [x] Download chromedriver (based on the Google Chrome version installed).
-    - [ ] Extract and move to `assest/driver` folder.
+    - [x] Extract and move to `assest/driver` folder.
   - [ ] Handle dedicated Chrome profile (if not previously done)
     - [ ] Create a new chrome profile.
     - [ ] Use the new chrome profile.
