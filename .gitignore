@@ -3,3 +3,4 @@ assest
 ignoreGIT
 wsc_venv
 test.py
+.env
