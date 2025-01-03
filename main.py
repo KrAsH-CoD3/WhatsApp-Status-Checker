@@ -1,32 +1,32 @@
-from datetime import datetime
-from selenium import webdriver
-from typing import Optional, Dict
-import contextlib, pyautogui, pytz
-from time import sleep, perf_counter
-from os import environ as env_variable
-from selenium.webdriver.common.by import By
-from art import tprint, set_default, text2art
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from python_whatsapp_bot import Whatsapp, Inline_list, List_item
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from os import environ as env_variable, getcwd, path as os_path
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
+from art import tprint, set_default, text2art
+from selenium.webdriver.common.by import By
+from time import sleep, perf_counter
+import contextlib, pyautogui, pytz
+from typing import Optional, Dict
+from selenium import webdriver
+from datetime import datetime
 
 NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
 TOKEN: str =  env_variable.get("TOKEN")  # Token
-
+CURRENT_DIR = getcwd()
 
 set_default("fancy99")
 tprint("WhatsApp Status Viewer", 'rectangles')
 tprint('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ')
 
-timezone: str = "Africa/Lagos"  # Your timezone
+timezone: str = "Africa/Lagos"  # Your timezone #TODO: Use specified timezone else Automatically get it
 pause_btn_xpath:str = '//span[@data-icon="status-media-controls-pause"]'
 statusUploaderName: str = "ContactName" # As it is saved on your phone(Case Sensitive)
 ppsXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//..//preceding-sibling::\
@@ -35,7 +35,7 @@ ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//..//precedin
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 barXpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg"]'
-driverpath: str = "C:\\Users\\Administrator\\Documents\\WhatsApp-Status-Checker\\assest\\driver\\chromedriver.exe"
+driverpath: str = os_path(CURRENT_DIR, "driver", "chromedriver.exe")
 barVA_Xpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg velocity-animating"]'
 scrolled_viewed_person_xpath :str = f'//span[@title="{statusUploaderName}" and \
     @class="ggj6brxn gfz4du6o r7fjleex g0rxnol2 lhj4utae le5p0ye3 _11JPr"]'
@@ -81,7 +81,7 @@ def getNotified() -> None:
 
 def open_WhatsApp()-> None:
 
-    bot.get("https://web.whatsapp.com")
+    bot.get("https://web.whatsapp.com/")
 
 
     try:

@@ -96,9 +96,9 @@ It is recommended you create/use another instance of your Chrome browser with a 
     - [ ] Use the new chrome profile.
 
 [requirements.txt]: <requirements.txt>
-[WhatsApp Web]: <https://web.whatsapp.com>
-[Fork]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/fork>
-[Python-WhatsApp-Bot]: <https://github.com/Radi-dev/python-whatsapp-bot>
+[WhatsApp Web]: <https://web.whatsapp.com/>
+[Fork]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/fork/>
+[Python-WhatsApp-Bot]: <https://github.com/Radi-dev/python-whatsapp-bot/>
 [ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
 [WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
