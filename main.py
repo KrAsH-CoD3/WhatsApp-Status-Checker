@@ -15,6 +15,9 @@ import contextlib, pyautogui, pytz
 from typing import Optional, Dict
 from selenium import webdriver
 from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
@@ -35,7 +38,7 @@ ppXpath: str = f'//span[@title="{statusUploaderName}"]//..//..//..//..//precedin
     div[@class="_1AHcd"]//*[local-name()="svg" and @class="bx0vhl82 ma4rpf0l lhggkp7q"]//parent::div'
 barsXpath: str = '//div[@class="g0rxnol2 qq0sjtgm jxacihee l7jjieqr egv1zj2i ppled2lx gj5xqxfh om6y7gxh"]'
 barXpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg"]'
-driverpath: str = os_path(CURRENT_DIR, "driver", "chromedriver.exe")
+driverpath: str = os_path.join(CURRENT_DIR, "driver", "chromedriver.exe")
 barVA_Xpath: str =  '//div[@class="lhggkp7q qq0sjtgm tkdu00h0 ln8gz9je ppled2lx ss1fofi6 o7z9b2jg velocity-animating"]'
 scrolled_viewed_person_xpath :str = f'//span[@title="{statusUploaderName}" and \
     @class="ggj6brxn gfz4du6o r7fjleex g0rxnol2 lhj4utae le5p0ye3 _11JPr"]'

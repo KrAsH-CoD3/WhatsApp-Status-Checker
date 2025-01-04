@@ -1,5 +1,8 @@
 from os import environ as env_variable
 from python_whatsapp_bot import Whatsapp, Inline_list, List_item
+from dotenv import load_dotenv
+
+load_dotenv()
 
 NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
