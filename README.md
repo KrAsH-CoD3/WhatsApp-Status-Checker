@@ -36,8 +36,6 @@ You should see a screen like this
 
 ![WhatsApp Business Cloud API Dashboard Image](static/images/WhatsApp%20Business%20Cloud%20API%20Dashboard.png)
 
-> Pay attention to the version. `v15.0` was the version at the time of making this package. Use the correct version.
-
 # How to use
 
 It is recommended you create/use another instance of your Chrome browser with a specific profile for just this package. To create new profile, please check YouTube. 
