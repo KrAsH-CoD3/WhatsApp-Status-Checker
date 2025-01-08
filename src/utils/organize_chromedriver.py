@@ -1,6 +1,4 @@
-from shutil import move, rmtree
 from typing import Literal
-from zipfile import ZipFile
 from pathlib import Path
 import requests
 
@@ -33,6 +31,40 @@ def get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', '
     else:
         raise ValueError("Unsupported platform")
 
+def get_chromedriver_link(platform: str) -> str:
+    """
+    Fetches the ChromeDriver download link from the 'Stable' section for a given platform.
+
+    Args:
+        platform (str): The platform (e.g., "linux64", "mac-arm64", "win64").
+
+    Returns:
+        str: The download link for the specified ChromeDriver.
+    """
+    
+    from bs4 import BeautifulSoup
+    from .get_chrome_version import get_chromebrowser_version
+
+    url = "https://googlechromelabs.github.io/chrome-for-testing/"
+    response = requests.get(url)
+    
+    if response.status_code != 200:
+        raise Exception(f"Failed to fetch the webpage. Status code: {response.status_code}")
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    
+    stable_section = soup.find('section', {'id': 'stable'})
+    if not stable_section:
+        raise Exception("Could not find the 'Stable' section on the webpage.")
+    
+    chromedriver_version = stable_section.find('p').text.strip().split(" ")[1]
+    chrome_version = get_chromebrowser_version()
+
+    if chromedriver_version.split(".")[0] != chrome_version.split(".")[0]:
+        raise Exception(f"Chromedriver version {chromedriver_version} is not compatible with Chrome version {chrome_version}.\
+                        Update your Chrome browser to the latest version.")
+    return f"https://storage.googleapis.com/chrome-for-testing-public/{chromedriver_version}/{platform}/chromedriver-{platform}.zip"
+
 def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
     """Downloads the ChromeDriver for the specified platform architecture.
 
@@ -41,7 +73,7 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
         platform_arch (str): The platform architecture to download.
     """
     
-    download_url = f"https://storage.googleapis.com/chrome-for-testing-public/131.0.6778.204/{platform_arch}/chromedriver-{platform_arch}.zip"
+    download_url = get_chromedriver_link(platform_arch)
 
     output_dir.mkdir(exist_ok=True)
     
@@ -57,7 +89,7 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
     else:
         print(f"Failed to download. Status code: {response.status_code}")
     
-def move_chromedriver():
+def move_chromedriver() -> None:
     """Move the extracted chromedriver.exe to the program's intent directory.
     If the chromedriver.exe is not found, it will be downloaded.
 
@@ -66,8 +98,14 @@ def move_chromedriver():
         platform_arch (str): The platform architecture to move the chromedriver.exe for.
     """
 
+    from shutil import move, rmtree
+    from zipfile import ZipFile
+
     extracted_dir = output_dir / platform_arch
     zip_file_path = output_dir / f"chromedriver-{platform_arch}.zip"
+    chromedriver_path = output_dir / f"chromedriver.exe"
+
+    if chromedriver_path.exists(): return # If chromedriver.exe already exists, do nothing
 
     # If chromedriver zip does not exist
     if not zip_file_path.exists():
@@ -79,14 +117,14 @@ def move_chromedriver():
         print(f"Extracted to {extracted_dir}")
 
     # Find the extracted chromedriver.exe
-    chromedriver_path = extracted_dir / "chromedriver.exe"
+    extracted_chromedriver_path = extracted_dir / "chromedriver.exe"
     for path in extracted_dir.rglob("chromedriver.exe"):
-        chromedriver_path = path
+        extracted_chromedriver_path = path
         break
 
     # Move chromedriver.exe to the output directory
-    if chromedriver_path.exists():
-        move(str(chromedriver_path), str(output_dir / "chromedriver.exe"))
+    if extracted_chromedriver_path.exists():
+        move(str(extracted_chromedriver_path), str(output_dir / "chromedriver.exe"))
         print(f"Moved chromedriver.exe to {output_dir}")
         
     # Clean up the extracted directory
@@ -101,4 +139,4 @@ output_dir = Path(__file__).parent.parent / 'driver'
 
 
 if "__main__" in __name__:
-    move_chromedriver(output_dir, platform_arch)
+    move_chromedriver()

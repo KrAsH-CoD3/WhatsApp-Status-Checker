@@ -1,5 +1,4 @@
-import subprocess
-import platform
+import platform, subprocess
 
 def get_chrome_version_windows():
     """Get the installed version of Google Chrome on Windows."""
@@ -56,7 +55,7 @@ def get_chrome_version_mac():
     except (subprocess.CalledProcessError, FileNotFoundError):
         return None  # Return None if Chrome is not found
 
-def get_chrome_version():
+def get_chromebrowser_version():
     """Get the installed version of Google Chrome for the current platform."""
     current_os = platform.system()
     if current_os == "Windows":
@@ -69,7 +68,7 @@ def get_chrome_version():
         return None  # Unsupported OS
 
 def main():
-    chrome_version = get_chrome_version()
+    chrome_version = get_chromebrowser_version()
     if chrome_version:
         print(f"Detected Chrome version: {chrome_version}")
     else:
