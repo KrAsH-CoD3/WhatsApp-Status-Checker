@@ -86,7 +86,7 @@ It is recommended you create/use another instance of your Chrome browser with a 
 ## TODO
 - [ ] Create a package and publish to PyPi.
 - [ ] Automatically
-  - [ ] Handle Chromedriver
+  - [x] Handle Chromedriver
     - [x] Download chromedriver (based on the Google Chrome version installed).
     - [x] Extract and move to `assest/driver` folder.
   - [ ] Handle dedicated Chrome profile (if not previously done)
