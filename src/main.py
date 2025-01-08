@@ -9,6 +9,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 from art import tprint, set_default, text2art
 from selenium.webdriver.common.by import By
+from utils import organize_chromedriver
 from time import sleep, perf_counter
 import contextlib, pyautogui, pytz
 from typing import Optional, Dict
@@ -16,6 +17,8 @@ from selenium import webdriver
 from datetime import datetime
 from vars import *
 
+
+organize_chromedriver.move_chromedriver() # Handle ChromeDriver
 
 set_default("fancy99")
 tprint("WhatsApp Status Viewer", 'rectangles')
