@@ -7,11 +7,11 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
+import contextlib, pyautogui, pytz, os, signal, subprocess, atexit, sys
 from art import tprint, set_default, text2art
 from selenium.webdriver.common.by import By
 from utils import organize_chromedriver
 from time import sleep, perf_counter
-import contextlib, pyautogui, pytz
 from typing import Optional, Dict
 from selenium import webdriver
 from datetime import datetime
@@ -189,7 +189,10 @@ def autoViewStatus(
                     (By.XPATH, search_bar_loading_xpath)))
                 bot.find_element(By.XPATH, pps_xpath)  # Status Circle around profile picture
                 sleep(5)
-                bot.find_element(By.XPATH, pp_xpath).click()  # Click Profile Picture to view Status
+                try:
+                    bot.find_element(By.XPATH, profile_picture_img_xpath).click()  # Click profile picture to view Status
+                except NoSuchElementException: # 
+                    bot.find_element(By.XPATH, default_profile_picture_xpath).click()  # Click default profile picture to view Status 
                 break
             # NO GREEN CIRCLE AROUND PROFILE PICTURE (NO STATUS YET) OR STILL LOADING SEARCHED WORD
             except (TimeoutException, NoSuchElementException): continue 
@@ -208,7 +211,7 @@ def autoViewStatus(
         block_line: str = "-"*38
         loop_range: list = range(1, unviewed_status+1)
         viewed_status: int = total_status - unviewed_status
-        statusTypeMsg += f"{status_uploader_name}\nUnviewed Statues " + "is" if unviewed_status == 1 else "are" + f" {unviewed_status} out of {total_status}.\n"
+        statusTypeMsg += f"{status_uploader_name}\nUnviewed Statues " + ("is" if unviewed_status == 1 else "are") + f" {unviewed_status} out of {total_status}.\n"
         statusType_xpaths = [img_status_xpath, video_status_xpath, text_status_xpath, audio_status_xpath, oldMessage_status_xpath]
         for status_idx in loop_range:
 
@@ -346,15 +349,45 @@ if __name__ == "__main__":
         "excludeSwitches", ["enable-automation", 'enable-logging'])
     options.add_argument('--disable-blink-features=AutomationControlled')
 
-    bot = webdriver.Chrome(service=service, options=options)
-    wait = WebDriverWait(bot, 60)
-    wait3secs = WebDriverWait(bot, 3)
-    action = ActionChains(bot)
-    bot.set_window_size(700, 730)
-    bot.set_window_position(676, 0)
-    wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
-    pyautogui.FAILSAFE = False
-    pyautogui.press('esc')
+    def create_driver(service, options):
+        bot = webdriver.Chrome(service=service, options=options)
+        
+        def cleanup_handler(signum=None, frame=None):
+            try:
+                bot.quit()
+            except:
+                pass
+            if signum is not None:  # If called due to signal
+                sys.exit(1)
+        
+        # Register cleanup for normal exit
+        atexit.register(cleanup_handler)
+        
+        # Register cleanup for SIGINT (Ctrl+C)
+        signal.signal(signal.SIGINT, cleanup_handler)
+        
+        return bot
+    
+    try:       
+        bot = create_driver(service, options)
+        wait = WebDriverWait(bot, 60)
+        wait3secs = WebDriverWait(bot, 3)
+        action = ActionChains(bot)
+        bot.set_window_size(700, 730)
+        bot.set_window_position(676, 0)
+        wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
+        pyautogui.FAILSAFE = False
+        pyautogui.press('esc')
 
-    if answer in ["Y", "YES"]: getNotified()
-    elif answer in ["N", "NO"]: autoViewStatus()
+        if answer in ["Y", "YES"]: getNotified()
+        elif answer in ["N", "NO"]: autoViewStatus()
+    except KeyboardInterrupt as e:
+        # # Kill the ChromeDriver process
+        # if service.process and service.process.pid:
+        #     os.kill(service.process.pid, signal.SIGTERM)
+
+        # # Use taskkill to terminate the process on Windows
+        # subprocess.run(["taskkill", "/F", "/PID", str(service.process.pid)], shell=True)
+        # print(f"ChromeDriver process (PID {service.process.pid}) terminated.")
+        print("Exiting...")
+        # bot.quit()

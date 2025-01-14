@@ -1,4 +1,4 @@
-from os import environ as env_variable, path as os_path, getcwd
+from os import environ as env_variable, path as os_path
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -6,7 +6,6 @@ load_dotenv()
 NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number e.g: 234xxxxxxxxxx
 NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
 TOKEN: str =  env_variable.get("TOKEN")  # Token
-CURRENT_DIR = getcwd()
 
 status_uploader_name: str = "contact_name" # As it is saved on your phone(Case Sensitive)
 timezone: str = "Africa/Lagos"  # Your timezone #TODO: Use specified timezone else Automatically get it
@@ -19,9 +18,11 @@ driverpath: str = os_path.join(
 
 pause_btn_xpath:str = '//span[@data-icon="status-media-controls-pause"]'
 pps_xpath: str = f'//span[@title="{status_uploader_name}"]//..//..//..//..//preceding-sibling::\
-    div//*[local-name()="svg"]' # Green circle
-pp_xpath: str = f'//span[@title="{status_uploader_name}"]//..//..//..//..//preceding-sibling::\
+    div//*[local-name()="svg" and @class="x8182xy x1kgmq87 x10l6tqk"]' # Green circle
+profile_picture_img_xpath: str = f'//span[@title="{status_uploader_name}"]//..//..//..//..//preceding-sibling::\
     div//img[contains(@class, "x1hc1fzr _ao3e")]' # Profile picture
+default_profile_picture_xpath: str = f'//span[@title="{status_uploader_name}"]//..//..//..//..//preceding-sibling::\
+    div//span[@data-icon="default-user"]' # Default Profile picture
 bars_xpath: str = '//div[contains(@class, "x12mruv9 xfs2ol5")]' # All bars in the status(irrespective if viewed or not)
 paused_video_bar_xpath: str =  '//div[contains(@class, "x5i6ehr")]' # paused video
 playing_video_bar_xpath: str = '//div[contains(@class, "x5i6ehr velocity-animating")]' # playing video
