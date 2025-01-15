@@ -5,4 +5,3 @@ wsc_venv
 test.py
 __pycache__
 driver
-.env
