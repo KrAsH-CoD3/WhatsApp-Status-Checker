@@ -13,7 +13,7 @@ See [requirements.txt]
 
 # Installation
   - Download or clone this project.
-  - Open CMD from the project folder.
+  - Open CMD from the project directory.
   - Create a Virtual Environment using the following command `py -m venv your_env_name`.
   - Activate your virtual environment and run the below command to install dependencies.
 
@@ -38,26 +38,28 @@ You should see a screen like this
 
 # How to use
 
-It is recommended you create/use another instance of your Chrome browser with a specific profile for just this package. To create new profile, please check YouTube. 
+Make sure your installed Google Chrome Browser is the latest. It is recommended you create/use another instance of your Chrome browser with a specific profile for just this package. See [TODO] for more info. Check YouTube to create chrome profile. 
     
 > **NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser profile/instance*
 
 > To check for `profile-directory` and `user-data-dir` on your new instance, goto `chrome://version/`
 
-  - Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
-  - Download [ChromeDriver] that is of the same version as your Chrome browser. Navigate to `chrome://version/` to check your Chrome Version.
-  - Extract chromedriver from the zip into this folder `assest/driver`
-  - Afterwards, ensure all required in the `config.py` are provided (PHONE_ID, CONTACTS and TOKEN). See [WhatsApp Business Cloud API Dashboard] for your infomations. 
-  > **REMEMBER** THE GENERATED TOKEN EXPIRES EVERY 24HOURS.
+  - In your new created chrome profile browser, Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
   
-  > If you need a permenent token, let me know.
-  - Then navigate to this project folder, open `main.py`.
-  - Edit `driverpath` variable to your driver path.
-  - Edit `timezone` variable to your location time zone.
-  - Edit `options.add_argument(r'user-data-dir=YOUR-USER-DATA-DIR')`.
-  - Edit `options.add_argument(r'--profile-directory=YOUR-PROFILE-DIR')`.
-  - Edit `statusUploaderName` to your desired ContactName (make sure it is exactly how it is saved on your phone(Case Sensitive)).
-  - Open command prompt in the same folder assuming your env('your_env_name') is activated.
+  - Open `.env` file. See [WhatsApp Business Cloud API Dashboard] for your infomations.
+    - Set `NUMBER` to your phone number. # Your WhatsApp Number e.g: 234xxxxxxxxxx
+    - Set `NUM_ID` to your phone number id. # Your Number ID provided by WhatsApp Business Cloud API
+    - Set `TOKEN` to your token. # Token provided by WhatsApp Business Cloud API
+    > **REMEMBER** GENERATED TOKEN EXPIRES EVERY 24HOURS. IF YOU NEED A PERMENENT TOKEN, LET ME KNOW
+
+  - Then navigate to src directory, open `config.py`.
+    - Set `status_uploader_name` to your desired contact name (make sure it is exactly how it is saved on your phone(Case Sensitive)).
+    - Set `timezone` to your location time zone.
+
+  - Open `main.py`.
+    - Edit `options.add_argument(r'user-data-dir=YOUR-USER-DATA-DIR')`.
+    - Edit `options.add_argument(r'--profile-directory=YOUR-PROFILE-DIR')`.
+  
   - Run `py main.py`.
 
 ## Screenshots
@@ -88,7 +90,7 @@ It is recommended you create/use another instance of your Chrome browser with a 
 - [ ] Automatically
   - [x] Handle Chromedriver
     - [x] Download chromedriver (based on the Google Chrome version installed).
-    - [x] Extract and move to `driver` folder.
+    - [x] Extract and move to `driver` directory.
   - [ ] Handle dedicated Chrome profile (if not previously done)
     - [ ] Create a new chrome profile.
     - [ ] Use the new chrome profile.
@@ -100,3 +102,4 @@ It is recommended you create/use another instance of your Chrome browser with a 
 [ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
 [WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
+[Todo]: <README.md#TODO>
