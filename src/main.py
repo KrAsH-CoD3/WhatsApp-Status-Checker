@@ -1,4 +1,5 @@
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
+from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoSuchWindowException, WebDriverException
+import contextlib, pyautogui, pytz, signal, atexit, sys, psutil, platform
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from python_whatsapp_bot import Whatsapp, Inline_list, List_item
@@ -7,8 +8,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
-import contextlib, pyautogui, pytz, os, signal, subprocess, atexit, sys
 from art import tprint, set_default, text2art
+from urllib3.exceptions import ProtocolError
 from selenium.webdriver.common.by import By
 from utils import organize_chromedriver
 from time import sleep, perf_counter
@@ -336,40 +337,105 @@ if __name__ == "__main__":
                 input_count += 1
             break
     
-    service = Service(executable_path=driverpath)
-    options = Options()
-    options.add_argument("--disable-gpu")
-    options.add_argument("--no-first-run")
-    options.add_argument("--single-process")
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument(r'--profile-directory=BoT Profile')
-    options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
-    options.add_experimental_option('useAutomationExtension', False)
-    options.add_experimental_option(
-        "excludeSwitches", ["enable-automation", 'enable-logging'])
-    options.add_argument('--disable-blink-features=AutomationControlled')
 
-    def create_driver(service, options):
-        bot = webdriver.Chrome(service=service, options=options)
+    class BotManager:
+        def __init__(self, driverpath: str) -> None:
+            self.driverpath: str = driverpath
+            self.driver = None
+            self.service = None
+            self.options = None
         
-        def cleanup_handler(signum=None, frame=None):
+        def get_child_procs(self, parent_pid):
+            """Get all child processes of a given parent process."""
             try:
-                bot.quit()
-            except:
-                pass
-            if signum is not None:  # If called due to signal
-                sys.exit(1)
+                parent = psutil.Process(parent_pid)
+                return parent.children(recursive=True)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                return []
         
-        # Register cleanup for normal exit
-        atexit.register(cleanup_handler)
+        def start_chrome(self):
+            self.service = Service(executable_path=self.driverpath)
+            self.options = Options()
+            self.options.add_argument("--disable-gpu")
+            self.options.add_argument("--no-first-run")
+            self.options.add_argument("--single-process")
+            self.options.add_argument('--disable-dev-shm-usage')
+            self.options.add_argument('--disable-software-rasterizer')
+            self.options.add_argument(r'--profile-directory=BoT Profile')
+            self.options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
+            self.options.add_experimental_option('useAutomationExtension', False)
+            self.options.add_experimental_option(
+                "excludeSwitches", ["enable-automation", 'enable-logging'])
+            self.options.add_argument('--disable-blink-features=AutomationControlled')
+
+            self.driver = webdriver.Chrome(service=self.service, options=self.options)
+
+            chromedriver_pid = self.driver.service.process.pid # Get ChromeDriver process
+            
+            # Find the Chrome browser process spawned by ChromeDriver
+            chrome_children = self.get_child_procs(chromedriver_pid)
+            for proc in chrome_children:
+                if 'chrome' in proc.name().lower():
+                    self.chrome_process = proc
+                    break
+            
+            atexit.register(self.cleanup) # Handle atexit cleanup
+            signal.signal(signal.SIGINT, self.signal_handler)   # Handle Ctrl+C
+            signal.signal(signal.SIGTERM, self.signal_handler)  # Handle termination request
+            if platform.system() != 'Windows':  # On Linux or MacOS
+                signal.signal(signal.SIGHUP, self.signal_handler) # Terminal closed
+
+            return self.driver
         
-        # Register cleanup for SIGINT (Ctrl+C)
-        signal.signal(signal.SIGINT, cleanup_handler)
-        
-        return bot
-    
-    try:       
-        bot = create_driver(service, options)
+        def cleanup(self):
+            try:
+                # # TAKES TIME TO QUIT AND DOESN'T QUIT DESPITE TAKING TIME
+                # if self.driver: # First try to quit gracefully
+                #     self.driver.quit() 
+                
+                # If we have the specific Chrome process, ensure it's terminated
+                if self.chrome_process:
+                    with contextlib.suppress(psutil.NoSuchProcess, psutil.AccessDenied):
+                        # Get all child processes before terminating
+                        children = self.chrome_process.children(recursive=True)
+                        
+                        # Terminate child processes
+                        for child in children:
+                            try:
+                                child.terminate()
+                            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                                pass
+                        
+                        # Terminate the main Chrome process
+                        self.chrome_process.terminate()
+                        
+                        # Wait for processes to terminate
+                        _, alive = psutil.wait_procs([self.chrome_process, *children], timeout=3)
+                        
+                        # Force kill any remaining processes
+                        for p in alive:
+                            # Handled this same error here again to avoid continuing execution outside the if block and to the except block 
+                            with contextlib.suppress(psutil.NoSuchProcess, psutil.AccessDenied):
+                                p.kill()
+                        
+                        atexit.unregister(self.cleanup) # Unregister atexit cleanup handler since cleanup was successful
+            except Exception as e:
+                print(f"Error during cleanup: {e}")
+            finally:
+                self.driver = None
+                self.chrome_process = None
+
+        def signal_handler(self, signum, frame):
+            self.cleanup()
+            # Without exiting, the program will continue to run
+            # Which will move execution to the KeyboardInterrupt block
+            sys.exit(1)
+
+    bot_manager = BotManager(driverpath)
+
+    try:
+        # bot = webdriver.Chrome(service=service, options=options)
+        bot = bot_manager.start_chrome()
         wait = WebDriverWait(bot, 60)
         wait3secs = WebDriverWait(bot, 3)
         action = ActionChains(bot)
@@ -382,12 +448,8 @@ if __name__ == "__main__":
         if answer in ["Y", "YES"]: getNotified()
         elif answer in ["N", "NO"]: autoViewStatus()
     except KeyboardInterrupt as e:
-        # # Kill the ChromeDriver process
-        # if service.process and service.process.pid:
-        #     os.kill(service.process.pid, signal.SIGTERM)
-
-        # # Use taskkill to terminate the process on Windows
-        # subprocess.run(["taskkill", "/F", "/PID", str(service.process.pid)], shell=True)
-        # print(f"ChromeDriver process (PID {service.process.pid}) terminated.")
-        print("Exiting...")
-        # bot.quit()
+        print("Keyboard Interrupt")
+    except (NoSuchWindowException, WebDriverException, ProtocolError) as e:
+        print("Webdriver Chrome Browser Closed!")
+    finally:
+        print("Program ended!")
