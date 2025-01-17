@@ -82,8 +82,8 @@ Make sure your installed Google Chrome Browser is the latest. It is recommended 
   > If a message isn't sent to your test number within 24hours, you would not recieve message.
 
 ## Support and Contribute
-- [Fork], do your thing and create a PR.
 - Please star 🌟 to encourage developer(s).
+- [Fork], do your thing and create a PR.
 
 ## TODO
 - [ ] Create a package and publish to PyPi.

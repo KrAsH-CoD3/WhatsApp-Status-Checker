@@ -434,7 +434,6 @@ if __name__ == "__main__":
     bot_manager = BotManager(driverpath)
 
     try:
-        # bot = webdriver.Chrome(service=service, options=options)
         bot = bot_manager.start_chrome()
         wait = WebDriverWait(bot, 60)
         wait3secs = WebDriverWait(bot, 3)

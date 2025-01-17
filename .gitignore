@@ -4,5 +4,4 @@ ignoreGIT
 wsc_venv
 test.py
 __pycache__
-.env
 driver

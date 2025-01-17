@@ -1,5 +1,5 @@
 from os import path as os_path
-from .config import *
+from config import *
 
 driverpath: str = os_path.join(
     os_path.dirname(os_path.abspath(__file__)),
