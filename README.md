@@ -38,13 +38,7 @@ You should see a screen like this
 
 # How to use
 
-Make sure your installed Google Chrome Browser is the latest. It is recommended you create/use another instance of your Chrome browser with a specific profile for just this package. See [TODO] for more info. Check YouTube to create chrome profile. 
-    
-> **NOTE:** *Remember your **profile-directory** and **user-data-dir** after you've created the new chrome browser profile/instance*
-
-> To check for `profile-directory` and `user-data-dir` on your new instance, goto `chrome://version/`
-
-  - In your new created chrome profile browser, Login into [WhatsApp Web] and make sure it is completely synced with your phone (Loading messages).
+Make sure your installed Google Chrome Browser is the latest.
   
   - Open `.env` file. See [WhatsApp Business Cloud API Dashboard] for your infomations.
     - Set `NUMBER` to your phone number. # Your WhatsApp Number e.g: 234xxxxxxxxxx
@@ -52,13 +46,9 @@ Make sure your installed Google Chrome Browser is the latest. It is recommended 
     - Set `TOKEN` to your token. # Token provided by WhatsApp Business Cloud API
     > **REMEMBER** GENERATED TOKEN EXPIRES EVERY 24HOURS. IF YOU NEED A PERMENENT TOKEN, LET ME KNOW
 
-  - Then navigate to src directory, open `config.py`.
+  - Then navigate to `src/whatsapp-status-checker` directory, open `config.py`.
     - Set `status_uploader_name` to your desired contact name (make sure it is exactly how it is saved on your phone(Case Sensitive)).
-    - Set `timezone` to your location time zone.
-
-  - Open `main.py`.
-    - Edit `options.add_argument(r'user-data-dir=YOUR-USER-DATA-DIR')`.
-    - Edit `options.add_argument(r'--profile-directory=YOUR-PROFILE-DIR')`.
+    - Set `timezone` to your location time zone. # See [TODO] for more information.
   
   - Run `py main.py`.
 
@@ -86,14 +76,21 @@ Make sure your installed Google Chrome Browser is the latest. It is recommended 
 - [Fork], do your thing and create a PR.
 
 ## TODO
-- [ ] Create a package and publish to PyPi.
+- [ ] PyPi Package.
+    - [x] Convert to a package.
+    - [ ] publish to PyPi.
+    - 
 - [ ] Automatically
+  - [ ] Use specified timezone othwerwise automatically get it.
+  - [ ] Check first time activity.
+    - [ ] Make sure it is completely synced with phone (Loading messages).
   - [x] Handle Chromedriver
-    - [x] Download chromedriver (based on the Google Chrome version installed).
+    - [x] Download latest chromedriver.
     - [x] Extract and move to `driver` directory.
-  - [ ] Handle dedicated Chrome profile (if not previously done)
-    - [ ] Create a new chrome profile.
-    - [ ] Use the new chrome profile.
+  - [x] Handle dedicated Chrome profile 
+    - [x] Create a new chrome profile(if not previously done).
+    - [x] Use the newly chrome profile(if just created for the first time).
+    - [x] Use existing chrome profile(if already created).
 
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com/>
