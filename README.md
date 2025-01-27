@@ -79,7 +79,6 @@ Make sure your installed Google Chrome Browser is the latest.
 - [ ] PyPi Package.
     - [x] Convert to a package.
     - [ ] publish to PyPi.
-    - 
 - [ ] Automatically
   - [ ] Use specified timezone othwerwise automatically get it.
   - [ ] Check first time activity.
