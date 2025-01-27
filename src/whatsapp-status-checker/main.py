@@ -361,8 +361,8 @@ if __name__ == "__main__":
             self.options.add_argument("--single-process")
             self.options.add_argument('--disable-dev-shm-usage')
             self.options.add_argument('--disable-software-rasterizer')
-            self.options.add_argument(r'--profile-directory=BoT Profile')
-            self.options.add_argument(r'user-data-dir=C:\BoT Chrome Profile')
+            self.options.add_argument(fr'--profile-directory={bot_profile_name}')
+            self.options.add_argument(fr'user-data-dir={bot_profile_user_data_dir}')
             self.options.add_experimental_option('useAutomationExtension', False)
             self.options.add_experimental_option(
                 "excludeSwitches", ["enable-automation", 'enable-logging'])

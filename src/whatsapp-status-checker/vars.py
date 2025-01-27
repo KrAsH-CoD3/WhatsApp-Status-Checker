@@ -7,6 +7,13 @@ driverpath: str = os_path.join(
     "chromedriver.exe"
 )
 
+bot_profile_name: str = "Bot Profile"
+bot_profile_user_data_dir: str = os_path.join(
+    os_path.dirname(os_path.abspath(__file__)),
+    "driver", 
+    "WSC Bot Profile"
+)
+
 pause_btn_xpath:str = '//span[@data-icon="status-media-controls-pause"]'
 pps_xpath: str = f'//span[@title="{status_uploader_name}"]//..//..//..//..//preceding-sibling::\
     div//*[local-name()="svg" and @class="x8182xy x1kgmq87 x10l6tqk"]' # Green circle
