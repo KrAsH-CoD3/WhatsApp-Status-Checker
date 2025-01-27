@@ -84,6 +84,7 @@ Make sure your installed Google Chrome Browser is the latest.
   - [ ] Check first time activity.
     - [ ] Make sure it is completely synced with phone (Loading messages).
   - [x] Handle Chromedriver
+    - [ ] Check if Chrome browser version is same as chromedriver else download lastest
     - [x] Download latest chromedriver.
     - [x] Extract and move to `driver` directory.
   - [x] Handle dedicated Chrome profile 
