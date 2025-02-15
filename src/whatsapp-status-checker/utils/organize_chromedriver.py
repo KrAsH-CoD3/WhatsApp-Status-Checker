@@ -93,7 +93,10 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
     else:
         print(f"Failed to download. Status code: {response.status_code}")
     
-def move_chromedriver() -> None:
+def move_chromedriver(
+        output_dir: Path = None,
+        platform_arch: str = None
+) -> None:
     """Move the extracted chromedriver.exe to the program's intent directory.
     If the chromedriver.exe is not found, it will be downloaded.
 
