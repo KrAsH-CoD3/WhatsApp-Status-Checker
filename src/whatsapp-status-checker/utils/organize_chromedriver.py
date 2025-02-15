@@ -3,6 +3,8 @@ from pathlib import Path
 import requests
 
 
+class NotSameVersionException(Exception):...
+
 def get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', 'win32', 'win64']:
     """Returns the platform architecture for the current system.
 
@@ -61,8 +63,10 @@ def get_chromedriver_link(platform: str) -> str:
     chrome_version = get_chromebrowser_version()
 
     if chromedriver_version.split(".")[0] != chrome_version.split(".")[0]:
-        raise Exception(f"Chromedriver version {chromedriver_version} is not compatible with Chrome version {chrome_version}.\
-                        Update your Chrome browser to the latest version.")
+        raise NotSameVersionException(f"""
+Chromedriver version {chromedriver_version} is not compatible with Chrome version {chrome_version}.
+Update your Chrome browser to the latest version."""
+        )
     return f"https://storage.googleapis.com/chrome-for-testing-public/{chromedriver_version}/{platform}/chromedriver-{platform}.zip"
 
 def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
@@ -89,7 +93,10 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
     else:
         print(f"Failed to download. Status code: {response.status_code}")
     
-def move_chromedriver() -> None:
+def move_chromedriver(
+        output_dir: Path = None,
+        platform_arch: str = None
+) -> None:
     """Move the extracted chromedriver.exe to the program's intent directory.
     If the chromedriver.exe is not found, it will be downloaded.
 
@@ -136,7 +143,6 @@ def move_chromedriver() -> None:
 
 platform_arch = get_platform_architecture()
 output_dir = Path(__file__).parent.parent / 'driver'
-
 
 if "__main__" in __name__:
     move_chromedriver()
