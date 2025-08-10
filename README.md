@@ -72,8 +72,7 @@ Make sure your installed Google Chrome Browser is the latest.
   > If a message isn't sent to your test number within 24hours, you would not recieve message.
 
 ## Support and Contribute
-<a id="top"></a>
-- Please [![⭐ Star Project](https://img.shields.io/badge/Star-Project-blue?logo=github)](#top) to encourage developer(s).
+- Please [![⭐ Star Project](https://img.shields.io/badge/Star-Project-blue?logo=github)]() to encourage developer(s).
 - [Fork], do your thing and create a PR.
 
 ## TODO
@@ -100,4 +99,5 @@ Make sure your installed Google Chrome Browser is the latest.
 [ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
 [WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
+[REPO]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker>
 [Todo]: <README.md#TODO>
