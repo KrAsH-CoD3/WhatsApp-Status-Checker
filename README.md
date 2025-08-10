@@ -72,7 +72,8 @@ Make sure your installed Google Chrome Browser is the latest.
   > If a message isn't sent to your test number within 24hours, you would not recieve message.
 
 ## Support and Contribute
-- Please star 🌟 to encourage developer(s).
+<a id="top"></a>
+- Please [![⭐ Star Project](https://img.shields.io/badge/Star-Project-blue?logo=github)](#top) to encourage developer(s).
 - [Fork], do your thing and create a PR.
 
 ## TODO
