@@ -12,3 +12,4 @@ python-dotenv
 selenium==4.8.2
 python-whatsapp-bot
 whatsappcloud==0.0.5
+beautifulsoup4==4.13.5
