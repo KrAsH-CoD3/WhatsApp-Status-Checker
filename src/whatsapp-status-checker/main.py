@@ -4,6 +4,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium.webdriver.support import expected_conditions as EC
 from python_whatsapp_bot import Whatsapp, Inline_list, List_item
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from utils.organize_chromedriver import ensure_chromedriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -11,7 +12,6 @@ from selenium.webdriver.common.keys import Keys
 from art import tprint, set_default, text2art
 from urllib3.exceptions import ProtocolError
 from selenium.webdriver.common.by import By
-from utils import organize_chromedriver
 from time import sleep, perf_counter
 from typing import Optional, Dict
 from selenium import webdriver
@@ -19,7 +19,7 @@ from datetime import datetime
 from vars import *
 
 
-organize_chromedriver.move_chromedriver() # Handle ChromeDriver
+ensure_chromedriver() # Handle ChromeDriver
 
 set_default("fancy99")
 tprint("WhatsApp Status Viewer", 'rectangles')
