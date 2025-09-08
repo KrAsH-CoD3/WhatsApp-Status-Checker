@@ -1,11 +1,15 @@
-from typing import Literal
+from typing import Literal, Optional
+from shutil import move, rmtree
+from zipfile import ZipFile
 from pathlib import Path
 import requests
 
+BASE_DIR = Path(__file__).parent.parent
 
 class NotSameVersionException(Exception):...
 
-def get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', 'win32', 'win64']:
+
+def _get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', 'win32', 'win64']:
     """Returns the platform architecture for the current system.
 
     Returns:
@@ -17,23 +21,24 @@ def get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', '
     system = platform.system().lower()
     arch, _ = platform.architecture()
     
-    if system == "linux":
-        return "linux64"
+    if system == "windows":
+        if arch == "64bit":
+            return "win64"
+        else:
+            return "win32"
     elif system == "darwin":
         # Check if it's an ARM Mac (M1/M2)
         if "arm" in platform.machine().lower():
             return "mac-arm64"
         else:
             return "mac-x64"
-    elif system == "windows":
-        if arch == "32bit":
-            return "win32"
-        else:
-            return "win64"
+    elif system == "linux":
+        return "linux64"
     else:
         raise ValueError("Unsupported platform")
 
-def get_chromedriver_link(platform: str) -> str:
+
+def _get_chromedriver_link(platform: str) -> str:
     """
     Fetches the ChromeDriver download link from the 'Stable' section for a given platform.
 
@@ -43,9 +48,8 @@ def get_chromedriver_link(platform: str) -> str:
     Returns:
         str: The download link for the specified ChromeDriver.
     """
-    
     from bs4 import BeautifulSoup
-    from .get_chrome_version import get_chromebrowser_version
+    from get_chrome_version import get_chromebrowser_version
 
     url = "https://googlechromelabs.github.io/chrome-for-testing/"
     response = requests.get(url)
@@ -59,15 +63,17 @@ def get_chromedriver_link(platform: str) -> str:
     if not stable_section:
         raise Exception("Could not find the 'Stable' section on the webpage.")
     
-    chromedriver_version = stable_section.find('p').text.strip().split(" ")[1]
+    chromedriver_full_version = stable_section.find('p').text.strip().split(" ")[1]
+    chromedriver_version = chromedriver_full_version.split(".")[0]
     chrome_version = get_chromebrowser_version()
 
-    if chromedriver_version.split(".")[0] != chrome_version.split(".")[0]:
+    if not ((int(chromedriver_version) - 1) <= int(chrome_version.split(".")[0]) <= (int(chromedriver_version) + 1)):
         raise NotSameVersionException(f"""
-Chromedriver version {chromedriver_version} is not compatible with Chrome version {chrome_version}.
+Chromedriver version {chromedriver_full_version} is not compatible with Chrome version {chrome_version}.
 Update your Chrome browser to the latest version."""
         )
-    return f"https://storage.googleapis.com/chrome-for-testing-public/{chromedriver_version}/{platform}/chromedriver-{platform}.zip"
+    return f"https://storage.googleapis.com/chrome-for-testing-public/{chromedriver_full_version}/{platform}/chromedriver-{platform}.zip"
+
 
 def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
     """Downloads the ChromeDriver for the specified platform architecture.
@@ -77,13 +83,14 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
         platform_arch (str): The platform architecture to download.
     """
     
-    download_url = get_chromedriver_link(platform_arch)
+    download_url = _get_chromedriver_link(platform_arch)
 
+    output_dir = BASE_DIR / 'driver'
     output_dir.mkdir(exist_ok=True)
     
     print(f"Downloading ChromeDriver for {platform_arch} from {download_url}...")
     
-    # Download the file
+    # Download the chromedriver zip file
     response = requests.get(download_url, stream=True)
     if response.status_code == 200:
         with open(zip_file_path, "wb") as file:
@@ -92,57 +99,64 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
         print(f"Downloaded to {zip_file_path}")
     else:
         print(f"Failed to download. Status code: {response.status_code}")
+
+
+def ensure_chromedriver(output_dir: Optional[Path] = None, platform_arch: Optional[str] = None) -> None:
+    """Ensure chromedriver.exe exists in output_dir for the given platform_arch."""
+    if output_dir is None:
+        output_dir = BASE_DIR / 'driver'
+     
+    chromedriver_path = output_dir / "chromedriver.exe"
+    if chromedriver_path.exists():
+        return
     
-def move_chromedriver(
-        output_dir: Path = None,
-        platform_arch: str = None
-) -> None:
-    """Move the extracted chromedriver.exe to the program's intent directory.
-    If the chromedriver.exe is not found, it will be downloaded.
+    if platform_arch is None:
+        platform_arch = _get_platform_architecture()
+    
+    zip_file_path = _get_or_download_zip(output_dir, platform_arch)
+    extracted_dir = _extract_zip(zip_file_path, output_dir / platform_arch)
+    driver_path = _find_chromedriver(extracted_dir)
 
-    Args:
-        output_dir (Path): The output directory to move the chromedriver.exe to.
-        platform_arch (str): The platform architecture to move the chromedriver.exe for.
-    """
+    if driver_path:
+        _move_chromedriver(driver_path, chromedriver_path)
 
-    from shutil import move, rmtree
-    from zipfile import ZipFile
+    _cleanup(extracted_dir, zip_file_path)
 
-    extracted_dir = output_dir / platform_arch
-    zip_file_path = output_dir / f"chromedriver-{platform_arch}.zip"
-    chromedriver_path = output_dir / f"chromedriver.exe"
 
-    if chromedriver_path.exists(): return # If chromedriver.exe already exists, do nothing
+def _get_or_download_zip(output_dir: Path, platform_arch: str) -> Path:
+    """Return path to chromedriver zip, downloading if needed."""
+    zip_path = output_dir / f"chromedriver-{platform_arch}.zip"
+    if not zip_path.exists():
+        download_chromedriver(platform_arch, zip_path)
+    return zip_path
 
-    # If chromedriver zip does not exist
-    if not zip_file_path.exists():
-        download_chromedriver(platform_arch, zip_file_path)
 
-    # Extract the ZIP file
-    with ZipFile(zip_file_path, "r") as zip_ref:
-        zip_ref.extractall(extracted_dir)
-        print(f"Extracted to {extracted_dir}")
+def _extract_zip(zip_file: Path, target_dir: Path) -> Path:
+    """Extract a zip archive into target_dir and return the directory path."""
+    with ZipFile(zip_file, "r") as zip_ref:
+        zip_ref.extractall(target_dir)
+    return target_dir
 
-    # Find the extracted chromedriver.exe
-    extracted_chromedriver_path = extracted_dir / "chromedriver.exe"
+
+def _find_chromedriver(extracted_dir: Path) -> Path | None:
+    """Search for chromedriver.exe inside extracted_dir."""
     for path in extracted_dir.rglob("chromedriver.exe"):
-        extracted_chromedriver_path = path
-        break
+        return path
+    return None
 
-    # Move chromedriver.exe to the output directory
-    if extracted_chromedriver_path.exists():
-        move(str(extracted_chromedriver_path), str(output_dir / "chromedriver.exe"))
-        print(f"Moved chromedriver.exe to {output_dir}")
-        
-    # Clean up the extracted directory
+
+def _move_chromedriver(src: Path, dest: Path) -> None:
+    """Move chromedriver.exe to destination directory."""
+    move(str(src), str(dest))
+
+
+def _cleanup(extracted_dir: Path, zip_file: Path) -> None:
+    """Remove extracted directory and zip file."""
     if extracted_dir.exists():
         rmtree(extracted_dir)
+    if zip_file.exists():
+        zip_file.unlink()
 
-    # Clean up ZIP file
-    zip_file_path.unlink()
-
-platform_arch = get_platform_architecture()
-output_dir = Path(__file__).parent.parent / 'driver'
 
 if "__main__" in __name__:
-    move_chromedriver()
+    ensure_chromedriver()
