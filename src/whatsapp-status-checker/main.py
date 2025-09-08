@@ -5,6 +5,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from python_whatsapp_bot import Whatsapp, Inline_list, List_item
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from utils.organize_chromedriver import ensure_chromedriver
+from selenium.webdriver.remote.webelement import WebElement
+from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -12,11 +14,12 @@ from selenium.webdriver.common.keys import Keys
 from art import tprint, set_default, text2art
 from urllib3.exceptions import ProtocolError
 from selenium.webdriver.common.by import By
+from typing import Optional, Dict, List
 from time import sleep, perf_counter
-from typing import Optional, Dict
 from selenium import webdriver
 from datetime import datetime
 from vars import *
+import threading
 
 
 ensure_chromedriver() # Handle ChromeDriver
@@ -29,7 +32,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
 gmtTime: str = lambda tz: datetime.now(
     pytz.timezone(tz)).strftime("%I:%M:%S %p")
 
-checkStatus = lambda : bot.find_element(By.XPATH, pps_xpath)  # Status Circle around profile picture
+checkStatus = lambda : bot.find_element(By.XPATH, profile_picture_status_xpath)  # Status Circle around profile picture
 
 def reminderFn(ttime_diff: float, sstart: float) -> float:
     if (
@@ -56,7 +59,7 @@ def getNotified() -> None:
 
 def open_WhatsApp()-> None:
 
-    wait_until_whatsapp_login_instructions_disappear = lambda: wait3secs.until(EC.visibility_of_element_located((By.XPATH, '//div[@class="_3AjBo"]')))  # WhatsApp list login instructions
+    wait_until_whatsapp_login_instructions_disappear = lambda: wait3secs.until(EC.visibility_of_element_located((By.XPATH, login_instructions_xpath)))  # WhatsApp login instructions
 
     bot.get("https://web.whatsapp.com/")
 
@@ -88,8 +91,18 @@ def open_WhatsApp()-> None:
         print(text2art("Logged in successfully."), "✌")
         tprint(f'Logged in at {gmtTime(timezone)}\n')
     except TimeoutException:
-        wa_bot.send_message(NUMBER, 'Took too long to login.', reply_markup=Inline_list("Show list", \
-            list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
+        wa_bot.send_message(
+            NUMBER, 
+            'Took too long to login.', 
+            reply_markup=Inline_list(
+                "Show list", 
+                list_items=[
+                    List_item("Nice one 👌"), 
+                    List_item("Thanks ✨"), 
+                    List_item("Great Job 🤞")
+                ]
+            )
+        )
         bot.quit()
 
 def scroll(contact_name) -> None:
@@ -118,82 +131,100 @@ def scroll(contact_name) -> None:
                 break
             #  REMOVE EXCEPTION BLOCK AFTER GETTING WHETHER IT VIEWED OR NOT
 
-def checkStatusType(xpath) -> Optional[Dict[str, bool]]:
-    global kill
-    while kill != True:
+def waitt(bot: WebDriver, seconds: int):
+    return WebDriverWait(bot, seconds)
+
+def _backnforward(bot: WebDriver, viewed_status: int):
+    # Go backward and forward to get 'blob' in url
+    bot.find_elements(By.XPATH, bars_xpath)[viewed_status-1].click(); 
+    sleep(.2)
+    bot.find_elements(By.XPATH, bars_xpath)[viewed_status].click()
+
+def _forwardnback(bot: WebDriver, viewed_status: int):
+    # Go forward and backward to get 'blob' in url
+    bot.find_elements(By.XPATH, bars_xpath)[viewed_status+1].click()
+    sleep(.2)
+    bot.find_elements(By.XPATH, bars_xpath)[viewed_status].click()
+
+def _close_status(bot: WebDriver):
+    bot.find_element(By.XPATH, status_exit_xpath).click()
+
+def handle_status_not_loaded(bot: WebDriver, total_status: int, viewed_status: int):
+    unviewed_status: int = total_status - viewed_status
+
+    if total_status == 1: # Only one status
+        # _close_status(bot)
+        # scroll(status_uploader_name)
+        # bot.find_element(By.XPATH, scrolled_viewed_person_xpath).click()
+        _close_status(bot)
+        sleep(3)
+        _click_profile_picture(bot)
+    else: # Multiple statuses
+        if unviewed_status == 1: # Only one new status uploaded
+            _backnforward(bot, viewed_status)
+        else:
+            _forwardnback(bot, viewed_status)
+
+def _click_profile_picture(bot: WebDriver):
+    try:
+        bot.find_element(By.XPATH, profile_picture_img_xpath).click()  # Click profile picture to view Status
+    except NoSuchElementException: # 
+        bot.find_element(By.XPATH, default_profile_picture_xpath).click()  # Click default profile picture to view Status 
+
+def checkStatusType(bot: WebDriver, xpath: str) -> Optional[Dict[str, bool]]:
+    while not stop_event.is_set():
         with contextlib.suppress(NoSuchElementException, TimeoutException):
-            WebDriverWait(bot, .1).until(EC.presence_of_element_located((By.XPATH, xpath)))
-            # bot.find_element(By.XPATH, xpath)
-            if 'r7fjleex"]//img' in xpath:
-                kill = True
-                return {"imgStatusValue": True}
-            elif 'r7fjleex"]//video' in xpath:
-                kill = True
+            waitt(bot, .1).until(EC.presence_of_element_located((By.XPATH, xpath)))
+
+            if '//video' in xpath:
+                stop_event.set()
                 return {"videoStatusValue": True}
-            elif 'l3hfgdr1 qk2y3tb3 myeiuhv9")]' in xpath:
-                kill = True
+            elif 'x5yr21d"]//img' in xpath:
+                element: WebElement = bot.find_element(By.XPATH, xpath)
+                if element.get_attribute('alt') == '':
+                    stop_event.set()
+                    return {"imgStatusValue": True}
+            elif 'background-color: rgb' in xpath:
+                stop_event.set()
                 return {"txtStatusValue": True}
             elif 'FixMeAudio' in xpath:
-            # elif 'ajgl1lbb"]' in xpath:
-                kill = True
+                stop_event.set()
                 return {"audioStatusValue": True}
-            elif 'b6f1x6w7 m62443ks")]' in xpath:
-                kill = True
-                return {"old_messageValue": True}  # Returning this is very rare
+            elif 'x1vvkbs x47corl")]' in xpath:
+                stop_event.set()
+                return {"old_messageValue": True}  # Very rare
+    return None
+
+def click_pause():
+    try:
+        waitt(bot, .5).until(EC.invisibility_of_element_located(
+            (By.XPATH, loading_icon_in_status_xpath)))
+        bot.find_element(By.XPATH, pause_btn_xpath).click()
+    except(NoSuchElementException, TimeoutException): 
+        return  # ALREADY PAUSED
 
 def autoViewStatus(
     statusTypeMsg: str = "", 
     status_uploader_name: str = status_uploader_name, 
 ) -> Optional[Dict[str, str]]:
     
-    def _backnforward():
-        # Go backward and forward to get 'blob' in url
-        bot.find_elements(By.XPATH, bars_xpath)[viewed_status-1].click(); sleep(1)
-        bot.find_elements(By.XPATH, bars_xpath)[viewed_status].click(); sleep(1)
-
-    def click_pause():
-        while True:
-            try:
-                wait.until(EC.invisibility_of_element_located(
-                    (By.XPATH, loading_icon_in_status_xpath)))
-                bot.find_element(By.XPATH, pause_btn_xpath).click()
-                sleep(3)
-                break
-            except TimeoutException: ...
-            except NoSuchElementException: return  # ALREADY PAUSED
-
-    def img_or_txt_pause():
-        """This function pauses when image or text status is detected"""
-        try:
-            WebDriverWait(bot, 1).until(EC.invisibility_of_element_located(
-                (By.XPATH, loading_icon_in_status_xpath)))
-            bot.find_element(By.XPATH, pause_btn_xpath).click()
-        except Exception: return
-        # except (TimeoutException, NoSuchElementException): return
-        ##  Add StaleElement to the above(Fix this)
-    
-    global kill
-    kill = False
-
     open_WhatsApp()
 
-    search_field = bot.find_element(By.XPATH, search_field_xpath)
+    search_field: WebElement = bot.find_element(By.XPATH, search_field_xpath)
     search_field.send_keys(status_uploader_name)
 
-    counter = 0
+    # counter = 0
     total_status: int  = 1
     while True:
-        counter += 1
+        # counter += 1
+        # Continous check for status update
         while True:
             try:
-                wait.until(EC.invisibility_of_element_located(  # SEARCH BAR LOADING SVG ICON
-                    (By.XPATH, search_bar_loading_xpath)))
-                bot.find_element(By.XPATH, pps_xpath)  # Status Circle around profile picture
+                wait60secs.until(EC.visibility_of_element_located(  # Wait for status Circle around profile picture
+                    (By.XPATH, profile_picture_status_xpath)))
+                bot.find_element(By.XPATH, profile_picture_status_xpath)  # Status Circle around profile picture
                 sleep(5)
-                try:
-                    bot.find_element(By.XPATH, profile_picture_img_xpath).click()  # Click profile picture to view Status
-                except NoSuchElementException: # 
-                    bot.find_element(By.XPATH, default_profile_picture_xpath).click()  # Click default profile picture to view Status 
+                _click_profile_picture(bot)
                 break
             # NO GREEN CIRCLE AROUND PROFILE PICTURE (NO STATUS YET) OR STILL LOADING SEARCHED WORD
             except (TimeoutException, NoSuchElementException): continue 
@@ -203,114 +234,160 @@ def autoViewStatus(
             #     if counter > 1:                # THE LAST BREAK SHOULD
             #         return                     # BE REMOVED CUS IT'S
             #     scroll(status_uploader_name)     # FOR VIEWING VIEWED STATUS
-            #     wait.until(EC.invisibility_of_element((By.XPATH, temp_status_thumbnail)))
+            #     wait60secs.until(EC.invisibility_of_element((By.XPATH, temp_status_thumbnail)))
             #     bot.find_element(By.XPATH, scrolled_viewed_person_xpath).click()
             #     break
 
+        bars: List[WebElement] = bot.find_elements(By.XPATH, bars_xpath)
+        # +1 because the currently playing status is not included in the unviewed status
         unviewed_status: int = len(bot.find_elements(By.XPATH, unviewed_status_xpath)) + 1
-        total_status: int = len(bot.find_elements(By.XPATH, bars_xpath))
+        total_status: int = len(bars)
         block_line: str = "-"*38
         loop_range: list = range(1, unviewed_status+1)
         viewed_status: int = total_status - unviewed_status
-        statusTypeMsg += f"{status_uploader_name}\nUnviewed Statues " + ("is" if unviewed_status == 1 else "are") + f" {unviewed_status} out of {total_status}.\n"
+        is_more_than_one_status: bool = unviewed_status > 1
+        statusTypeMsg += f"{status_uploader_name}\nUnviewed Status update" + ("s" if is_more_than_one_status else "") + f" {unviewed_status} out of {total_status}.\n"
         statusType_xpaths = [img_status_xpath, video_status_xpath, text_status_xpath, audio_status_xpath, oldMessage_status_xpath]
         for status_idx in loop_range:
 
-            img_or_txt_pause()
+            if status_idx == 1: 
+                tprint(statusTypeMsg[:-1])
+            
+            tasks = None
+            stop_event.clear()
+            executor = ThreadPoolExecutor(max_workers=5)
+            tasks = [executor.submit(checkStatusType, bot, xpath) for xpath in statusType_xpaths]
 
-            if status_idx == 1: tprint(statusTypeMsg[:-1])
+            check_status = None
+            for future in as_completed(tasks):
+                check_status = future.result()
+                if check_status is not None:
+                    break
 
-            with ThreadPoolExecutor(5) as pool:
-                tasks = [pool.submit(checkStatusType, specific_xpath) for specific_xpath in statusType_xpaths]
-                
-                for future in as_completed(tasks):
-                    if all([future.done(), future.result() is not None]):
-                        check_Status = future.result()
-                kill = False # Reset kill to False
+            # Stop accepting new tasks, return immediately
+            executor.shutdown(wait=False)
 
             try:
-                if check_Status["imgStatusValue"]:
-                    try: bot.find_element(By.XPATH, pause_btn_xpath).click()
-                    except NoSuchElementException: ...  # ALREADY CLCIKED
-                    tprint(f"{status_idx}. Status is an Image.")
-                    statusTypeMsg += f"{status_idx}. Status is an Image.\n"
+                if check_status["imgStatusValue"]:
+                    click_pause()
+                    msg: str = f"{status_idx}. Status is an Image."
+                    tprint(msg)
+                    statusTypeMsg += msg + '\n'
             except KeyError:
                 try:
-                    if check_Status["videoStatusValue"]:
+                    if check_status["videoStatusValue"]:
                         loading_icon: bool = True
+
+                        attempts = 0
                 
-                        while True:                                
+                        while True:
                             with contextlib.suppress(TimeoutException):
+                                waitt(bot, .1).until(EC.invisibility_of_element_located(
+                                    (By.XPATH, loading_icon_in_status_xpath)))
+                                loading_icon = False
+                            
+                            try:
+                                playing_status: WebElement = bot.find_element(By.XPATH, playing_bar_xpath)  # playing status
+                                style_value = playing_status.get_attribute("style")  # Starts @ 100 reduces to 0
+                            except NoSuchElementException:
+                                paused_status: WebElement = bot.find_element(By.XPATH, paused_bar_xpath)  # paused status
+                                style_value = paused_status.get_attribute("style")  # Starts @ 100 reduces to 0
+                            finally:
                                 try:
-                                    bot.find_element(By.XPATH, paused_video_bar_xpath)  # paused status
-                                    style_value = bot.find_element(By.XPATH, paused_video_bar_xpath).get_attribute("style")  # Starts @ 100 reduces to 0
-                                except NoSuchElementException:
-                                    bot.find_element(By.XPATH, playing_video_bar_xpath)  # playing status
-                                    style_value = bot.find_element(By.XPATH, playing_video_bar_xpath).get_attribute("style")  # Starts @ 100 reduces to 0
-                                finally:
-                                    video_progress = style_value.split("(")[1].split(")")[0][1:-1]
-                                    with contextlib.suppress(TimeoutException, NoSuchElementException):
-                                        wait3secs.until(EC.invisibility_of_element_located(
-                                            (By.XPATH, loading_icon_in_status_xpath)))
-                                        loading_icon = False
-                                    if all([(0 <= float(video_progress) <= 30), loading_icon, total_status == 1]): # The only Status
-                                        bot.find_element(By.XPATH, status_exit_xpath).click()
-                                        scroll(status_uploader_name)
-                                        bot.find_element(By.XPATH, scrolled_viewed_person_xpath).click()
-                                    # while not loading_icon:
-                                    if all([(0 <= float(video_progress) <= 30), loading_icon, total_status > 1]): # Not the only Status
-                                        _backnforward(); continue
-                                    # Continous loopback till loading_icon = False
-                                    if all([(30 <= float(video_progress) <= 100), loading_icon]): continue
-                                    # try: click_pause()  # THE VIDEO IS DEF. CAHCED/LOADED (_backnforward OR SCROLLING TO STATUS)
-                                    # except NoSuchElementException: ...
-                                    try: bot.find_element(By.XPATH, pause_btn_xpath).click()
-                                    except NoSuchElementException: ...  # ALREADY CLCIKED                                    
-                                    tprint(f"{status_idx}. Status is a Video.")
-                                    statusTypeMsg += f"{status_idx}. Status is a Video.\n"
+                                    video_progress = float(style_value.split("(")[1].split(")")[0][1:-1])
+                                except (IndexError, ValueError): # Unable to get video progress
+                                    continue
+                                
+                                # Try to detect if the video status is loaded. If not, try to load it.
+                                try:
+                                    waitt(bot, .5).until(EC.invisibility_of_element_located(
+                                        (By.XPATH, loading_icon_in_status_xpath)))
                                     loading_icon = False
-                                    break
+                                except(TimeoutException, NoSuchElementException):
+                                    if loading_icon and (0 <= video_progress <= 30):
+                                        handle_status_not_loaded(bot, total_status, viewed_status)
+                                        attempts += 1
+                                    if attempts >= 5:
+                                        # Send to Self
+                                        wa_bot.send_message(
+                                            NUMBER, 
+                                            f"Unable to load {status_uploader_name}'s video status.\
+                                                Use a better internet i guess.", 
+                                            reply_markup=Inline_list(
+                                                "Show list",
+                                                list_items=[
+                                                    List_item("Nice one 👌"), 
+                                                    List_item("Thanks ✨"), 
+                                                    List_item("Great Job")
+                                                ]
+                                            )
+                                        )
+                                        sys.exit()   
+                                    continue
+                                                                
+                                try: 
+                                    click_pause()
+                                except NoSuchElementException: 
+                                    ...  # ALREADY PAUSED
+                                msg = f"{status_idx}. Status is a Video."                            
+                                tprint(msg)
+                                statusTypeMsg += msg + '\n'
+                                loading_icon = False
+                                break
                 except KeyError: 
                     try:
-                        if check_Status["txtStatusValue"]:
-                            try: bot.find_element(By.XPATH, pause_btn_xpath).click()
-                            except NoSuchElementException: ...  # ALREADY CLCIKED
-                            tprint(f"{status_idx}. Status is a Text.")
-                            statusTypeMsg += f"{status_idx}. Status is a Text.\n"
+                        if check_status["txtStatusValue"]:
+                            click_pause()
+                            msg: str = f"{status_idx}. Status is a Text."
+                            tprint(msg)
+                            statusTypeMsg += msg + '\n'
                     except KeyError:
                         try:
-                            if check_Status["audioStatusValue"]:
-                                tprint(f"{status_idx}. Status is an Audio.")
-                                statusTypeMsg += f"{status_idx}. Status is an Audio.\n"
+                            if check_status["audioStatusValue"]:
+                                msg: str = f"{status_idx}. Status is an Audio."
+                                tprint(msg)
+                                statusTypeMsg += msg + '\n'
                         except KeyError:
                             try: 
-                                if check_Status["old_messageValue"]:
-                                    tprint(f"{status_idx}. Status is an Old Whatsapp Version.")
-                                    statusTypeMsg += f"{status_idx}. Status is an Old Whatsapp Version.\n"
+                                if check_status["old_messageValue"]:
+                                    msg: str = f"{status_idx}. Status is an Old Whatsapp Version."
+                                    tprint(msg)
+                                    statusTypeMsg += msg + '\n'
                             except KeyError as e: 
                                 tprint(f'Failed! -> {e}')
             finally:
                 if status_idx != loop_range[-1]:
                     viewed_status += 1
-                    check_Status = None
+                    check_status = None
 
                     # Click Next Status
                     bot.find_elements(By.XPATH, bars_xpath)[viewed_status].click()
                 else: # Status view completed, Exit status
                     try:
                         bot.find_element(By.XPATH, status_exit_xpath).click()
-                    except NoSuchElementException:
+                    except NoSuchElementException: # Status already exited
                         sleep(3)
                         with contextlib.suppress(NoSuchElementException): 
                             # Check if it has truely exited by confirming if the page is on 'contact_name' search page
                             # BUT WHAT IF IT HAS NOT? WHY SKIP DO THIS IN THE FIRST PLACE # TODO FIX THIS
                             bot.find_element(By.XPATH, f'//span[@title="{status_uploader_name}"]//span')
                             bot.find_element(By.XPATH, '//div[@title="Status"]').send_keys(Keys.ESCAPE) # TODO: Confirm what this does
-                    tprint(block_line); sleep(1)
-
+                    tprint(block_line)
+    
         # Send to Self
-        wa_bot.send_message(NUMBER, f"{statusTypeMsg}\n{status_uploader_name} at {gmtTime(timezone)}.", \
-            reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job")]))
+        wa_bot.send_message(
+            NUMBER, 
+            f"{statusTypeMsg}\n{status_uploader_name} at {gmtTime(timezone)}.",
+            reply_markup=Inline_list(
+                "Show list",
+                list_items=[
+                    List_item("Nice one 👌"), 
+                    List_item("Thanks ✨"), 
+                    List_item("Great Job")
+                ]
+            )
+        )
+        
         statusTypeMsg: str = ""
 
                 
@@ -360,6 +437,7 @@ if __name__ == "__main__":
             self.options.add_argument("--no-sandbox")
             self.options.add_argument("--no-first-run")
             self.options.add_argument('--disable-dev-shm-usage')
+            # self.options.add_argument("--auto-open-devtools-for-tabs")
             self.options.add_argument('--disable-software-rasterizer')
             self.options.add_argument(fr'--profile-directory={bot_profile_name}')
             self.options.add_argument(fr'user-data-dir={bot_profile_user_data_dir}')
@@ -434,15 +512,18 @@ if __name__ == "__main__":
     bot_manager = BotManager(driverpath)
 
     try:
-        bot = bot_manager.start_chrome()
-        wait = WebDriverWait(bot, 60)
-        wait3secs = WebDriverWait(bot, 3)
-        action = ActionChains(bot)
+        bot: WebDriver = bot_manager.start_chrome()
+        wait60secs: WebDriverWait = waitt(bot, 60)
+        wait3secs: WebDriverWait = waitt(bot, 3)
+        action: ActionChains = ActionChains(bot)
         bot.set_window_size(700, 730)
         bot.set_window_position(676, 0)
         wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
         pyautogui.FAILSAFE = False
         pyautogui.press('esc')
+
+        # Shared stop signal for all threads
+        stop_event = threading.Event()
 
         if answer in ["Y", "YES"]: getNotified()
         elif answer in ["N", "NO"]: autoViewStatus()
