@@ -12,45 +12,60 @@ See [requirements.txt]
 
 
 # Installation
+
   - Download or clone this project.
   - Open CMD from the project directory.
-  - Create a Virtual Environment using the following command `py -m venv your_env_name`.
-  - Activate your virtual environment and run the below command to install dependencies.
-
-```python
-pip install -r requirements.txt
-```
+  
+  - <details>
+      <summary>Using UV</summary>
+      
+      - Install UV if you haven't already using `pip install uv`.
+      - Create a Virtual Environment using `uv venv`.
+      - Activate your virtual environment using `.venv\Scripts\activate`.
+      - Install dependencies using `uv add -r requirements.txt && uv sync`.
+    </details>
+    
+  - <details>
+      <summary>Using Python</summary>
+      
+      - Create a Virtual Environment using `py -m venv .venv`.
+      - Activate your virtual environment using `.venv\Scripts\activate`.
+      - Install dependencies using `pip install -r requirements.txt`.
+    </details>
 
 ## WhatsApp Messenger
 
-[Python-WhatsApp-Bot] was used for WhatsApp message, **PLEASE READ!**
-
-## WhatsApp Business Cloud API Dashboard
-  - Go to [WhatsApp Business Cloud API].
-  - Login and choose your created App.
-  - On the left side bar, click "WhatsApp".
-  - From the dropdown, select "Getting started".
-  - Here is a [video demonstration](https://youtu.be/yQZsrGnJfcg)
-
-You should see a screen like this 
-
-![WhatsApp Business Cloud API Dashboard Image](static/images/WhatsApp%20Business%20Cloud%20API%20Dashboard.png)
+[CallMeBot] was used for WhatsApp message, **PLEASE READ!**
 
 # How to use
 
 Make sure your installed Google Chrome Browser is the latest.
   
-  - Open `.env` file. See [WhatsApp Business Cloud API Dashboard] for your infomations.
-    - Set `NUMBER` to your phone number. # Your WhatsApp Number e.g: 234xxxxxxxxxx
-    - Set `NUM_ID` to your phone number id. # Your Number ID provided by WhatsApp Business Cloud API
-    - Set `TOKEN` to your token. # Token provided by WhatsApp Business Cloud API
-    > **REMEMBER** GENERATED TOKEN EXPIRES EVERY 24HOURS. IF YOU NEED A PERMENENT TOKEN, LET ME KNOW
+  - Create a `.env` file.
+    - Set `NUMBER` to your phone number. (Your WhatsApp Number e.g: 234xxxxxxxxxx)
+    - Set `CALLMEBOT_APIKEY` to your API Key. (API Key provided by CallMeBot)
+      > See [CallMeBot] for detailed information.
 
   - Then navigate to `src/whatsapp-status-checker` directory, open `config.py`.
-    - Set `status_uploader_name` to your desired contact name (make sure it is exactly how it is saved on your phone(Case Sensitive)).
-    - Set `timezone` to your location time zone. # See [TODO] for more information.
+    - Set `status_uploader_name` (The contact name you want to view his/her status. Make sure it is exactly how it is saved on your phone(Case Sensitive)).
+    - Set `timezone` to your location time zone. (See [TODO] for more information).
   
-  - Run `py main.py`.
+  - <details>
+      <summary>Run Program</summary>
+      
+      <details>
+        <summary>Using UV</summary>
+        
+        uv run main.py
+      </details>
+
+      <details>
+        <summary>Using Python</summary>
+
+        py main.py
+      </details>
+    </details>
+
 
 ## Screenshots
 
@@ -68,8 +83,8 @@ Make sure your installed Google Chrome Browser is the latest.
 
 - **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
   > Preferrably, use a more stable internet.
-- **Not Receiving WhatsApp Message:** Send a message to your Test Number.
-  > If a message isn't sent to your test number within 24hours, you would not recieve message.
+- **Not Receiving WhatsApp Message:** Make sure you follow [CallMeBot] instructions carefully.
+  > Also confirm your `.env` values are correct.
 
 ## Support and Contribute
 - Please [![⭐ Star Project](https://img.shields.io/badge/Star-Project-blue?logo=github)]() to encourage developer(s).
@@ -95,9 +110,10 @@ Make sure your installed Google Chrome Browser is the latest.
 [requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com/>
 [Fork]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/fork/>
-[Python-WhatsApp-Bot]: <https://github.com/Radi-dev/python-whatsapp-bot/>
+[CallMeBot]: <https://www.callmebot.com/blog/free-api-whatsapp-messages/>
 [ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
 [WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
 [REPO]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker>
 [Todo]: <README.md#TODO>
+
