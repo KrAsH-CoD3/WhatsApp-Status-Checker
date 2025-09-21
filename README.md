@@ -6,6 +6,15 @@ The WhatsApp Status Viewer view a specific WhatsApp contact status as soon as it
 
 > _**NOTE:** WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe._
 
+## Demo Video
+
+<video width="100%" controls>
+  <source src="static/videos/Demo.mp4" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
+
+**Note**: If the video doesn't play directly, you can [download it here](static/videos/Demo.mp4) to view locally.
+
 # Requirements
 
 See [requirements.txt]
