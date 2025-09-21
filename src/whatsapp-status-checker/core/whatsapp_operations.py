@@ -64,9 +64,6 @@ class WhatsAppOperations:
             from utils.helpers import gmtTime
             tprint(f'Logged in at {gmtTime(self.timezone)}\n')
         except TimeoutException:
-            from python_whatsapp_bot import Inline_list, List_item
-            from vars import NUMBER
-            # This would need wa_bot instance - consider refactoring
             print('Took too long to login.')
             self.bot.quit()
     

@@ -26,7 +26,7 @@ See [requirements.txt]
     </details>
     
   - <details>
-      <summary>Using Python</summary>
+      <summary>Using PIP</summary>
       
       - Create a Virtual Environment using `py -m venv .venv`.
       - Activate your virtual environment using `.venv\Scripts\activate`.

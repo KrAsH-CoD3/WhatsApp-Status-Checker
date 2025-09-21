@@ -1,8 +1,13 @@
-from selenium.common.exceptions import TimeoutException, NoSuchElementException, NoSuchWindowException, WebDriverException
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from python_whatsapp_bot import Whatsapp, Inline_list, List_item
+from core.whatsapp_notifier import CallMeBotClient
 from art import tprint, set_default, text2art
 from urllib3.exceptions import ProtocolError
+from selenium.common.exceptions import (
+    TimeoutException, 
+    NoSuchElementException, 
+    NoSuchWindowException, 
+    WebDriverException
+)
 from time import perf_counter
 from typing import Optional
 import contextlib
@@ -10,18 +15,17 @@ import pyautogui
 import threading
 
 # Local imports
-from core import StatusHandlerFactory, VideoStatusHandler, BotManager, WhatsAppOperations
+from core import (
+    StatusHandlerFactory, VideoStatusHandler, BotManager, WhatsAppOperations)
+from config import (
+    NUMBER, CALLMEBOT_APIKEY, status_uploader_name, timezone)
 from utils import ensure_chromedriver, gmtTime, reminderFn
 from vars import *
-from config import *
 
 
 ensure_chromedriver() # Handle ChromeDriver
 
 set_default("fancy99")
-tprint("WhatsApp Status Viewer", 'rectangles')
-tprint('\nDo you want to get notified about status or view them automatically?\n\
-Enter "Y" to get notified or "N" to view them automatically: ')
 
 # Global variables for bot and WhatsApp operations
 bot = None
@@ -40,8 +44,7 @@ def getNotified() -> None:
             
             if time_diff <= 0.2:
                 tprint(f"\n{status_uploader_name} has a status.\n{gmtTime(timezone)}")
-                wa_bot.send_message(NUMBER, f"{status_uploader_name} has a status.\n{gmtTime(timezone)}", 
-                    reply_markup=Inline_list("Show list",list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("GGs 🤞")]))
+                wa_bot.send_simple_notification(status_uploader_name, gmtTime(timezone))
             else:
                 start = reminderFn(time_diff, start, reminderTime)  # Reset time
         except (TimeoutException, NoSuchElementException):
@@ -120,27 +123,20 @@ def autoViewStatus(statusTypeMsg: str = "", status_uploader_name: str = status_u
                 tprint(block_line)
     
         # Send to Self
-        wa_bot.send_message(
-            NUMBER, 
-            f"{statusTypeMsg}\n{status_uploader_name} at {gmtTime(timezone)}.",
-            reply_markup=Inline_list(
-                "Show list",
-                list_items=[
-                    List_item("Nice one 👌"), 
-                    List_item("Thanks ✨"), 
-                    List_item("Great Job")
-                ]
-            )
+        wa_bot.send_status_notification(
+            status_uploader_name,
+            statusTypeMsg,
+            gmtTime(timezone)
         )
         
         statusTypeMsg: str = ""
 
 
-
-if __name__ == "__main__":
-
-    # answer: str = input('===> ').strip().upper()
-    answer: str = "N"
+def main():
+    tprint("WhatsApp Status Viewer", 'rectangles')
+    tprint('\nDo you want to get notified about status or view them automatically?\n\
+Enter "Y" to get notified or "N" to view them automatically: ')
+    answer: str = input('===> ').strip().upper()
 
     input_count: int = 1
     while True:
@@ -160,10 +156,9 @@ if __name__ == "__main__":
                     if reminderTime in {1, 2, 3, 4}: break
                 input_count += 1
             break
-    
 
 
-    def initialize_app():
+    def initialize_app() -> None:
         """Initialize the application components"""
         global bot, wa_bot, whatsapp_ops, stop_event
         
@@ -171,15 +166,14 @@ if __name__ == "__main__":
         bot = bot_manager.start_chrome()
         bot.set_window_size(700, 730)
         bot.set_window_position(676, 0)
-        wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
+        wa_bot = CallMeBotClient(NUMBER, CALLMEBOT_APIKEY)
         whatsapp_ops = WhatsAppOperations(bot, timezone)
         pyautogui.FAILSAFE = False
         pyautogui.press('esc')
         stop_event = threading.Event()
-        return bot_manager
 
     try:
-        bot_manager = initialize_app()
+        initialize_app()
 
         if answer in ["Y", "YES"]: 
             getNotified()
@@ -187,7 +181,16 @@ if __name__ == "__main__":
             autoViewStatus()
     except KeyboardInterrupt as e:
         print("Keyboard Interrupt")
-    except (NoSuchWindowException, WebDriverException, ProtocolError) as e:
-        print("Webdriver Chrome Browser Closed!")
+    except NoSuchWindowException as e:
+        print("No such window exception")
+    except WebDriverException as e:
+        print("Webdriver exception")
+    except ProtocolError as e:
+        print("Protocol error")
+    except Exception as e:
+        print("An error occurred:", e)
     finally:
         print("Program ended!")
+
+if __name__ == "__main__":
+    main()

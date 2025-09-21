@@ -6,7 +6,6 @@ from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
-from python_whatsapp_bot import Inline_list, List_item
 from selenium.webdriver.common.by import By
 from abc import ABC, abstractmethod
 from typing import Optional, Dict
@@ -16,7 +15,7 @@ import sys
 
 from vars import (
     loading_icon_in_status_xpath, pause_btn_xpath, playing_bar_xpath, 
-    paused_bar_xpath, NUMBER
+    paused_bar_xpath, NUMBER, #_status_not_loaded
 )
 from utils.helpers import wait_for, handle_status_not_loaded
 
@@ -128,18 +127,8 @@ class VideoStatusHandler(StatusHandler):
     
     def _send_loading_failure_message(self):
         """Send failure message when video can't be loaded after max attempts"""
-        self.wa_bot.send_message(
-            NUMBER, 
-            f"Unable to load {self.contact_name}'s video status. Use a better internet i guess.", 
-            reply_markup=Inline_list(
-                "Show list",
-                list_items=[
-                    List_item("Nice one 👌"), 
-                    List_item("Thanks ✨"), 
-                    List_item("Great Job")
-                ]
-            )
-        )
+        error_message = f"Unable to load {self.contact_name}'s video status. Use a better internet i guess."
+        self.wa_bot.send_error_notification(self.contact_name, "Video loading failed after multiple attempts. Check your internet connection.")
 
 
 class TextStatusHandler(StatusHandler):
