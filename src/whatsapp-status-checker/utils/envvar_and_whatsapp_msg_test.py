@@ -1,14 +1,18 @@
 from os import environ as env_variable
-from python_whatsapp_bot import Whatsapp, Inline_list, List_item
+from callmebot import send_message
 from dotenv import load_dotenv
 
 load_dotenv()
 
-NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number e.g: 234xxxxxxxxxx
-NUM_ID: str = env_variable.get("NUM_ID")  # Your Number ID
-TOKEN: str =  env_variable.get("TOKEN")  # Token
+NUMBER: str = env_variable.get("MY_NUMBER")
+CALLMEBOT_APIKEY: str = env_variable.get("CALLMEBOT_APIKEY")
 
-wa_bot = Whatsapp(number_id=NUM_ID, token=TOKEN)
-wa_bot.send_message(NUMBER, "This is a test message to confirm env variables are read 🤦.", reply_markup=Inline_list("Show list", \
-  list_items=[List_item("Nice one 👌"), List_item("Thanks ✨"), List_item("Great Job 🤞")]))
+# Test CallMeBot API
+message = "This is a test message to confirm CallMeBot API is working 🤖✨"
+success, response = send_message(message, NUMBER, CALLMEBOT_APIKEY)
+
+if success:
+    print("✅ CallMeBot API test successful!")
+else:
+    print(f"❌ CallMeBot API test failed: {response}")
         
