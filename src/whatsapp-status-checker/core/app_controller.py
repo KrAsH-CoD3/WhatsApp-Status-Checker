@@ -3,26 +3,26 @@ WhatsApp Status Checker Application Controller
 Handles the main application logic and flow
 """
 
+from core.status_handlers import status_handler, VideoStatusHandler
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from core.whatsapp_operations import WhatsAppOperations
+from core.webdriver_manager import BotManager
+from urllib3.exceptions import ProtocolError
 from selenium.common.exceptions import (
     TimeoutException, 
     NoSuchElementException, 
     NoSuchWindowException, 
     WebDriverException
 )
+from utils import gmt_time, reminderFn
+from callmebot import send_message
+from typing import Optional, Dict
+from art import tprint, text2art
 from time import perf_counter
-from typing import Optional
+from vars import driverpath
 import contextlib
 import pyautogui
 import threading
-
-from art import tprint, text2art
-from urllib3.exceptions import ProtocolError
-
-from .whatsapp_notifier import CallMeBotClient
-from . import create_status_handler, VideoStatusHandler, BotManager, WhatsAppOperations
-from utils import gmtTime, reminderFn
-from vars import driverpath
 
 
 class WhatsAppStatusApp:
@@ -36,7 +36,6 @@ class WhatsAppStatusApp:
         
         # Application components
         self.bot = None
-        self.wa_bot = None
         self.whatsapp_ops = None
         self.stop_event = None
         self.bot_manager = None
@@ -47,7 +46,6 @@ class WhatsAppStatusApp:
         self.bot = self.bot_manager.start_chrome()
         self.bot.set_window_size(700, 730)
         self.bot.set_window_position(676, 0)
-        self.wa_bot = CallMeBotClient(self.phone_number, self.api_key)
         self.whatsapp_ops = WhatsAppOperations(self.bot, self.timezone)
         pyautogui.FAILSAFE = False
         pyautogui.press('esc')
@@ -98,14 +96,16 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                 time_diff = float("{:.2f}".format(perf_counter())) - start
                 
                 if time_diff <= 0.2:
-                    tprint(f"\n{self.status_uploader_name} has a status.\n{gmtTime(self.timezone)}")
-                    self.wa_bot.send_simple_notification(self.status_uploader_name, gmtTime(self.timezone))
+                    tprint(f"\n{self.status_uploader_name} has a status.\n{gmt_time(self.timezone)}")
+                    message = f"🔔 *{self.status_uploader_name}* has a new status!\n📅 {gmt_time(self.timezone)}"
+                    message = self.format_message(message)
+                    send_message(message, self.phone_number, self.api_key)
                 else:
                     start = reminderFn(time_diff, start, reminder_time)
             except (TimeoutException, NoSuchElementException):
                 continue
     
-    def auto_view_status(self, status_type_msg: str = "") -> Optional[str]:
+    def auto_view_status(self, message: str = "") -> Optional[str]:
         """Main function to automatically view and process WhatsApp statuses"""
         self.whatsapp_ops.open_whatsapp()
         self.whatsapp_ops.search_contact(self.status_uploader_name)
@@ -128,15 +128,18 @@ Enter "Y" to get notified or "N" to view them automatically: ')
             block_line = "-" * 38
             loop_range = range(1, unviewed_status + 1)
             is_more_than_one_status = unviewed_status > 1
-            status_type_msg += f"{self.status_uploader_name}\nUnviewed Status update" + ("s" if is_more_than_one_status else "") + f" {unviewed_status} out of {total_status}.\n"
+
+            # Construct message to send 
+            message += f'{self.status_uploader_name}\nUnviewed Status update' + \
+                ("s are " if is_more_than_one_status else " is ") + \
+                f'{unviewed_status} out of {total_status}.\n'
             
-            # Initialize status handler factory
-            status_factory = StatusHandlerFactory(self.bot, self.wa_bot, self.status_uploader_name)
+            # Get status type xpaths for detection
             status_type_xpaths = self.whatsapp_ops.get_status_type_xpaths()
             
             for status_idx in loop_range:
                 if status_idx == 1: 
-                    tprint(status_type_msg[:-1])
+                    tprint(message[:-1])
                 
                 # Detect status type using ThreadPoolExecutor
                 self.stop_event.clear()
@@ -149,17 +152,25 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                     if check_status is not None:
                         break
 
-                executor.shutdown(wait=False)
+                executor.shutdown(wait=False) # Shutdown the executor
 
-                # Use Strategy Pattern to handle the detected status type
+                # Use simple factory pattern to handle the detected status type
                 if check_status is not None:
-                    handler = create_status_handler(check_status, self.bot, self.wa_bot, self.status_uploader_name)
+                    handler = status_handler(
+                        check_status, self.bot, 
+                        self.phone_number, self.api_key, 
+                        self.status_uploader_name
+                    )
                     if handler is not None:
                         if isinstance(handler, VideoStatusHandler):
-                            msg = handler.handle(status_idx, total_status=total_status, viewed_status=viewed_status)
+                            msg = handler.handle(
+                                status_idx, 
+                                total_status=total_status, 
+                                viewed_status=viewed_status
+                            )
                         else:
                             msg = handler.handle(status_idx)
-                        status_type_msg += msg
+                        message += msg
                     else:
                         tprint(f'Unknown status type detected: {check_status}')
                 else:
@@ -175,14 +186,15 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                     tprint(block_line)
         
             # Send to Self
-            self.wa_bot.send_status_notification(
-                self.status_uploader_name,
-                status_type_msg,
-                gmtTime(self.timezone)
-            )
-            
-            status_type_msg = ""
+            message = self.format_message(message)
+            send_message(message, self.phone_number, self.api_key)
+                        
+            message = "" # Reset message
     
+    def format_message(self, message: str) -> str:
+        """Format message to bold the contact name"""
+        return message.replace(self.status_uploader_name, f"*{self.status_uploader_name}*")
+
     def run(self):
         """Main application run method"""
         try:

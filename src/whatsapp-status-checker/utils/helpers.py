@@ -18,7 +18,7 @@ def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
     return WebDriverWait(bot, seconds)
 
 
-def gmtTime(tz: str) -> str:
+def gmt_time(tz: str) -> str:
     """Get current time in specified timezone formatted as HH:MM:SS AM/PM"""
     return datetime.now(pytz.timezone(tz)).strftime("%I:%M:%S %p")
 

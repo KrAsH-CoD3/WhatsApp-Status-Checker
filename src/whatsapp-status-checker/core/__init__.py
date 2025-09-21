@@ -9,7 +9,7 @@ from .status_handlers import (
     AudioStatusHandler,
     OldMessageStatusHandler,
     VideoStatusHandler,
-    StatusHandlerFactory
+    status_handler
 )
 
 from .webdriver_manager import BotManager
@@ -22,7 +22,7 @@ __all__ = [
     'AudioStatusHandler',
     'OldMessageStatusHandler',
     'VideoStatusHandler',
-    'StatusHandlerFactory',
+    'status_handler',
     'BotManager',
     'WhatsAppOperations'
 ]

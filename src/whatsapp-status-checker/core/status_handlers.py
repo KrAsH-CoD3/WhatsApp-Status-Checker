@@ -4,28 +4,29 @@ Status Handler classes implementing Strategy Pattern for different WhatsApp stat
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
+from utils.helpers import wait_for, handle_status_not_loaded
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from abc import ABC, abstractmethod
+from callmebot import send_message
 from typing import Optional, Dict
 from art import tprint
-import contextlib
-import sys
-
 from vars import (
     loading_icon_in_status_xpath, pause_btn_xpath, playing_bar_xpath, 
     paused_bar_xpath, NUMBER, #_status_not_loaded
 )
-from utils.helpers import wait_for, handle_status_not_loaded
+import contextlib
+import sys
 
 
 class StatusHandler(ABC):
     """Abstract base class for handling different status types"""
     
-    def __init__(self, bot: WebDriver, wa_bot, contact_name: str):
+    def __init__(self, bot: WebDriver, phone_number: str, api_key: str, contact_name: str):
         self.bot = bot
-        self.wa_bot = wa_bot
+        self.phone_number = phone_number
+        self.api_key = api_key
         self.contact_name = contact_name
     
     @abstractmethod
@@ -56,11 +57,13 @@ class ImageStatusHandler(StatusHandler):
 class VideoStatusHandler(StatusHandler):
     """Handler for video status types with complex loading logic"""
     
-    def __init__(self, bot: WebDriver, wa_bot, contact_name: str, max_attempts: int = 3):
-        super().__init__(bot, wa_bot, contact_name)
+    def __init__(self, bot: WebDriver, phone_number: str, api_key: str, contact_name: str, max_attempts: int = 3):
+        super().__init__(bot, phone_number, api_key, contact_name)
         self.max_attempts = max_attempts
     
-    def handle(self, status_idx: int, total_status: int = 1, viewed_status: int = 0, **kwargs) -> str:
+    def handle(self, status_idx: int, **kwargs) -> str:
+        total_status = kwargs.get('total_status', 1)
+        viewed_status = kwargs.get('viewed_status', 0)
         return self._process_video_status(status_idx, total_status, viewed_status)
     
     def _process_video_status(self, status_idx: int, total_status: int, viewed_status: int) -> str:
@@ -128,7 +131,8 @@ class VideoStatusHandler(StatusHandler):
     def _send_loading_failure_message(self):
         """Send failure message when video can't be loaded after max attempts"""
         error_message = f"Unable to load {self.contact_name}'s video status. Use a better internet i guess."
-        self.wa_bot.send_error_notification(self.contact_name, "Video loading failed after multiple attempts. Check your internet connection.")
+        message = f"⚠️ Error with *{self.contact_name}*'s status:\n{error_message}"
+        send_message(message, self.phone_number, self.api_key)
 
 
 class TextStatusHandler(StatusHandler):
@@ -159,24 +163,23 @@ class OldMessageStatusHandler(StatusHandler):
         return msg + '\n'
 
 
-class StatusHandlerFactory:
-    """Factory class to create appropriate status handlers"""
+def status_handler(
+    check_status: Dict[str, bool], 
+    bot: WebDriver, 
+    phone_number: str, 
+    api_key: str, 
+    contact_name: str
+) -> Optional[StatusHandler]:
+    """Create the appropriate status handler based on status type"""
+    handler_map = {
+        "imgStatusValue": ImageStatusHandler,
+        "videoStatusValue": VideoStatusHandler,
+        "txtStatusValue": TextStatusHandler,
+        "audioStatusValue": AudioStatusHandler,
+        "old_messageValue": OldMessageStatusHandler
+    }
     
-    def __init__(self, bot: WebDriver, wa_bot, contact_name: str):
-        self.bot = bot
-        self.wa_bot = wa_bot
-        self.contact_name = contact_name
-        self._handlers = {
-            "imgStatusValue": ImageStatusHandler(bot, wa_bot, contact_name),
-            "videoStatusValue": VideoStatusHandler(bot, wa_bot, contact_name),
-            "txtStatusValue": TextStatusHandler(bot, wa_bot, contact_name),
-            "audioStatusValue": AudioStatusHandler(bot, wa_bot, contact_name),
-            "old_messageValue": OldMessageStatusHandler(bot, wa_bot, contact_name)
-        }
-    
-    def get_handler(self, check_status: Dict[str, bool]) -> Optional[StatusHandler]:
-        """Get the appropriate handler based on status type"""
-        for status_type, handler in self._handlers.items():
-            if check_status.get(status_type, False):
-                return handler
-        return None
+    for status_type, handler in handler_map.items():
+        if check_status.get(status_type, False):
+            return handler(bot, phone_number, api_key, contact_name)
+    return None

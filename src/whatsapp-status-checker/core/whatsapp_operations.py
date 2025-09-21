@@ -9,17 +9,16 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
 from typing import Optional, Dict, List
+from utils.helpers import wait_for
 from art import tprint, text2art
 from time import sleep
-import contextlib
-
 from vars import (
     login_instructions_xpath, profile_picture_status_xpath, profile_picture_img_xpath,
     default_profile_picture_xpath, search_field_xpath, bars_xpath, unviewed_status_xpath,
     status_exit_xpath, img_status_xpath, video_status_xpath, text_status_xpath,
     audio_status_xpath, oldMessage_status_xpath, status_uploader_name
 )
-from utils.helpers import wait_for
+import contextlib
 
 
 class WhatsAppOperations:
@@ -53,16 +52,19 @@ class WhatsAppOperations:
 
                         wait_until_whatsapp_login_instructions_disappear()
 
+                        # WhatsApp: Text
                         wait_for(self.bot, 3).until(EC.visibility_of_element_located(
-                            (By.XPATH, '//div[@class="_1dEQH _26aja"]'))) # WhatsApp: Text
+                            (By.XPATH, '//div[@class="_1dEQH _26aja"]')))
+                        # Loading your chats
                         wait_for(self.bot, 3).until(EC.invisibility_of_element(
-                            (By.XPATH, '//div[@class="x1c3i2sq x14ug900 xk82a7y x1sy10c2"]')))  # Loading your chats
+                            (By.XPATH, '//div[@class="x1c3i2sq x14ug900 xk82a7y x1sy10c2"]')))
+                        # Loading [%]
                         wait_for(self.bot, 3).until(EC.invisibility_of_element(
-                            (By.XPATH, '//div[@class="_3HbCE"]'))) # Loading [%]
+                            (By.XPATH, '//div[@class="_3HbCE"]')))
                         break
             print(text2art("Logged in successfully."), "✌")
-            from utils.helpers import gmtTime
-            tprint(f'Logged in at {gmtTime(self.timezone)}\n')
+            from utils.helpers import gmt_time
+            tprint(f'Logged in at {gmt_time(self.timezone)}\n')
         except TimeoutException:
             print('Took too long to login.')
             self.bot.quit()
