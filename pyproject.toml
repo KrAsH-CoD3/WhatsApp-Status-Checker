@@ -12,7 +12,7 @@ dependencies = [
     "pytz==2021.3",
     "selenium==4.8.2",
     "beautifulsoup4==4.13.5",
-    "callmebot @ git+https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git@refactor/codebase"
+    "callmebot @ git+https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git"
 ]
 
 [tool.setuptools.packages.find]
