@@ -53,7 +53,7 @@ class WhatsAppStatusApp:
     
     def get_user_choice(self) -> tuple[str, Optional[int]]:
         """Get user choice for notification vs auto-view mode"""
-        tprint("WhatsApp Status Viewer", 'rectangles')
+        tprint("Whatsapp Status Checker", 'rectangles')
         tprint('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ')
         # answer = input('===> ').strip().upper()
