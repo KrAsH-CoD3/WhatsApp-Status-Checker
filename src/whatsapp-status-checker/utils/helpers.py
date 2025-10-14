@@ -13,13 +13,10 @@ import requests
 import pytz
 import json
 
-from vars import bars_xpath, status_exit_xpath, scrolled_viewed_person_xpath
+from vars import bars_xpath, status_exit_xpath #, scrolled_viewed_person_xpath
 
-# Global cache for timezone and current time
-_timezone_cache: Optional[str] = None
-_current_time_cache: Optional[str] = None
-_cache_timestamp: Optional[float] = None
-CACHE_DURATION = 86_400  # Cache for 24 hours
+# Global timezone - set once at application startup
+_detected_timezone: Optional[str] = None
 
 
 def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
@@ -30,58 +27,44 @@ def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
 def get_timezone_from_ip() -> str:
     """Get timezone based on IP geolocation"""
     try:
-        # Using ipapi.co for timezone detection (free service)
-        response = requests.get("https://ipapi.co/json/", timeout=5)
+        response = requests.get("http://lumtest.com/myip.json", timeout=30)
         if response.status_code == 200:
-            data = response.json()
-            timezone = data.get('timezone')
+            data: dict[str, dict[str, str]] = response.json()
+            timezone: str = data.get('geo').get('tz')
             if timezone:
                 return timezone
-    except (requests.RequestException, json.JSONDecodeError, KeyError):
+    except (requests.RequestException, json.JSONDecodeError, KeyError, AttributeError):
         pass
     
-    # Fallback to UTC if IP detection fails
-    return "UTC"
+    # Fallback to GMT if IP detection fails
+    return "GMT"
 
 
-def get_cached_time(tz: Optional[str] = None) -> str:
-    """Get current time with caching to avoid repeated function calls"""
-    from time import time
+def initialize_timezone(tz: Optional[str] = None) -> str:
+    """Initialize timezone once at application startup"""
+    global _detected_timezone
     
-    global _timezone_cache, _current_time_cache, _cache_timestamp
-    
-    current_time = time()
-    
-    if tz is None:
-        if _timezone_cache is None:
-            _timezone_cache = get_timezone_from_ip()
-        effective_timezone = _timezone_cache
+    if tz is not None:
+        _detected_timezone = tz
     else:
-        effective_timezone = tz
+        _detected_timezone = get_timezone_from_ip()
     
-    # Check if cache is valid
-    if (_current_time_cache is not None and 
-        _cache_timestamp is not None and 
-        current_time - _cache_timestamp < CACHE_DURATION):
-        return _current_time_cache
-    
-    # Update cache
-    _current_time_cache = datetime.now(pytz.timezone(effective_timezone)).strftime("%I:%M:%S %p")
-    _cache_timestamp = current_time
-    
-    return _current_time_cache
+    return _detected_timezone
 
 
-def gmt_time(tz: Optional[str] = None) -> str:
-    """Get current time in specified timezone formatted as HH:MM:SS AM/PM
-    
-    Args:
-        tz: Timezone string (e.g., 'America/New_York'). If None, auto-detects from IP.
+def get_time() -> str:
+    """Get current time in the initialized timezone formatted as HH:MM:SS AM/PM
     
     Returns:
         Formatted time string (HH:MM:SS AM/PM)
     """
-    return get_cached_time(tz)
+    global _detected_timezone
+
+    if _detected_timezone is None:
+        # Fallback if not initialized
+        _detected_timezone = get_timezone_from_ip()
+    
+    return datetime.now(pytz.timezone(_detected_timezone)).strftime("%I:%M:%S %p")
 
 
 def _backnforward(bot: WebDriver, viewed_status: int):

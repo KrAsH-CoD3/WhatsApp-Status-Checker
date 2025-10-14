@@ -7,7 +7,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
-from utils.helpers import wait_for, gmt_time
+from utils.helpers import wait_for, get_time
 from selenium.webdriver.common.by import By
 from typing import Optional, Dict, List
 from art import tprint, text2art
@@ -16,7 +16,7 @@ from vars import (
     login_instructions_xpath, profile_picture_status_xpath, profile_picture_img_xpath,
     default_profile_picture_xpath, search_field_xpath, bars_xpath, unviewed_status_xpath,
     status_exit_xpath, img_status_xpath, video_status_xpath, text_status_xpath,
-    audio_status_xpath, oldMessage_status_xpath, status_uploader_name
+    audio_status_xpath, oldMessage_status_xpath
 )
 import contextlib
 
@@ -24,9 +24,8 @@ import contextlib
 class WhatsAppOperations:
     """Handles WhatsApp web operations and status detection"""
     
-    def __init__(self, bot: WebDriver, timezone: str):
+    def __init__(self, bot: WebDriver):
         self.bot = bot
-        self.timezone = timezone
     
     def open_whatsapp(self) -> None:
         """Open WhatsApp Web and handle login process"""
@@ -63,7 +62,7 @@ class WhatsAppOperations:
                             (By.XPATH, '//div[@class="_3HbCE"]')))
                         break
             print(text2art("Logged in successfully."), "✌")
-            tprint(f'Logged in at {gmt_time()}\n')
+            tprint(f'Logged in at {get_time()}\n')
         except TimeoutException:
             print('Took too long to login.')
             self.bot.quit()

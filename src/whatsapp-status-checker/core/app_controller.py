@@ -5,16 +5,16 @@ Handles the main application logic and flow
 
 from core.status_handlers import status_handler, VideoStatusHandler
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from utils import get_time, reminderFn, initialize_timezone
 from core.whatsapp_operations import WhatsAppOperations
 from core.webdriver_manager import BotManager
 from urllib3.exceptions import ProtocolError
 from selenium.common.exceptions import (
     TimeoutException, 
     NoSuchElementException, 
-    NoSuchWindowException, 
+    # NoSuchWindowException,
     WebDriverException
 )
-from utils import gmt_time, reminderFn
 from callmebot import send_message
 from typing import Optional, Dict
 from art import tprint, text2art
@@ -28,7 +28,7 @@ import threading
 class WhatsAppStatusApp:
     """Main application controller for WhatsApp Status Checker"""
     
-    def __init__(self, phone_number: str, api_key: str, status_uploader_name: str, timezone: str):
+    def __init__(self, phone_number: str, api_key: str, status_uploader_name: str, timezone: Optional[str]):
         self.phone_number = phone_number
         self.api_key = api_key
         self.status_uploader_name = status_uploader_name
@@ -42,14 +42,14 @@ class WhatsAppStatusApp:
     
     def initialize(self):
         """Initialize all application components"""
-        self.bot_manager = BotManager(driverpath)
-        self.bot = self.bot_manager.start_chrome()
-        self.bot.set_window_size(700, 730)
+        self.detected_timezone = initialize_timezone(self.timezone)
+        self.bot = BotManager().start_chrome(driverpath)
+        self.whatsapp_ops = WhatsAppOperations(self.bot)
+        self.stop_event = threading.Event()
         self.bot.set_window_position(676, 0)
-        self.whatsapp_ops = WhatsAppOperations(self.bot, self.timezone)
+        self.bot.set_window_size(700, 730)
         pyautogui.FAILSAFE = False
         pyautogui.press('esc')
-        self.stop_event = threading.Event()
     
     def get_user_choice(self) -> tuple[str, Optional[int]]:
         """Get user choice for notification vs auto-view mode"""
@@ -94,7 +94,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
             try:
                 self.whatsapp_ops.wait_for_status_and_click()
                 time_diff = float("{:.2f}".format(perf_counter())) - start
-                timezone = gmt_time()
+                timezone = get_time()
                 
                 if time_diff <= 0.2:
                     tprint(f"\n{self.status_uploader_name} has a status.\n{timezone}")
@@ -130,19 +130,16 @@ Enter "Y" to get notified or "N" to view them automatically: ')
             loop_range = range(1, unviewed_status + 1)
             is_more_than_one_status = unviewed_status > 1
 
-            # Construct message to send 
             message += f'{self.status_uploader_name}\nUnviewed Status update' + \
                 ("s are " if is_more_than_one_status else " is ") + \
                 f'{unviewed_status} out of {total_status}.\n'
             
-            # Get status type xpaths for detection
             status_type_xpaths = self.whatsapp_ops.get_status_type_xpaths()
             
             for status_idx in loop_range:
                 if status_idx == 1: 
                     tprint(message[:-1])
                 
-                # Detect status type using ThreadPoolExecutor
                 self.stop_event.clear()
                 executor = ThreadPoolExecutor(max_workers=5)
                 tasks = [executor.submit(self.whatsapp_ops.check_status_type, xpath, self.stop_event) for xpath in status_type_xpaths]
@@ -153,7 +150,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                     if check_status is not None:
                         break
 
-                executor.shutdown(wait=False) # Shutdown the executor
+                executor.shutdown(wait=False)
 
                 # Use simple factory pattern to handle the detected status type
                 if check_status is not None:
@@ -209,13 +206,13 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                 
         except KeyboardInterrupt:
             print("Keyboard Interrupt!")
-        except NoSuchElementException:
-            print("Element not found!")
-        except WebDriverException:
-            print("Webdriver Chrome Browser Closed!")
-        except ProtocolError:
-            print("Protocol Error!")
+        except NoSuchElementException as e:
+            print(f"Element not found!: {e}")
+        except WebDriverException as e:
+            print(f"Webdriver Chrome Browser Closed!: {e}")
+        except ProtocolError as e:
+            print(f"Protocol Error!: {e}")
         except Exception as e:
-            print("An error occurred:", e)
+            print(f"An error occurred: {e}")
         finally:
             print("Program ended!")

@@ -9,8 +9,6 @@ from art import set_default
 
 
 def main():
-    """Main entry point"""
-
     # Setup
     ensure_chromedriver()
     set_default("fancy99")
