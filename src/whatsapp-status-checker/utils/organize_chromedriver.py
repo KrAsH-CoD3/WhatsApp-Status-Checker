@@ -49,7 +49,7 @@ def _get_chromedriver_link(platform: str) -> str:
         str: The download link for the specified ChromeDriver.
     """
     from bs4 import BeautifulSoup
-    from get_chrome_version import get_chromebrowser_version
+    from .get_chrome_version import get_chromebrowser_version
 
     url = "https://googlechromelabs.github.io/chrome-for-testing/"
     response = requests.get(url)
@@ -64,14 +64,17 @@ def _get_chromedriver_link(platform: str) -> str:
         raise Exception("Could not find the 'Stable' section on the webpage.")
     
     chromedriver_full_version = stable_section.find('p').text.strip().split(" ")[1]
-    chromedriver_version = chromedriver_full_version.split(".")[0]
-    chrome_version = get_chromebrowser_version()
+    chromedriver_version = int(chromedriver_full_version.split('.')[0])
+    
+    chrome_version_full_version = get_chromebrowser_version()
+    chrome_version: int = int(chrome_version_full_version.split('.')[0])
 
-    if not ((int(chromedriver_version) - 1) <= int(chrome_version.split(".")[0]) <= (int(chromedriver_version) + 1)):
+    if (chrome_version < chromedriver_version):
         raise NotSameVersionException(f"""
-Chromedriver version {chromedriver_full_version} is not compatible with Chrome version {chrome_version}.
+Chromedriver version {chromedriver_full_version} is not compatible with Chrome version {chrome_version_full_version}.
 Update your Chrome browser to the latest version."""
         )
+    
     return f"https://storage.googleapis.com/chrome-for-testing-public/{chromedriver_full_version}/{platform}/chromedriver-{platform}.zip"
 
 
@@ -87,8 +90,9 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
 
     output_dir = BASE_DIR / 'driver'
     output_dir.mkdir(exist_ok=True)
+    chrome_driver_version = download_url.split("/")[-2]
     
-    print(f"Downloading ChromeDriver for {platform_arch} from {download_url}...")
+    print(f"Downloading Chrome Driver {chrome_driver_version} for {platform_arch}...")
     
     # Download the chromedriver zip file
     response = requests.get(download_url, stream=True)
