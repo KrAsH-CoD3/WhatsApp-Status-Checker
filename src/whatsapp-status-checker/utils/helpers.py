@@ -7,10 +7,16 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from datetime import datetime
+from typing import Optional
 from time import sleep
+import requests
 import pytz
+import json
 
-from vars import bars_xpath, status_exit_xpath, scrolled_viewed_person_xpath
+from vars import bars_xpath, status_exit_xpath #, scrolled_viewed_person_xpath
+
+# Global timezone - set once at application startup
+_detected_timezone: Optional[str] = None
 
 
 def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
@@ -18,9 +24,47 @@ def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
     return WebDriverWait(bot, seconds)
 
 
-def gmt_time(tz: str) -> str:
-    """Get current time in specified timezone formatted as HH:MM:SS AM/PM"""
-    return datetime.now(pytz.timezone(tz)).strftime("%I:%M:%S %p")
+def get_timezone_from_ip() -> str:
+    """Get timezone based on IP geolocation"""
+    try:
+        response = requests.get("http://lumtest.com/myip.json", timeout=30)
+        if response.status_code == 200:
+            data: dict[str, dict[str, str]] = response.json()
+            timezone: str = data.get('geo').get('tz')
+            if timezone:
+                return timezone
+    except (requests.RequestException, json.JSONDecodeError, KeyError, AttributeError):
+        pass
+    
+    # Fallback to GMT if IP detection fails
+    return "GMT"
+
+
+def initialize_timezone(tz: Optional[str] = None) -> str:
+    """Initialize timezone once at application startup"""
+    global _detected_timezone
+    
+    if tz is not None:
+        _detected_timezone = tz
+    else:
+        _detected_timezone = get_timezone_from_ip()
+    
+    return _detected_timezone
+
+
+def get_time() -> str:
+    """Get current time in the initialized timezone formatted as HH:MM:SS AM/PM
+    
+    Returns:
+        Formatted time string (HH:MM:SS AM/PM)
+    """
+    global _detected_timezone
+
+    if _detected_timezone is None:
+        # Fallback if not initialized
+        _detected_timezone = get_timezone_from_ip()
+    
+    return datetime.now(pytz.timezone(_detected_timezone)).strftime("%I:%M:%S %p")
 
 
 def _backnforward(bot: WebDriver, viewed_status: int):

@@ -19,8 +19,7 @@ from vars import bot_profile_name, bot_profile_user_data_dir
 class BotManager:
     """Manages Chrome WebDriver lifecycle with proper cleanup"""
     
-    def __init__(self, driver_path: str) -> None:
-        self.driver_path: str = driver_path
+    def __init__(self) -> None:
         self.driver = None
         self.service = None
         self.options = None
@@ -34,9 +33,9 @@ class BotManager:
         except (psutil.NoSuchProcess, psutil.AccessDenied):
             return []
     
-    def start_chrome(self) -> WebDriver:
+    def start_chrome(self, driver_path: str) -> WebDriver:
         """Start Chrome browser with configured options"""
-        self.service = Service(executable_path=self.driver_path)
+        self.service = Service(executable_path=driver_path)
         self.options = Options()
         
         # Configure Chrome options

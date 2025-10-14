@@ -1,5 +1,5 @@
 """
-WhatsApp Status Checker - Main Entry Point
+WhatsApp Status Checker
 """
 
 from config import NUMBER, CALLMEBOT_APIKEY, status_uploader_name, timezone
@@ -9,8 +9,6 @@ from art import set_default
 
 
 def main():
-    """Main entry point"""
-
     # Setup
     ensure_chromedriver()
     set_default("fancy99")
