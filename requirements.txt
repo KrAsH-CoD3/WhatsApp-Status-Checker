@@ -1,7 +1,7 @@
 # REQUIRED PIP INSTALLATIONS
 
 # Enter the command in your termial in this project folder
-# python -m venv wa-viewer-env
+# python -m venv wsc-venv
 # pip install -r requirements.txt
 
 art>=5.9

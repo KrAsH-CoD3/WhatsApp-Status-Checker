@@ -5,15 +5,18 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "art==5.9",
+    "art>=5.9",
+    "beautifulsoup4>=4.13.5",
+    "callmebot",
     "ipykernel>=6.30.1",
     "pyautogui>=0.9.54",
     "python-dotenv>=1.1.1",
-    "pytz==2021.3",
-    "selenium==4.8.2",
-    "beautifulsoup4==4.13.5",
-    "callmebot @ git+https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git"
+    "pytz>=2021.3",
+    "selenium>=4.8.2",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.uv.sources]
+callmebot = { git = "https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git" }
