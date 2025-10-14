@@ -2,7 +2,7 @@
 
 ![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
 
-The WhatsApp Status Checker views a specific WhatsApp contact status as soon as it is uploaded, send a WhatsApp message about the status type(Image, Video, Text, or  Audio) and the time at which it was viewed OR alternatively always check and notify you if a status is uploaded. You get notified every 30minutes, 1hour, 3hours or 6 hours depending on your choice.
+WhatsApp Status Checker continuously views a specific contact status as soon as it is uploaded, send you a message about the status type(Image, Video, Text, or  Audio) and the time at which it was viewed OR alternatively always monitor the specific contact status and notify you if a status is uploaded. You get notified every 30minutes, 1hour, 3hours or 6 hours depending on your choice.
 
 > _**NOTE:** WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe._
 
@@ -10,7 +10,7 @@ The WhatsApp Status Checker views a specific WhatsApp contact status as soon as 
 
 ![WhatsApp Status Checker Demo](static/images/Demo.webp)
 
-**Note**: If the animation doesn't play, you can [download the HD version here](static/videos/Demo.mp4) to view locally.
+View HD Demo Video [here](static/videos/Demo.mp4).
 
 # Requirements
 
