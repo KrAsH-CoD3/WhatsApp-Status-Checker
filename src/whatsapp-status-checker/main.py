@@ -1,5 +1,5 @@
 """
-WhatsApp Status Checker - Main Entry Point
+WhatsApp Status Checker
 """
 
 from config import NUMBER, CALLMEBOT_APIKEY, status_uploader_name, timezone
