@@ -94,10 +94,11 @@ Enter "Y" to get notified or "N" to view them automatically: ')
             try:
                 self.whatsapp_ops.wait_for_status_and_click()
                 time_diff = float("{:.2f}".format(perf_counter())) - start
+                timezone = gmt_time()
                 
                 if time_diff <= 0.2:
-                    tprint(f"\n{self.status_uploader_name} has a status.\n{gmt_time(self.timezone)}")
-                    message = f"🔔 *{self.status_uploader_name}* has a new status!\n📅 {gmt_time(self.timezone)}"
+                    tprint(f"\n{self.status_uploader_name} has a status.\n{timezone}")
+                    message = f"🔔 *{self.status_uploader_name}* has a new status!\n📅 {timezone}"
                     message = self.format_message(message)
                     send_message(message, self.phone_number, self.api_key)
                 else:

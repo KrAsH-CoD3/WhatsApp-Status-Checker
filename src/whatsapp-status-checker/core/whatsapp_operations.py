@@ -7,9 +7,9 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
+from utils.helpers import wait_for, gmt_time
 from selenium.webdriver.common.by import By
 from typing import Optional, Dict, List
-from utils.helpers import wait_for
 from art import tprint, text2art
 from time import sleep
 from vars import (
@@ -63,8 +63,7 @@ class WhatsAppOperations:
                             (By.XPATH, '//div[@class="_3HbCE"]')))
                         break
             print(text2art("Logged in successfully."), "✌")
-            from utils.helpers import gmt_time
-            tprint(f'Logged in at {gmt_time(self.timezone)}\n')
+            tprint(f'Logged in at {gmt_time()}\n')
         except TimeoutException:
             print('Took too long to login.')
             self.bot.quit()

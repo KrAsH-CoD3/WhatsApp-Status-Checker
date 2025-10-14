@@ -7,10 +7,19 @@ from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.common.by import By
 from datetime import datetime
+from typing import Optional
 from time import sleep
+import requests
 import pytz
+import json
 
 from vars import bars_xpath, status_exit_xpath, scrolled_viewed_person_xpath
+
+# Global cache for timezone and current time
+_timezone_cache: Optional[str] = None
+_current_time_cache: Optional[str] = None
+_cache_timestamp: Optional[float] = None
+CACHE_DURATION = 86_400  # Cache for 24 hours
 
 
 def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
@@ -18,9 +27,61 @@ def wait_for(bot: WebDriver, seconds: int) -> WebDriverWait:
     return WebDriverWait(bot, seconds)
 
 
-def gmt_time(tz: str) -> str:
-    """Get current time in specified timezone formatted as HH:MM:SS AM/PM"""
-    return datetime.now(pytz.timezone(tz)).strftime("%I:%M:%S %p")
+def get_timezone_from_ip() -> str:
+    """Get timezone based on IP geolocation"""
+    try:
+        # Using ipapi.co for timezone detection (free service)
+        response = requests.get("https://ipapi.co/json/", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            timezone = data.get('timezone')
+            if timezone:
+                return timezone
+    except (requests.RequestException, json.JSONDecodeError, KeyError):
+        pass
+    
+    # Fallback to UTC if IP detection fails
+    return "UTC"
+
+
+def get_cached_time(tz: Optional[str] = None) -> str:
+    """Get current time with caching to avoid repeated function calls"""
+    from time import time
+    
+    global _timezone_cache, _current_time_cache, _cache_timestamp
+    
+    current_time = time()
+    
+    if tz is None:
+        if _timezone_cache is None:
+            _timezone_cache = get_timezone_from_ip()
+        effective_timezone = _timezone_cache
+    else:
+        effective_timezone = tz
+    
+    # Check if cache is valid
+    if (_current_time_cache is not None and 
+        _cache_timestamp is not None and 
+        current_time - _cache_timestamp < CACHE_DURATION):
+        return _current_time_cache
+    
+    # Update cache
+    _current_time_cache = datetime.now(pytz.timezone(effective_timezone)).strftime("%I:%M:%S %p")
+    _cache_timestamp = current_time
+    
+    return _current_time_cache
+
+
+def gmt_time(tz: Optional[str] = None) -> str:
+    """Get current time in specified timezone formatted as HH:MM:SS AM/PM
+    
+    Args:
+        tz: Timezone string (e.g., 'America/New_York'). If None, auto-detects from IP.
+    
+    Returns:
+        Formatted time string (HH:MM:SS AM/PM)
+    """
+    return get_cached_time(tz)
 
 
 def _backnforward(bot: WebDriver, viewed_status: int):
