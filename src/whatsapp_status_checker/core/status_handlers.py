@@ -4,14 +4,14 @@ Status Handler classes implementing Strategy Pattern for different WhatsApp stat
 
 from selenium.common.exceptions import NoSuchElementException, TimeoutException
 from selenium.webdriver.support import expected_conditions as EC
-from utils.helpers import wait_for, handle_status_not_loaded
+from ..utils.helpers import wait_for, handle_status_not_loaded
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from abc import ABC, abstractmethod
 from callmebot import send_message
 from typing import Optional, Dict
 from art import tprint
-from vars import (
+from ..vars import (
     loading_icon_in_status_xpath, pause_btn_xpath, playing_bar_xpath, 
     paused_bar_xpath, NUMBER, #_status_not_loaded
 )

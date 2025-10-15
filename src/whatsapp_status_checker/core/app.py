@@ -1,14 +1,13 @@
 """
 WhatsApp Status Checker Application
-Contains the main application orchestration class.
 """
 
-from utils import get_time, calculate_next_reminder_time, initialize_timezone
-from config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
-from core.status_handlers import status_handler, VideoStatusHandler
+from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
+from ..config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
+from .status_handlers import status_handler, VideoStatusHandler
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from core.whatsapp_operations import WhatsAppOperations
-from core.webdriver_manager import BotManager
+from .whatsapp_operations import WhatsAppOperations
+from .webdriver_manager import BotManager
 from urllib3.exceptions import ProtocolError
 from selenium.common.exceptions import (
     TimeoutException, 
@@ -17,10 +16,10 @@ from selenium.common.exceptions import (
     WebDriverException
 )
 from callmebot import send_message
-from typing import Optional, Dict
 from art import tprint, text2art
 from time import perf_counter
-from vars import driverpath
+from ..vars import driverpath
+from typing import Optional
 import contextlib
 import pyautogui
 import threading
@@ -47,7 +46,7 @@ class WhatsAppStatusChecker:
     
     def initialize(self):
         """Initialize all application components"""
-        from utils import ensure_chromedriver
+        from ..utils import ensure_chromedriver
         from art import set_default
         
         

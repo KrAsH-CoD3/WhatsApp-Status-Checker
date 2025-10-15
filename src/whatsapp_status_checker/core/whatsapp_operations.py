@@ -7,12 +7,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.keys import Keys
-from utils.helpers import wait_for, get_time
+from ..utils.helpers import wait_for, get_time
 from selenium.webdriver.common.by import By
 from typing import Optional, Dict, List
 from art import tprint, text2art
 from time import sleep
-from vars import (
+from ..vars import (
     login_instructions_xpath, profile_picture_status_xpath, profile_picture_img_xpath,
     default_profile_picture_xpath, search_field_xpath, bars_xpath, unviewed_status_xpath,
     status_exit_xpath, img_status_xpath, video_status_xpath, text_status_xpath,

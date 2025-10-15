@@ -13,7 +13,7 @@ import requests
 import pytz
 import json
 
-from vars import bars_xpath, status_exit_xpath #, scrolled_viewed_person_xpath
+from ..vars import bars_xpath, status_exit_xpath #, scrolled_viewed_person_xpath
 
 # Global timezone - set once at application startup
 _detected_timezone: Optional[str] = None
@@ -103,7 +103,7 @@ def handle_status_not_loaded(bot: WebDriver, total_status: int, viewed_status: i
 
 def _click_profile_picture(bot: WebDriver):
     """Click profile picture to view status"""
-    from vars import profile_picture_img_xpath, default_profile_picture_xpath
+    from ..vars import profile_picture_img_xpath, default_profile_picture_xpath
     
     try:
         bot.find_element(By.XPATH, profile_picture_img_xpath).click()
@@ -113,7 +113,7 @@ def _click_profile_picture(bot: WebDriver):
 
 def scroll(bot: WebDriver, contact_name: str) -> None:
     """Scroll to find contact in status list"""
-    from vars import status_list_page_xpath
+    from ..vars import status_list_page_xpath
     
     bot.find_element(By.XPATH, status_list_page_xpath).click()  # Enter Status Screen
     status_container_xpath: str = '//*[@class="g0rxnol2 ggj6brxn m0h2a7mj lb5m6g5c lzi2pvmc ag5g9lrv jhwejjuw ny7g4cd4"]'
