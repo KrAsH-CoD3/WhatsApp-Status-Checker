@@ -28,13 +28,13 @@ import threading
 class WhatsAppStatusApp:
     """Main application controller for WhatsApp Status Checker"""
     
-    def __init__(self, phone_number: str, api_key: str, status_uploader_name: str, timezone: Optional[str]):
+    def __init__(self, phone_number: str, api_key: str, STATUS_UPLOADER_NAME: str, timezone: Optional[str]):
         self.phone_number = phone_number
         self.api_key = api_key
-        self.status_uploader_name = status_uploader_name
+        self.STATUS_UPLOADER_NAME = STATUS_UPLOADER_NAME
         self.timezone = timezone
+        # Application components        
         
-        # Application components
         self.bot = None
         self.whatsapp_ops = None
         self.stop_event = None
@@ -97,8 +97,8 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                 timezone = get_time()
                 
                 if time_diff <= 0.2:
-                    tprint(f"\n{self.status_uploader_name} has a status.\n{timezone}")
-                    message = f"🔔 *{self.status_uploader_name}* has a new status!\n📅 {timezone}"
+                    tprint(f"\n{self.STATUS_UPLOADER_NAME} has a status.\n{timezone}")
+                    message = f"🔔 *{self.STATUS_UPLOADER_NAME}* has a new status!\n📅 {timezone}"
                     message = self.format_message(message)
                     send_message(message, self.phone_number, self.api_key)
                 else:
@@ -109,7 +109,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
     def auto_view_status(self, message: str = "") -> Optional[str]:
         """Main function to automatically view and process WhatsApp statuses"""
         self.whatsapp_ops.open_whatsapp()
-        self.whatsapp_ops.search_contact(self.status_uploader_name)
+        self.whatsapp_ops.search_contact(self.STATUS_UPLOADER_NAME)
         
         while True:
             # Wait for status and click profile picture
@@ -130,7 +130,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
             loop_range = range(1, unviewed_status + 1)
             is_more_than_one_status = unviewed_status > 1
 
-            message += f'{self.status_uploader_name}\nUnviewed Status update' + \
+            message += f'{self.STATUS_UPLOADER_NAME}\nUnviewed Status update' + \
                 ("s are " if is_more_than_one_status else " is ") + \
                 f'{unviewed_status} out of {total_status}.\n'
             
@@ -157,7 +157,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                     handler = status_handler(
                         check_status, self.bot, 
                         self.phone_number, self.api_key, 
-                        self.status_uploader_name
+                        self.STATUS_UPLOADER_NAME
                     )
                     if handler is not None:
                         if isinstance(handler, VideoStatusHandler):
@@ -180,7 +180,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                     check_status = None
                     self.whatsapp_ops.navigate_to_next_status(viewed_status)
                 else:  # Status view completed, Exit status
-                    self.whatsapp_ops.exit_status_view(self.status_uploader_name)
+                    self.whatsapp_ops.exit_status_view(self.STATUS_UPLOADER_NAME)
                     tprint(block_line)
         
             # Send to Self
@@ -191,7 +191,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
     
     def format_message(self, message: str) -> str:
         """Format message to bold the contact name"""
-        return message.replace(self.status_uploader_name, f"*{self.status_uploader_name}*")
+        return message.replace(self.STATUS_UPLOADER_NAME, f"*{self.STATUS_UPLOADER_NAME}*")
 
     def run(self):
         """Main application run method"""

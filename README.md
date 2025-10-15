@@ -53,7 +53,7 @@ Make sure your installed Google Chrome Browser is the latest.
       > See [CallMeBot] for detailed information.
 
   - Then navigate to `src/whatsapp-status-checker` directory, open `config.py`.
-    - Set `status_uploader_name` (The contact name you want to view his/her status. Make sure it is exactly how it is saved on your phone(Case Sensitive)).
+    - Set `STATUS_UPLOADER_NAME` (The contact name you want to view his/her status. Make sure it is exactly how it is saved on your phone(Case Sensitive)).
     - Set `timezone` to your location time zone. (See [TODO] for more information).
   
   - <details>
