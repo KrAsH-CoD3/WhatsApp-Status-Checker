@@ -68,7 +68,8 @@ class WhatsAppStatusChecker:
         tprint("Whatsapp Status Checker", 'rectangles')
         tprint('\nDo you want to get notified about status or view them automatically?\n\
 Enter "Y" to get notified or "N" to view them automatically: ')
-        answer = input('===> ').strip().upper()
+        # answer = input('===> ').strip().upper()
+        answer = "N"
         
         input_count = 1
         reminder_time = None

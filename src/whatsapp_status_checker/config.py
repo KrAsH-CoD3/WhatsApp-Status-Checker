@@ -8,4 +8,11 @@ NUMBER: str = env_variable.get("MY_NUMBER")  # Your WhatsApp Number with country
 CALLMEBOT_APIKEY: str = env_variable.get("CALLMEBOT_APIKEY")  # CallMeBot API Key
 
 STATUS_UPLOADER_NAME: str = env_variable.get("STATUS_UPLOADER_NAME") # As it is saved on your phone(Case Sensitive)
+# STATUS_UPLOADER_NAME: str = "Tom J" # As it is saved on your phone(Case Sensitive)
+# STATUS_UPLOADER_NAME: str = "Ipadeola" # As it is saved on your phone(Case Sensitive)
+# STATUS_UPLOADER_NAME: str = "Lawrence" # As it is saved on your phone(Case Sensitive)
+# STATUS_UPLOADER_NAME: str = "Acefads" # As it is saved on your phone(Case Sensitive)
+# STATUS_UPLOADER_NAME: str = "Emeka" # As it is saved on your phone(Case Sensitive)
+STATUS_UPLOADER_NAME: str = "Liam" # As it is saved on your phone(Case Sensitive)
+
 TIMEZONE: Optional[str] = env_variable.get("TIMEZONE") # Example: "Africa/Lagos", Specify your timezone manually
