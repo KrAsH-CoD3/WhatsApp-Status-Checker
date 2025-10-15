@@ -1,4 +1,4 @@
-from core import WhatsAppStatusChecker
+from .core import WhatsAppStatusChecker
 
 __all__ = [
     "WhatsAppStatusChecker"
