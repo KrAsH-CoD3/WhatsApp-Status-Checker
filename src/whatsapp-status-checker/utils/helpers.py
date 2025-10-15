@@ -141,8 +141,8 @@ def scroll(bot: WebDriver, contact_name: str) -> None:
                 continue
 
 
-def reminderFn(ttime_diff: float, sstart: float, reminder_time: int) -> float:
-    """Calculate reminder time based on configured interval"""
+def calculate_next_reminder_time(ttime_diff: float, sstart: float, reminder_time: int) -> float:
+    """Calculate next reminder time based on configured interval"""
     if (
        reminder_time == 1 and ttime_diff >= 1_800  # Every 30 Mins
        or reminder_time == 2 and ttime_diff >= 3_600  # Every 1 Hour
