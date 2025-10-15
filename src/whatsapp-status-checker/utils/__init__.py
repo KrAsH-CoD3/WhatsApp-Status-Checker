@@ -9,7 +9,7 @@ from .helpers import (
     initialize_timezone,
     handle_status_not_loaded,
     scroll,
-    reminderFn
+    calculate_next_reminder_time
 )
 
 from .organize_chromedriver import ensure_chromedriver
@@ -21,6 +21,6 @@ __all__ = [
     'initialize_timezone',
     'handle_status_not_loaded',
     'scroll',
-    'reminderFn',
+    'calculate_next_reminder_time',
     'ensure_chromedriver'
 ]

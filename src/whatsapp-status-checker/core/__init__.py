@@ -14,6 +14,7 @@ from .status_handlers import (
 
 from .webdriver_manager import BotManager
 from .whatsapp_operations import WhatsAppOperations
+from .app import WhatsAppStatusChecker
 
 __all__ = [
     'StatusHandler',
@@ -24,5 +25,6 @@ __all__ = [
     'VideoStatusHandler',
     'status_handler',
     'BotManager',
-    'WhatsAppOperations'
+    'WhatsAppOperations',
+    'WhatsAppStatusChecker'
 ]
