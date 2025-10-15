@@ -3,9 +3,9 @@ WhatsApp Status Checker Application Controller
 Handles the main application logic and flow
 """
 
+from utils import get_time, calculate_next_reminder_time, initialize_timezone
 from core.status_handlers import status_handler, VideoStatusHandler
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from utils import get_time, reminderFn, initialize_timezone
 from core.whatsapp_operations import WhatsAppOperations
 from core.webdriver_manager import BotManager
 from urllib3.exceptions import ProtocolError
@@ -102,7 +102,7 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                     message = self.format_message(message)
                     send_message(message, self.phone_number, self.api_key)
                 else:
-                    start = reminderFn(time_diff, start, reminder_time)
+                    start = calculate_next_reminder_time(time_diff, start, reminder_time)
             except (TimeoutException, NoSuchElementException):
                 continue
     
