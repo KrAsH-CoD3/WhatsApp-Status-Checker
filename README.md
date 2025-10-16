@@ -10,34 +10,7 @@ WhatsApp Status Checker continuously views a specific contact status as soon as 
 
 ![WhatsApp Status Checker Demo](static/images/Demo.webp)
 
-View HD Demo Video [here](static/videos/Demo.mp4).
-
-# Requirements
-
-See [requirements.txt]
-
-
-# Installation
-
-  - Download or clone this project.
-  - Open CMD from the project directory.
-  
-  - <details>
-      <summary>Using UV</summary>
-      
-      - Install UV if you haven't already using `pip install uv`.
-      - Create a Virtual Environment using `uv venv`.
-      - Activate your virtual environment using `.venv\Scripts\activate`.
-      - Install dependencies using `uv add -r requirements.txt && uv sync`.
-    </details>
-    
-  - <details>
-      <summary>Using PIP</summary>
-      
-      - Create a Virtual Environment using `py -m venv .venv`.
-      - Activate your virtual environment using `.venv\Scripts\activate`.
-      - Install dependencies using `pip install -r requirements.txt`.
-    </details>
+View HD Demo Video [here](static/videos/Demo.mp4)
 
 ## WhatsApp Messenger
 
@@ -46,31 +19,46 @@ See [requirements.txt]
 # How to use
 
 Make sure your installed Google Chrome Browser is the latest.
-  
+
   - Create a `.env` file.
     - Set `NUMBER` to your phone number. (Your WhatsApp Number e.g: 234xxxxxxxxxx)
     - Set `CALLMEBOT_APIKEY` to your API Key. (API Key provided by CallMeBot)
       > See [CallMeBot] for detailed information.
-
-  - Then navigate to `src/whatsapp-status-checker` directory, open `config.py`.
-    - Set `STATUS_UPLOADER_NAME` (The contact name you want to view his/her status. Make sure it is exactly how it is saved on your phone(Case Sensitive)).
-    - Set `timezone` to your location time zone. (See [TODO] for more information).
+    - Set `STATUS_UPLOADER_NAME` contact you want to view their status. 
+      > NOTE: As it is saved on your phone(Case Sensitive).
+    - Optionally, set `TIMEZONE` to your preferred timezone. Time will be displayed in this timezone.
+      > If not set, it resolves to IP timezone.
   
+  ## Installation
   - <details>
-      <summary>Run Program</summary>
+      <summary>Using UV</summary>
       
-      <details>
-        <summary>Using UV</summary>
-        
-        uv run main.py
-      </details>
-
-      <details>
-        <summary>Using Python</summary>
-
-        py main.py
-      </details>
+      - Install UV if you haven't already using `pip install uv`
+      - Initialize and create virtual environment using `uv init . && uv venv`
+      - Install package using `uv add git+https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker.git`
     </details>
+    
+  - <details>
+      <summary>Using PIP</summary>
+      
+      - Create a Virtual Environment using `py -m venv .venv`
+      - Activate your virtual environment using `.venv\Scripts\activate`
+      - Install dependencies using `pip install git+https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker.git`
+    </details>
+  
+  ## Usage
+  ```python
+  from whatsapp_status_checker import WhatsAppStatusChecker
+
+  def main():
+      # Create and run application
+      app = WhatsAppStatusChecker()
+      app.run()
+
+  if __name__ == "__main__":
+      main()
+  ```
+  </details>
 
 
 ## Screenshots
@@ -96,9 +84,29 @@ Make sure your installed Google Chrome Browser is the latest.
 - Please [![⭐ Star Project](https://img.shields.io/badge/Star-Project-blue?logo=github)]() to encourage developer(s).
 - [Fork], do your thing and create a PR.
 
+## Issues and Bug Reports
+
+Found a bug or have a feature request? Please:
+
+1. **Check existing issues**: [Browse issues] to see if it’s already reported.
+2. **Open a new issue**: [Create one here] with:
+   - A clear title
+   - Description (and steps to reproduce, if a bug)
+   - Expected vs actual behavior
+   - Screenshots or error logs, if relevant
+   - Environment (OS, Python, Chrome version)
+3. **Use the template**: Please use the provided bug report template.
+4. **Feature requests**: Explain what you want, why it’s useful, and any suggestions.
+
+
+## Discussion
+
+Have feedback or suggestions? Open an [issue] or join discussions on new features, improvements, and use cases. Your input helps shape the project!
+
 ## TODO
 - [ ] PyPi Package.
     - [x] Convert to a package.
+    - [x] pip install package.
     - [ ] publish to PyPi.
 - [ ] Automatically
   - [x] Use specified timezone othwerwise automatically get it.
@@ -113,13 +121,15 @@ Make sure your installed Google Chrome Browser is the latest.
     - [x] Use the newly chrome profile(if just created for the first time).
     - [x] Use existing chrome profile(if already created).
 
-[requirements.txt]: <requirements.txt>
 [WhatsApp Web]: <https://web.whatsapp.com/>
 [Fork]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/fork/>
 [CallMeBot]: <https://www.callmebot.com/blog/free-api-whatsapp-messages/>
 [ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
 [WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
 [WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
+[Create one here]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues/new>
+[Browse issues]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues>
+[issue]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues>
 [REPO]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker>
 [Todo]: <README.md#TODO>
 
