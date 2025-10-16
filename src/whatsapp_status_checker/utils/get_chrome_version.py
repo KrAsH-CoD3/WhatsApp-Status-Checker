@@ -1,4 +1,5 @@
-import platform, subprocess
+import platform
+import subprocess
 
 def get_chrome_version_windows():
     """Get the installed version of Google Chrome on Windows."""

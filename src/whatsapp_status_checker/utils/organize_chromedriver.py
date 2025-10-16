@@ -92,7 +92,7 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
     output_dir.mkdir(exist_ok=True)
     chrome_driver_version = download_url.split("/")[-2]
     
-    print(f"Downloading Chrome Driver {chrome_driver_version} for {platform_arch}...")
+    print(f"Downloading Chrome Driver {chrome_driver_version}...")
     
     # Download the chromedriver zip file
     response = requests.get(download_url, stream=True)

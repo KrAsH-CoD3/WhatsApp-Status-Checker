@@ -1,5 +1,5 @@
 from os import path as os_path
-from config import *
+from .config import *
 
 driverpath: str = os_path.join(
     os_path.dirname(os_path.abspath(__file__)),
@@ -17,7 +17,7 @@ bot_profile_user_data_dir: str = os_path.join(
 # WhatsApp login instructions
 login_instructions_xpath: str = '//*[contains(@aria-label, "QR code")]'
 
-BASE_PP_XPATH: str = f'//span[@title="{status_uploader_name}"]//..//..//..//..//..//preceding-sibling::' # To identify specfied user
+BASE_PP_XPATH: str = f'//span[@title="{STATUS_UPLOADER_NAME}"]//..//..//..//..//..//preceding-sibling::' # To identify specfied user
 profile_picture_status_xpath: str = BASE_PP_XPATH + 'div//*[local-name()="svg" and @class="xe9ewy2 x1kgmq87 x10l6tqk"]' # Green circle.
 profile_picture_img_xpath: str = BASE_PP_XPATH + 'div//img[contains(@class, "x1n2onr6 x1lliihq")]' # Profile picture
 default_profile_picture_xpath: str = BASE_PP_XPATH + 'div//span[@data-icon="default-contact-refreshed"]' # Default Profile picture
@@ -31,9 +31,9 @@ bars_xpath: str = '//div[contains(@class, "x10l6tqk xtijo5x x1o0tod")]\
 
 playing_bar_xpath: str = '//div[contains(@class, "x5i6ehr velocity-animating")]' # playing status
 paused_bar_xpath: str = '//div[contains(@class, "x5i6ehr")]' # paused status
-scrolled_viewed_person_xpath :str = f'//span[@title="{status_uploader_name}" and \
+scrolled_viewed_person_xpath :str = f'//span[@title="{STATUS_UPLOADER_NAME}" and \
     @class="ggj6brxn gfz4du6o r7fjleex g0rxnol2 lhj4utae le5p0ye3 _11JPr"]' # Test this
-temp_status_thumbnail: str = f'//span[@title="{status_uploader_name}"]//..//..//..//preceding-sibling::div[@class="_1AHcd"]//\
+temp_status_thumbnail: str = f'//span[@title="{STATUS_UPLOADER_NAME}"]//..//..//..//preceding-sibling::div[@class="_1AHcd"]//\
     div[@class="t3g6t33p sxl192xd qnwaluaf g9p5wyxn i0tg5vk9 aoogvgrq o2zu3hjb gfz4du6o r7fjleex lniyxyh2 qssinsw9 rx2toazg"]' # Test this
 
 img_status_xpath: str = '(//div[@class="x1n2onr6 xh8yej3 x5yr21d"]//img[1])'

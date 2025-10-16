@@ -7,3 +7,5 @@ __pycache__
 driver
 .env
 uv.lock
+build
+*.egg-info

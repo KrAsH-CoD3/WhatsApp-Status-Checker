@@ -2,6 +2,7 @@
 WebDriver management for Chrome browser automation
 """
 
+from ..vars import bot_profile_name, bot_profile_user_data_dir
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -12,8 +13,6 @@ import signal
 import atexit
 import psutil
 import sys
-
-from vars import bot_profile_name, bot_profile_user_data_dir
 
 
 class BotManager:
