@@ -101,7 +101,7 @@ Found a bug or have a feature request? Please:
 
 ## Discussion
 
-Have feedback or suggestions? Open an [issue] or join discussions on new features, improvements, and use cases. Your input helps shape the project!
+Have feedback or suggestions? Open an [issue] or join [dicussions] on new features, improvements, and use cases. Your input helps shape the project!
 
 ## TODO
 - [ ] PyPi Package.
@@ -131,5 +131,7 @@ Have feedback or suggestions? Open an [issue] or join discussions on new feature
 [Browse issues]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues>
 [issue]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues>
 [REPO]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker>
+[Dicussions]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/discussions>
+
 [Todo]: <README.md#TODO>
 
