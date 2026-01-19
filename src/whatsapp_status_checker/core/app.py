@@ -151,37 +151,11 @@ Enter "Y" to get notified or "N" to view them automatically: ')
                 if status_idx == 1: 
                     tprint(message[:-1])
                 
-                self.stop_event.clear()
-                executor = ThreadPoolExecutor(max_workers=5)
-                tasks = [executor.submit(self.whatsapp_ops.check_status_type, xpath, self.stop_event) for xpath in status_type_xpaths]
-
-                check_status = None
-                for future in as_completed(tasks):
-                    check_status = future.result()
-                    if check_status is not None:
-                        break
-
-                executor.shutdown(wait=False)
-
-                # Use simple factory pattern to handle the detected status type
-                if check_status is not None:
-                    handler = status_handler(
-                        check_status, self.bot, 
-                        self.phone_number, self.api_key, 
-                        self.status_uploader_name
-                    )
-                    if handler is not None:
-                        if isinstance(handler, VideoStatusHandler):
-                            msg = handler.handle(
-                                status_idx, 
-                                total_status=total_status, 
-                                viewed_status=viewed_status
-                            )
-                        else:
-                            msg = handler.handle(status_idx)
-                        message += msg
-                    else:
-                        tprint(f'Unknown status type detected: {check_status}')
+                # Detect status type and handle it
+                check_status = self._detect_status_type(status_type_xpaths)
+                
+                if check_status:
+                    message += self._handle_status(check_status, status_idx, total_status, viewed_status)
                 else:
                     tprint(f'Failed to detect status type for status {status_idx}')
                 
@@ -227,5 +201,41 @@ Enter "Y" to get notified or "N" to view them automatically: ')
             print(f"An error occurred: {e}")
         finally:
             print("Program ended!")
+
+    def _detect_status_type(self, status_type_xpaths):
+        """Detect status type"""
+        self.stop_event.clear()
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            tasks = [executor.submit(self.whatsapp_ops.check_status_type, xpath, self.stop_event) 
+                    for xpath in status_type_xpaths]
+            
+            for future in as_completed(tasks):
+                result = future.result()
+                if result is not None:
+                    return result
+        return None
+
+    def _handle_status(self, check_status, status_idx, total_status, viewed_status):
+        """Handle status with unified parameter passing"""
+        status_handler_kwargs = {
+            "check_status": check_status,
+            "bot": self.bot,
+            "phone_number": self.phone_number,
+            "api_key": self.api_key,
+            "contact_name": self.status_uploader_name
+        }
+        handler = status_handler(**status_handler_kwargs)
+        
+        if not handler:
+            tprint(f'Unknown status type detected: {check_status}')
+            return ''
+        
+        # Unified parameter passing - all handlers get same kwargs
+        handler_kwargs = {
+            'total_status': total_status,
+            'viewed_status': viewed_status
+        }
+        
+        return handler.handle(status_idx, **handler_kwargs)
 
 
