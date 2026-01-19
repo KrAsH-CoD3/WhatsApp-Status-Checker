@@ -21,12 +21,12 @@ View HD Demo Video [here](static/videos/Demo.mp4)
 Make sure your installed Google Chrome Browser is the latest.
 
   - Create a `.env` file.
-    - Set `NUMBER` to your phone number. (Your WhatsApp Number e.g: 234xxxxxxxxxx)
+    - Set `MY_NUMBER` to your phone number. (Your WhatsApp Number e.g: 234xxxxxxxxxx)
     - Set `CALLMEBOT_APIKEY` to your API Key. (API Key provided by CallMeBot)
       > See [CallMeBot] for detailed information.
     - Set `STATUS_UPLOADER_NAME` contact you want to view their status. 
       > NOTE: As it is saved on your phone(Case Sensitive).
-    - Optionally, set `TIMEZONE` to your preferred timezone. Time will be displayed in this timezone.
+    - **Optionally**, set `TIMEZONE` to your preferred timezone. Time will be displayed in this timezone.
       > If not set, it resolves to IP timezone.
   
   ## Installation

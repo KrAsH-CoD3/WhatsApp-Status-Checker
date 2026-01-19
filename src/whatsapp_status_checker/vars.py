@@ -42,12 +42,13 @@ text_status_xpath: str = '//div[@class="x10l6tqk x13vifvy x1o0tod xh8yej3 x5yr21
     and contains(@style, "background-color: rgb")]'
 audio_status_xpath: str = '//div[@class="ajgl1lbb"]' # Test this
 oldMessage_status_xpath: str = '//div[contains(@class, "x88nbbm x2b8uid x1vvkbs x47corl")]'
+
 caption_xpath: str = '//div[@class="tvsr5v2h mz6luxmp clw8hvz5 p2tfx3a3 holukk2e cw3vfol9"]//\
     span[@class="_11JPr" and @dir="auto" and @aria-label]' # Test this
 read_more_caption_xpath: str = caption_xpath + '//following-sibling::strong' # Test this
 
 loading_icon_in_status_xpath: str = '//button[@class="icon-media-disabled"]'
-search_field_xpath: str = '//p[@class="selectable-text copyable-text x15bjb6t x1n2onr6"]'
+search_field_xpath: str = '//p[contains(@class, "copyable-text") and contains(@class, "x15bjb6t") and contains(@class, "x1n2onr6")]'
 unviewed_status_xpath: str = '//div[contains(@class, "x5fxwdf")]'
 status_exit_xpath: str = '//span[@data-icon="x-viewer"]'
 status_list_page_xpath: str = '//span[@data-icon="status-outline"]' # Test this
