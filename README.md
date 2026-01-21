@@ -1,4 +1,4 @@
-# WhatsApp Status Checker
+# WhatsApp Status Auto View
 
 ![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
 
