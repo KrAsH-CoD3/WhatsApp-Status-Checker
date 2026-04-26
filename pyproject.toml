@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "art>=5.9",
-    "beautifulsoup4>=4.13.5",
     "callmebot",
     "ipykernel>=6.30.1",
     "pyautogui>=0.9.54",
@@ -20,3 +19,6 @@ where = ["src"]
 
 [tool.uv.sources]
 callmebot = { git = "https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git" }
+
+[project.scripts]
+whatsapp-status-checker = "whatsapp_status_checker.__main__:main"
