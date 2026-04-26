@@ -1,10 +1,14 @@
 from os import path as os_path
 from .config import *
 
+import os
+IS_WINDOWS = os.name == 'nt'
+CHROMEDRIVER_NAME = "chromedriver.exe" if IS_WINDOWS else "chromedriver"
+
 driverpath: str = os_path.join(
     os_path.dirname(os_path.abspath(__file__)),
     "driver", 
-    "chromedriver.exe"
+    CHROMEDRIVER_NAME
 )
 
 bot_profile_name: str = "Bot Profile"
