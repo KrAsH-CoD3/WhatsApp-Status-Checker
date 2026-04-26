@@ -123,7 +123,9 @@ def _get_chromedriver_version(chromedriver_path: Path) -> Optional[int]:
         version_str = result.stdout.strip().split()[1]
         return int(version_str.split('.')[0])
         
-    except Exception:
+    except Exception as e:
+        print("Unable to get chromedriver version")
+        print(e)
         return None
 
 
