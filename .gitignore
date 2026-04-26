@@ -10,3 +10,4 @@ build
 
 # exclude ignoring  important files
 !.gitignore
+!.python-version
