@@ -1,5 +1,7 @@
 import platform
 import subprocess
+import os
+import shutil
 
 def get_chrome_version_windows():
     """Get the installed version of Google Chrome on Windows."""
@@ -20,41 +22,65 @@ def get_chrome_version_windows():
             for line in result.stdout.splitlines():
                 if "version" in line.lower():
                     return line.split()[-1]
-        except subprocess.CalledProcessError:
+        except (subprocess.CalledProcessError, FileNotFoundError):
             # Continue to the next path if the current one fails
             continue
     return None  # Return None if no version is found
 
 def get_chrome_version_linux():
     """Get the installed version of Google Chrome on Linux."""
-    try:
-        # Query the Chrome binary for its version
-        result = subprocess.run(
-            ['google-chrome', '--version'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip().split()[-1]  # Extract version number
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None  # Return None if Chrome is not found
+    commands = ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser']
+    for cmd in commands:
+        if shutil.which(cmd):
+            try:
+                result = subprocess.run(
+                    [cmd, '--version'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    check=True
+                )
+                # Output usually looks like: "Google Chrome 124.0.6367.60"
+                return result.stdout.strip().split()[-1]
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                continue
+    return None # Return None if Chrome is not found
 
 def get_chrome_version_mac():
     """Get the installed version of Google Chrome on macOS."""
-    chrome_path = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+    # Check common application paths
+    paths = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chrome.app/Contents/MacOS/Google Chrome",
+        os.path.expanduser("~/Applications/Google Chrome.app/Contents/MacOS/Google Chrome")
+    ]
+    
+    for path in paths:
+        if os.path.exists(path):
+            try:
+                result = subprocess.run(
+                    [path, '--version'],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    text=True,
+                    check=True
+                )
+                return result.stdout.strip().split()[-1] # Extract version number
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                continue
+    
+    # Fallback to mdfind (Spotlight)
     try:
-        # Query the Chrome binary for its version
-        result = subprocess.run(
-            [chrome_path, '--version'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-            check=True
-        )
-        return result.stdout.strip().split()[-1]  # Extract version number
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        return None  # Return None if Chrome is not found
+        app_path = subprocess.check_output(["mdfind", "kMDItemCFBundleIdentifier == 'com.google.Chrome'"], text=True).strip().split('\n')[0]
+        if app_path:
+            version_path = os.path.join(app_path, "Contents", "Info.plist")
+            if os.path.exists(version_path):
+                version = subprocess.check_output(["defaults", "read", version_path, "CFBundleShortVersionString"], text=True).strip()
+                return version
+    except Exception:
+        pass
+        
+    return None # Return None if Chrome is not found
 
 def get_chromebrowser_version():
     """Get the installed version of Google Chrome for the current platform."""

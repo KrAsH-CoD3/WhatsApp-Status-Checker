@@ -1,12 +1,18 @@
-from typing import Literal, Optional
-from shutil import move, rmtree
-from zipfile import ZipFile
-from pathlib import Path
+import os
 import requests
+import subprocess
+from pathlib import Path
+from shutil import move, rmtree
+from typing import Literal, Optional
+from zipfile import ZipFile
 
 BASE_DIR = Path(__file__).parent.parent
+IS_WINDOWS = os.name == 'nt'
+CHROMEDRIVER_NAME = "chromedriver.exe" if IS_WINDOWS else "chromedriver"
 
-class NotSameVersionException(Exception):...
+class NotSameVersionException(Exception):
+    """Exception raised when the installed Chrome version is not compatible with the available ChromeDriver."""
+    pass
 
 
 def _get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', 'win32', 'win64']:
@@ -38,44 +44,42 @@ def _get_platform_architecture() ->  Literal['linux64', 'mac-arm64', 'mac-x64', 
         raise ValueError("Unsupported platform")
 
 
-def _get_chromedriver_link(platform: str) -> str:
+def _get_chromedriver_link(platform_arch: str) -> str:
     """
-    Fetches the ChromeDriver download link from the 'Stable' section for a given platform.
+    Fetches the ChromeDriver download link matching the installed Chrome version.
 
     Args:
-        platform (str): The platform (e.g., "linux64", "mac-arm64", "win64").
+        platform_arch (str): The platform (e.g., "linux64", "mac-arm64", "win64").
 
     Returns:
-        str: The download link for the specified ChromeDriver.
+        str: The download link for the matching ChromeDriver.
     """
-    from bs4 import BeautifulSoup
     from .get_chrome_version import get_chromebrowser_version
 
-    url = "https://googlechromelabs.github.io/chrome-for-testing/"
-    response = requests.get(url)
+    chrome_version_full = get_chromebrowser_version()
+    if not chrome_version_full:
+        raise Exception("Unable to detect installed Chrome version.")
+    
+    milestone = chrome_version_full.split('.')[0]
+    
+    api_url = "https://googlechromelabs.github.io/chrome-for-testing/latest-versions-per-milestone-with-downloads.json"
+    response = requests.get(api_url)
     
     if response.status_code != 200:
-        raise Exception(f"Failed to fetch the webpage. Status code: {response.status_code}")
+        raise Exception(f"Failed to fetch Chrome for Testing API. Status code: {response.status_code}")
     
-    soup = BeautifulSoup(response.text, 'html.parser')
+    data = response.json()
+    milestone_data = data.get("milestones", {}).get(milestone)
     
-    stable_section = soup.find('section', {'id': 'stable'})
-    if not stable_section:
-        raise Exception("Could not find the 'Stable' section on the webpage.")
+    if not milestone_data:
+        raise Exception(f"No ChromeDriver found for Chrome milestone {milestone}")
     
-    chromedriver_full_version = stable_section.find('p').text.strip().split(" ")[1]
-    chromedriver_version = int(chromedriver_full_version.split('.')[0])
-    
-    chrome_version_full_version = get_chromebrowser_version()
-    chrome_version: int = int(chrome_version_full_version.split('.')[0])
-
-    if (chrome_version < chromedriver_version):
-        raise NotSameVersionException(f"""
-Chromedriver version {chromedriver_full_version} is not compatible with Chrome version {chrome_version_full_version}.
-Update your Chrome browser to the latest version."""
-        )
-    
-    return f"https://storage.googleapis.com/chrome-for-testing-public/{chromedriver_full_version}/{platform}/chromedriver-{platform}.zip"
+    downloads = milestone_data.get("downloads", {}).get("chromedriver", [])
+    for download in downloads:
+        if download.get("platform") == platform_arch:
+            return download.get("url")
+            
+    raise Exception(f"No ChromeDriver download found for platform {platform_arch} in milestone {milestone}")
 
 
 def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
@@ -106,14 +110,18 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
 
 
 def ensure_chromedriver(output_dir: Optional[Path] = None, platform_arch: Optional[str] = None) -> None:
-    """Ensure chromedriver.exe exists in output_dir for the given platform_arch."""
+    """Ensure chromedriver exists."""
     if output_dir is None:
         output_dir = BASE_DIR / 'driver'
-     
-    chromedriver_path = output_dir / "chromedriver.exe"
-    if chromedriver_path.exists():
-        return
     
+    chromedriver_path = output_dir / CHROMEDRIVER_NAME
+
+    # If a driver exists, verify compatibility
+    if chromedriver_path.exists():
+        if not IS_WINDOWS:
+            os.chmod(chromedriver_path, 0o755)
+        return
+
     if platform_arch is None:
         platform_arch = _get_platform_architecture()
     
@@ -143,19 +151,22 @@ def _extract_zip(zip_file: Path, target_dir: Path) -> Path:
 
 
 def _find_chromedriver(extracted_dir: Path) -> Path | None:
-    """Search for chromedriver.exe inside extracted_dir."""
-    for path in extracted_dir.rglob("chromedriver.exe"):
+    """Search for chromedriver executable inside extracted_dir."""
+    for path in extracted_dir.rglob(CHROMEDRIVER_NAME):
         return path
     return None
 
 
 def _move_chromedriver(src: Path, dest: Path) -> None:
-    """Move chromedriver.exe to destination directory."""
+    """Move chromedriver to destination directory and set permissions."""
     move(str(src), str(dest))
+    if not IS_WINDOWS:
+        os.chmod(dest, 0o755)
 
 
 def _cleanup(extracted_dir: Path, zip_file: Path) -> None:
-    """Remove extracted directory and zip file."""
+    """Safely remove temporary files after driver installation."""
+    # Only remove temporary files, never the final driver
     if extracted_dir.exists():
         rmtree(extracted_dir)
     if zip_file.exists():

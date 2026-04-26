@@ -1,11 +1,18 @@
-.vscode
-assest
-ignoreGIT
-wsc_venv
 test.py
 __pycache__
 driver
-.env
 uv.lock
 build
 *.egg-info
+
+# Ignore all hidden directories automatically
+.*/
+
+# Except for .github
+!.github/
+
+# Manually ignore sensitive hidden files
+.env
+
+# Hidden files like .gitignore and .python-version are tracked by default
+# because .*/ only ignores directories.
