@@ -109,49 +109,18 @@ def download_chromedriver(platform_arch: str, zip_file_path: Path) -> None:
         print(f"Failed to download. Status code: {response.status_code}")
 
 
-def _get_chromedriver_version(chromedriver_path: Path) -> Optional[int]:
-    """Return the major version of an existing chromedriver, or None if unavailable."""
-    try:
-        result = subprocess.run(
-            [str(chromedriver_path), '--version'],
-            stdout=subprocess.PIPE, 
-            stderr=subprocess.PIPE, 
-            text=True, 
-            check=True
-        )
-        # Expected output: 'ChromeDriver 126.0.6478.127 (....)'
-        version_str = result.stdout.strip().split()[1]
-        return int(version_str.split('.')[0])
-        
-    except Exception as e:
-        print("Unable to get chromedriver version")
-        print(e)
-        return None
-
-
 def ensure_chromedriver(output_dir: Optional[Path] = None, platform_arch: Optional[str] = None) -> None:
-    """Ensure chromedriver exists and matches installed Chrome version."""
-    from .get_chrome_version import get_chromebrowser_version
-    
+    """Ensure chromedriver exists."""
     if output_dir is None:
         output_dir = BASE_DIR / 'driver'
     
     chromedriver_path = output_dir / CHROMEDRIVER_NAME
-    # Determine installed Chrome major version
-    chrome_version_full = get_chromebrowser_version()
-    if not chrome_version_full:
-        raise Exception("Unable to detect installed Chrome version.")
-    chrome_major = int(chrome_version_full.split('.')[0])
 
     # If a driver exists, verify compatibility
     if chromedriver_path.exists():
         if not IS_WINDOWS:
             os.chmod(chromedriver_path, 0o755)
-        driver_major = _get_chromedriver_version(chromedriver_path)
-        if driver_major is not None and (chrome_major - 1 <= driver_major <= chrome_major + 1):
-            return  # Existing driver is compatible
-        # Incompatible driver; remove it to allow fresh download
-        chromedriver_path.unlink()
+        return
 
     if platform_arch is None:
         platform_arch = _get_platform_architecture()
