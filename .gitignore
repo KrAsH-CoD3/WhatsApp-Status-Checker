@@ -1,11 +1,12 @@
-.vscode
-assest
-ignoreGIT
-wsc_venv
 test.py
 __pycache__
 driver
-.env
 uv.lock
 build
 *.egg-info
+
+# ignore all hidden files
+.*
+
+# exclude ignoring  important files
+!.gitignore
