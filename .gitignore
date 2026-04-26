@@ -5,9 +5,14 @@ uv.lock
 build
 *.egg-info
 
-# ignore all hidden files
-.*
+# Ignore all hidden directories automatically
+.*/
 
-# exclude ignoring  important files
-!.gitignore
-!.python-version
+# Except for .github
+!.github/
+
+# Manually ignore sensitive hidden files
+.env
+
+# Hidden files like .gitignore and .python-version are tracked by default
+# because .*/ only ignores directories.
