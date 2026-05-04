@@ -178,7 +178,10 @@ def status_handler(
         "old_messageValue": OldMessageStatusHandler
     }
     
-    for status_type, handler in handler_map.items():
-        if check_status.get(status_type, False):
-            return handler(bot, phone_number, api_key, contact_name)
+    # Get the first active status type from the check_status dict
+    active_type = next((k for k, v in check_status.items() if v), None)
+    
+    if handler_cls := handler_map.get(active_type):
+        return handler_cls(bot, phone_number, api_key, contact_name)
+        
     return None
