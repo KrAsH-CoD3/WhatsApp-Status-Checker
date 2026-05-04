@@ -10,7 +10,7 @@
                 "PYTHONPATH": "${workspaceFolder}/src"
             },
             "console": "integratedTerminal",
-            "justMyCode": true
+            "justMyCode": false
         }
     ]
 }

@@ -20,5 +20,8 @@ where = ["src"]
 [tool.uv.sources]
 callmebot = { git = "https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git" }
 
+[tool.uv]
+package = true
+
 [project.scripts]
-whatsapp-status-checker = "whatsapp_status_checker.__main__:main"
+wsc = "whatsapp_status_checker.__main__:main"
