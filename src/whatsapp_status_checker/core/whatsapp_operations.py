@@ -13,11 +13,12 @@ from typing import Optional, Dict, List
 from art import tprint, text2art
 from time import sleep
 from ..vars import (
-    login_instructions_xpath, profile_picture_status_xpath, profile_picture_img_xpath,
+    profile_picture_status_xpath, profile_picture_img_xpath,
     default_profile_picture_xpath, search_field_xpath, bars_xpath, unviewed_status_xpath,
     status_exit_xpath, img_status_xpath, video_status_xpath, text_status_xpath,
-    audio_status_xpath, oldMessage_status_xpath
+    audio_status_xpath, oldMessage_status_xpath, pane_xpath, qr_xpath, loading_xpath
 )
+
 import contextlib
 
 
@@ -28,41 +29,45 @@ class WhatsAppOperations:
         self.bot = bot
     
     def open_whatsapp(self) -> None:
-        """Open WhatsApp Web and handle login process"""
+        """Open WhatsApp Web and handle login process with a 3-minute timeout"""
+        import time
         self.bot.get("https://web.whatsapp.com/")
         print(text2art("\nLogging in..."), "💿")
-
-        qr_xpath = '//div[@data-testid="link-device-qr-code"]'
-        pane_xpath = '//div[@id="pane-side"]'
-        loading_xpath = '//div[@data-testid="wa-web-loading-screen"]'
+        
+        start_time = time.time()
+        timeout = 180  # 3 minutes max
+        qr_shown = False
 
         try:
-            # Wait for either QR code or Chat List to determine login state
-            wait = wait_for(self.bot, 60)
-            
-            def detect_login_state(driver):
-                return driver.find_elements(By.XPATH, qr_xpath) or \
-                       driver.find_elements(By.XPATH, pane_xpath)
+            # Endless loop with 3-minute cap
+            while (time.time() - start_time) < timeout:
+                # 1. Check if we are already logged in (Chat list visible)
+                if self.bot.find_elements(By.XPATH, pane_xpath):
+                    break
+                
+                # 2. Check if we need to scan the QR code
+                if self.bot.find_elements(By.XPATH, qr_xpath) and not qr_shown:
+                    print(text2art("Please scan the QRCODE to log in"), "🔑")
+                    qr_shown = True
+                
+                # Poll every second to keep responsiveness high but CPU low
+                sleep(1)
+            else:
+                # If the loop finishes without a 'break', it means we timed out
+                raise TimeoutException("Login sequence timed out")
 
-            wait.until(detect_login_state)
-
-            # Case 1: Login required (QR Code visible)
-            if self.bot.find_elements(By.XPATH, qr_xpath):
-                print(text2art("Please scan the QRCODE to log in"), "🔑")
-                # After scan, wait for the chat list to appear
-                wait.until(EC.visibility_of_element_located((By.XPATH, pane_xpath)))
-
-            # Case 2: Already logged in or just finished scanning
-            # Handle transient loading screen if it appears
+            # Handle transient loading screen if it appears after scan or during load
             with contextlib.suppress(TimeoutException):
-                wait_for(self.bot, 15).until(EC.invisibility_of_element_located((By.XPATH, loading_xpath)))
+                wait_for(self.bot, 30).until(EC.invisibility_of_element_located((By.XPATH, loading_xpath)))
 
             print(text2art("Logged in successfully."), "✌")
             tprint(f'Logged in at {get_time()}\n')
 
         except TimeoutException:
-            print('\nTook too long to login. Operation timed out.')
+            print('\nTook too long to login. Operation timed out after 3 minutes.\n'
+                'Check your internet connection.')
             self.bot.quit()
+            raise  # Re-raise to inform the caller (app.py) that initialization failed
     
     def search_contact(self, contact_name: str) -> None:
         """Search for a specific contact"""
@@ -121,7 +126,7 @@ class WhatsAppOperations:
                 if '//video' in xpath:
                     stop_event.set()
                     return {"videoStatusValue": True}
-                elif 'x5yr21d"]//img' in xpath:
+                elif '//img' in xpath:
                     element: WebElement = self.bot.find_element(By.XPATH, xpath)
                     if element.get_attribute('alt') == '':
                         stop_event.set()

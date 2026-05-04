@@ -200,9 +200,11 @@ Enter "Y" to get notified or "N" to view them automatically: ')
         except Exception as e:
             print(f"An error occurred: {e}")
         finally:
+            if self.bot:
+                self.bot.quit()
             print("Program ended!")
 
-    def _detect_status_type(self, status_type_xpaths):
+    def _detect_status_type(self, status_type_xpaths: list) -> Optional[str]:
         """Detect status type"""
         self.stop_event.clear()
         with ThreadPoolExecutor(max_workers=5) as executor:
