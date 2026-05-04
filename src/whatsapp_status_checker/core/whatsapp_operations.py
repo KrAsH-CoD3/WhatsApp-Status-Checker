@@ -29,42 +29,39 @@ class WhatsAppOperations:
     
     def open_whatsapp(self) -> None:
         """Open WhatsApp Web and handle login process"""
-        wait_until_whatsapp_login_instructions_disappear = lambda: wait_for(self.bot, 3).until(
-            EC.visibility_of_element_located((By.XPATH, login_instructions_xpath)))
-
         self.bot.get("https://web.whatsapp.com/")
+        print(text2art("\nLogging in..."), "💿")
+
+        qr_xpath = '//div[@data-testid="link-device-qr-code"]'
+        pane_xpath = '//div[@id="pane-side"]'
+        loading_xpath = '//div[@data-testid="wa-web-loading-screen"]'
 
         try:
-            print(text2art("\nLogging in..."), "💿")
-            login_count: int = 1
-            while True:
-                try:
-                    self.bot.find_element(By.XPATH, '//div[@id="pane-side"]')
-                    break
-                except NoSuchElementException:  # Log in page (Scan QRCode)
-                    with contextlib.suppress(TimeoutException):
-                        wait_until_whatsapp_login_instructions_disappear()
+            # Wait for either QR code or Chat List to determine login state
+            wait = wait_for(self.bot, 60)
+            
+            def detect_login_state(driver):
+                return driver.find_elements(By.XPATH, qr_xpath) or \
+                       driver.find_elements(By.XPATH, pane_xpath)
 
-                        if login_count == 1:
-                            print(text2art("Please scan the QRCODE to log in"), "🔑")
-                            login_count += 1
+            wait.until(detect_login_state)
 
-                        wait_until_whatsapp_login_instructions_disappear()
+            # Case 1: Login required (QR Code visible)
+            if self.bot.find_elements(By.XPATH, qr_xpath):
+                print(text2art("Please scan the QRCODE to log in"), "🔑")
+                # After scan, wait for the chat list to appear
+                wait.until(EC.visibility_of_element_located((By.XPATH, pane_xpath)))
 
-                        # WhatsApp: Text
-                        wait_for(self.bot, 3).until(EC.visibility_of_element_located(
-                            (By.XPATH, '//div[@class="_1dEQH _26aja"]')))
-                        # Loading your chats
-                        wait_for(self.bot, 3).until(EC.invisibility_of_element(
-                            (By.XPATH, '//div[@class="x1c3i2sq x14ug900 xk82a7y x1sy10c2"]')))
-                        # Loading [%]
-                        wait_for(self.bot, 3).until(EC.invisibility_of_element(
-                            (By.XPATH, '//div[@class="_3HbCE"]')))
-                        break
+            # Case 2: Already logged in or just finished scanning
+            # Handle transient loading screen if it appears
+            with contextlib.suppress(TimeoutException):
+                wait_for(self.bot, 15).until(EC.invisibility_of_element_located((By.XPATH, loading_xpath)))
+
             print(text2art("Logged in successfully."), "✌")
             tprint(f'Logged in at {get_time()}\n')
+
         except TimeoutException:
-            print('Took too long to login.')
+            print('\nTook too long to login. Operation timed out.')
             self.bot.quit()
     
     def search_contact(self, contact_name: str) -> None:
