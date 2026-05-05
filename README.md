@@ -47,6 +47,35 @@ Make sure your installed Google Chrome Browser is the latest.
     </details>
   
   ## Usage
+
+  ### CLI (Recommended)
+  
+  You can run the application directly from the terminal using the `wsc` alias:
+
+  - <details>
+      <summary>Using UV</summary>
+      
+      ```bash
+      uv run wsc
+      ```
+    </details>
+    
+  - <details>
+      <summary>Using Python</summary>
+      
+      ```bash
+      python -m whatsapp_status_checker
+      ```
+      *Or if the package is already installed in your path:*
+      ```bash
+      wsc
+      ```
+    </details>
+
+  ### Python Script
+  
+  Alternatively, you can import and run it in your own Python script:
+  
   ```python
   from whatsapp_status_checker import WhatsAppStatusChecker
 
