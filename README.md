@@ -2,7 +2,7 @@
 
 ![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
 
-WhatsApp Status Checker continuously views a specific contact status as soon as it is uploaded, send you a message about the status type(Image, Video, Text, or  Audio) and the time at which it was viewed OR alternatively always monitor the specific contact status and notify you if a status is uploaded. You get notified every 30minutes, 1hour, 3hours or 6 hours depending on your choice.
+WhatsApp Status Checker is a high-performance tool designed to continuously monitor and interact with WhatsApp statuses. It can automatically view a specific contact's status (Images, Videos, Text, or Audio) as soon as they are uploaded, ensuring every update is registered as "viewed" even on slow internet connections. Alternatively, it can function in a notification-only mode, alerting you via WhatsApp at your preferred intervals (30m, 1h, 3h, 6h).
 
 > _**NOTE:** WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe._
 
@@ -73,10 +73,18 @@ Make sure your installed Google Chrome Browser is the latest.
 ![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
 ### See other Screenshots, [Click here](static/images)
 
+<details>
+<summary><b><font size="4">AI Auto-Healing (Deprecation)</font></b></summary>
+
+While we explored implementing an AI-powered "Auto-Healing" mechanism to dynamically resolve broken XPaths, it has been intentionally deprecated. WhatsApp Web is a "heavy" application with highly dynamic DOM structures, making automated path resolution unreliable and performance-heavy. 
+
+To ensure the bot remains stable and reliable, we manually maintain and update the XPaths using an **accessibility-first** approach (targeting ARIA labels and attributes). This makes the locators significantly more resilient to UI updates and provides the consistency required for heavy applications like WhatsApp.
+</details>
+
 ## Errors and Fixes
 
-- **Timeout When Logging in:** Increase the timeout value `60` at `wait = WebDriverWait(bot, 60)`.
-  > Preferrably, use a more stable internet.
+- **Timeout When Logging in:** The application now uses an efficient 3-minute (180s) polling loop that handles QR code scanning and transient loading screens automatically.
+  > If you consistently timeout, ensure your internet connection is stable.
 - **Not Receiving WhatsApp Message:** Make sure you follow [CallMeBot] instructions carefully.
   > Also confirm your `.env` values are correct.
 
