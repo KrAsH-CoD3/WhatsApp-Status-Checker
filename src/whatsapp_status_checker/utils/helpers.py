@@ -87,18 +87,18 @@ def _close_status(bot: WebDriver):
 
 
 def handle_status_not_loaded(bot: WebDriver, total_status: int, viewed_status: int):
-    """Handle cases where status is not properly loaded"""
-    unviewed_status: int = total_status - viewed_status
-
-    if total_status == 1:  # Only one status
+    """Handle cases where status is not properly loaded by forcing a reload via navigation."""
+    if total_status == 1:
+        # Only one status available; exit and re-enter
         _close_status(bot)
         sleep(3)
         _click_profile_picture(bot)
-    else:  # Multiple statuses
-        if unviewed_status == 1:  # Only one new status uploaded
-            _backnforward(bot, viewed_status)
-        else:
-            _forwardnback(bot, viewed_status)
+    elif viewed_status == total_status - 1:
+        # Last status in the list; cannot go forward, so go backward then forward
+        _backnforward(bot, viewed_status)
+    else:
+        # Can safely go forward then backward (this includes the first status)
+        _forwardnback(bot, viewed_status)
 
 
 def _click_profile_picture(bot: WebDriver):

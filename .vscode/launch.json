@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: WhatsApp Status Checker (Module)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "whatsapp_status_checker",
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}/src"
+            },
+            "console": "integratedTerminal",
+            "justMyCode": false
+        }
+    ]
+}

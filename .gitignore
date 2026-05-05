@@ -8,8 +8,9 @@ build
 # Ignore all hidden directories automatically
 .*/
 
-# Except for .github
+# Except for .github and .vscode
 !.github/
+!.vscode/
 
 # Manually ignore sensitive hidden files
 .env

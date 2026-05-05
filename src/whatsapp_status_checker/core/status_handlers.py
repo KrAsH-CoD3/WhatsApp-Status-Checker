@@ -8,19 +8,20 @@ from ..utils.helpers import wait_for, handle_status_not_loaded
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.common.by import By
 from abc import ABC, abstractmethod
-from callmebot import send_message
 from typing import Optional, Dict
 from art import tprint
 from ..vars import (
-    loading_icon_in_status_xpath, pause_btn_xpath, playing_bar_xpath, 
-    paused_bar_xpath, NUMBER, #_status_not_loaded
+    loading_icon_in_status_xpath, pause_btn_xpath, 
+    playing_bar_xpath, paused_bar_xpath
 )
-import contextlib
-import sys
 
 
 class StatusHandler(ABC):
     """Abstract base class for handling different status types"""
+    
+    MAX_LOAD_ATTEMPTS = 3
+    LOAD_CHECK_TIMEOUT = 0.5  # seconds to wait per loading icon check
+    PAUSE_BTN_TIMEOUT = 2.0   # seconds to wait for pause button clickability
     
     def __init__(self, bot: WebDriver, phone_number: str, api_key: str, contact_name: str):
         self.bot = bot
@@ -33,72 +34,32 @@ class StatusHandler(ABC):
         """Handle the specific status type and return status message"""
         pass
     
-    def click_pause(self):
-        """Helper method to pause status"""
+    def _is_loading(self) -> bool:
+        """Check if the loading icon is currently visible"""
         try:
-            wait_for(self.bot, .5).until(EC.invisibility_of_element_located(
-                (By.XPATH, loading_icon_in_status_xpath)))
-            self.bot.find_element(By.XPATH, pause_btn_xpath).click()
-        except(NoSuchElementException, TimeoutException): 
-            return  # ALREADY PAUSED
-
-
-class ImageStatusHandler(StatusHandler):
-    """Handler for image status types"""
-    
-    def handle(self, status_idx: int, **kwargs) -> str:
-        self.click_pause()
-        msg = f"{status_idx}. Status is an Image."
-        tprint(msg)
-        return msg + '\n'
-
-
-class VideoStatusHandler(StatusHandler):
-    """Handler for video status types with complex loading logic"""
-    
-    def __init__(self, bot: WebDriver, phone_number: str, api_key: str, contact_name: str, max_attempts: int = 3):
-        super().__init__(bot, phone_number, api_key, contact_name)
-        self.max_attempts = max_attempts
-    
-    def handle(self, status_idx: int, **kwargs) -> str:
-        total_status = kwargs.get('total_status', 1)
-        viewed_status = kwargs.get('viewed_status', 0)
-        return self._process_video_status(status_idx, total_status, viewed_status)
-    
-    def _process_video_status(self, status_idx: int, total_status: int, viewed_status: int) -> str:
-        """Process video status with loading detection and retry logic"""
-        loading_icon = True
-        attempts = 0
-        
-        while True:
-            with contextlib.suppress(TimeoutException):
-                wait_for(self.bot, .1).until(EC.invisibility_of_element_located(
+            wait_for(self.bot, self.LOAD_CHECK_TIMEOUT).until(
+                EC.invisibility_of_element_located(
                     (By.XPATH, loading_icon_in_status_xpath)))
-                loading_icon = False
-            
-            video_progress = self._get_video_progress()
-            if video_progress is None:
-                continue
-            
-            # Handle video loading detection
-            if not self._is_video_loaded(loading_icon, video_progress, total_status, viewed_status, attempts):
-                attempts += 1
-                if attempts >= self.max_attempts:
-                    self._send_loading_failure_message()
-                    sys.exit()
-                continue
-            
-            try:
-                self.click_pause()
-            except NoSuchElementException:
-                pass  # ALREADY PAUSED
-            
-            msg = f"{status_idx}. Status is a Video."
-            tprint(msg)
-            return msg + '\n'
+            return False
+        except (TimeoutException, NoSuchElementException):
+            return True
     
-    def _get_video_progress(self) -> Optional[float]:
-        """Extract video progress from status bar style attribute"""
+    def wait_for_load(self, total_status: int, viewed_status: int, media_type: str = "media"):
+        """Wait for the status to fully load.
+        
+        To prevent unnecessary back-and-forth spamming, we only force a reload 
+        if the status has played past 30% but the loading icon is still visible.
+        Otherwise, we wait patiently for normal buffering.
+        """
+        while self._is_loading():
+            progress = self._get_status_progress()
+            
+            if progress is not None and progress > 30:
+                # Bug state: it's playing (past 30%) but loading icon remains
+                handle_status_not_loaded(self.bot, total_status, viewed_status)
+    
+    def _get_status_progress(self) -> Optional[float]:
+        """Extract status progress from status bar style attribute"""
         try:
             playing_status = self.bot.find_element(By.XPATH, playing_bar_xpath)
             style_value = playing_status.get_attribute("style")
@@ -114,30 +75,51 @@ class VideoStatusHandler(StatusHandler):
         except (IndexError, ValueError):
             return None
     
-    def _is_video_loaded(self, loading_icon: bool, video_progress: float, 
-                        total_status: int, viewed_status: int, attempts: int) -> bool:
-        """Check if video is properly loaded"""
+    def click_pause(self):
+        """Pause the status playback. Safe to call even if already paused."""
         try:
-            wait_for(self.bot, .5).until(EC.invisibility_of_element_located(
-                (By.XPATH, loading_icon_in_status_xpath)))
-            return True  # Video is loaded
-        except (TimeoutException, NoSuchElementException):
-            if loading_icon and (0 <= video_progress <= 30):
-                handle_status_not_loaded(self.bot, total_status, viewed_status)
-                return False
-            return True  # Assume loaded if we can't detect loading icon
+            pause_btn = wait_for(self.bot, self.PAUSE_BTN_TIMEOUT).until(
+                EC.element_to_be_clickable((By.XPATH, pause_btn_xpath)))
+            pause_btn.click()
+        except (NoSuchElementException, TimeoutException):
+            return  # Already paused or no pause button (e.g. text status)
+
+
+class ImageStatusHandler(StatusHandler):
+    """Handler for image status types"""
     
-    def _send_loading_failure_message(self):
-        """Send failure message when video can't be loaded after max attempts"""
-        error_message = f"Unable to load {self.contact_name}'s video status. Use a better internet i guess."
-        message = f"⚠️ Error with *{self.contact_name}*'s status:\n{error_message}"
-        send_message(message, self.phone_number, self.api_key)
+    def handle(self, status_idx: int, **kwargs) -> str:
+        total_status = kwargs.get('total_status', 1)
+        viewed_status = kwargs.get('viewed_status', 0)
+        
+        self.wait_for_load(total_status, viewed_status, media_type="image")
+        self.click_pause()
+        
+        msg = f"{status_idx}. Status is an Image."
+        tprint(msg)
+        return msg + '\n'
+
+
+class VideoStatusHandler(StatusHandler):
+    """Handler for video status types"""
+    
+    def handle(self, status_idx: int, **kwargs) -> str:
+        total_status = kwargs.get('total_status', 1)
+        viewed_status = kwargs.get('viewed_status', 0)
+        
+        self.wait_for_load(total_status, viewed_status, media_type="video")
+        self.click_pause()
+        
+        msg = f"{status_idx}. Status is a Video."
+        tprint(msg)
+        return msg + '\n'
 
 
 class TextStatusHandler(StatusHandler):
     """Handler for text status types"""
     
     def handle(self, status_idx: int, **kwargs) -> str:
+        # Text statuses don't load media, but pause to prevent auto-advance
         self.click_pause()
         msg = f"{status_idx}. Status is a Text."
         tprint(msg)
@@ -148,6 +130,12 @@ class AudioStatusHandler(StatusHandler):
     """Handler for audio status types"""
     
     def handle(self, status_idx: int, **kwargs) -> str:
+        total_status = kwargs.get('total_status', 1)
+        viewed_status = kwargs.get('viewed_status', 0)
+        
+        self.wait_for_load(total_status, viewed_status, media_type="audio")
+        self.click_pause()
+        
         msg = f"{status_idx}. Status is an Audio."
         tprint(msg)
         return msg + '\n'
@@ -157,6 +145,7 @@ class OldMessageStatusHandler(StatusHandler):
     """Handler for old WhatsApp version messages"""
     
     def handle(self, status_idx: int, **kwargs) -> str:
+        self.click_pause()
         msg = f"{status_idx}. Status is an Old Whatsapp Version."
         tprint(msg)
         return msg + '\n'
@@ -178,7 +167,10 @@ def status_handler(
         "old_messageValue": OldMessageStatusHandler
     }
     
-    for status_type, handler in handler_map.items():
-        if check_status.get(status_type, False):
-            return handler(bot, phone_number, api_key, contact_name)
+    # Get the first active status type from the check_status dict
+    active_type = next((k for k, v in check_status.items() if v), None)
+    
+    if handler_cls := handler_map.get(active_type):
+        return handler_cls(bot, phone_number, api_key, contact_name)
+        
     return None
