@@ -1,32 +1,45 @@
 """
-WhatsApp Status Checker Application
+Modern WhatsApp Status Checker - Powered by CamouChat & wa-js
 """
 
-from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
-from ..config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
-from .status_handlers import status_handler, VideoStatusHandler
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from .whatsapp_operations import WhatsAppOperations
-from .webdriver_manager import BotManager
-from urllib3.exceptions import ProtocolError
-from selenium.common.exceptions import (
-    TimeoutException, 
-    NoSuchElementException, 
-    # NoSuchWindowException,
-    WebDriverException
-)
-from callmebot import send_message
-from art import tprint, text2art
-from time import perf_counter
-from ..vars import driverpath
+import asyncio
+import os
+import time
+from datetime import datetime
 from typing import Optional
-import contextlib
-import pyautogui
-import threading
+
+from camouchat_browser import BrowserConfig, CamoufoxBrowser, ProfileManager
+from camouchat_core import Platform
+from camouchat_whatsapp import (
+    Login,
+    WapiSession,
+    InteractionController,
+    MediaController,
+)
+
+from .whatsapp_operations import WhatsAppOperations
+from .patch_status_get import _apply_patches as apply_status_get_patch
+
+from ..config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
+from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
+from art import tprint, text2art
+
+
+class RateLimiter:
+    """Rate limiter to prevent spam"""
+    def __init__(self, min_interval: float = 10.0):
+        self.min_interval = min_interval
+        self.last_call: float = 0
+    
+    async def wait(self):
+        elapsed = time.time() - self.last_call
+        if elapsed < self.min_interval:
+            await asyncio.sleep(self.min_interval - elapsed)
+        self.last_call = time.time()
 
 
 class WhatsAppStatusChecker:
-    """Main application controller for WhatsApp Status Checker"""
+    """Main application controller using CamouChat Bridge"""
     
     def __init__(self, 
         phone_number: Optional[str] = None,
@@ -39,205 +52,234 @@ class WhatsAppStatusChecker:
         self.status_uploader_name = status_uploader_name or STATUS_UPLOADER_NAME
         self.timezone = timezone or TIMEZONE
         
-        self.bot = None
-        self.whatsapp_ops = None
-        self.stop_event = None
-        self.bot_manager = None
-    
-    def initialize(self):
-        """Initialize all application components"""
-        from ..utils import ensure_chromedriver
-        from art import set_default
-        
-        
-        ensure_chromedriver()
-        set_default("fancy99")
-        
-        self.detected_timezone = initialize_timezone(self.timezone)
-        self.bot = BotManager().start_chrome(driverpath)
-        self.whatsapp_ops = WhatsAppOperations(self.bot)
-        self.stop_event = threading.Event()
-        self.bot.set_window_position(676, 0)
-        self.bot.set_window_size(700, 730)
-        pyautogui.FAILSAFE = False
-        pyautogui.press('esc')
-    
-    def get_user_choice(self) -> tuple[str, Optional[int]]:
-        """Get user choice for notification vs auto-view mode"""
-        tprint("Whatsapp Status Checker", 'rectangles')
-        tprint('\nDo you want to get notified about status or view them automatically?\n\
-Enter "Y" to get notified or "N" to view them automatically: ')
-        # answer = input('===> ').strip().upper()
-        answer = "N"
-        
-        input_count = 1
-        reminder_time = None
-        
-        while True:
-            if answer not in {"YES", "NO", "Y", "N"}:
-                print(text2art('\nYou had one job to do! "Y" or "N"', "fancy56"))
-                print('🥱')
-                tprint('Do you want to get notified about status or view them automatically?')
-                answer = input(text2art('Enter "Y" to get notified or "N" to view them automatically: ')).upper()
-            else:
-                if answer in ("N", "NO"):
-                    break
-                    
-                # Get reminder time for notification mode
-                while True:
-                    with contextlib.suppress(ValueError):
-                        if input_count == 1:
-                            reminder_time = int(input(text2art('\nHow often do you want to be notified?\n1. Enter "1" for 30 Mins\n2. Enter "2" for 1 Hour\n3. Enter "3" for 3 Hours\n4. Enter "4" for 6 Hours\nI want: ')))
-                        else: 
-                            print(text2art('\nYou have to choose between "1", "2", "3" or "4"', "fancy56"))
-                            reminder_time = int(input('🥱 ===> '))
-                        if reminder_time in {1, 2, 3, 4}:
-                            break
-                    input_count += 1
-                break
-        
-        return answer, reminder_time
-    
-    def monitor_notifications(self, reminder_time: int):
-        """Monitor contact for status updates and send notifications"""
-        start = float("{:.2f}".format(perf_counter()))
-        while True:
-            try:
-                self.whatsapp_ops.wait_for_status_and_click()
-                time_diff = float("{:.2f}".format(perf_counter())) - start
-                timezone = get_time()
-                
-                if time_diff <= 0.2:
-                    tprint(f"\n{self.status_uploader_name} has a status.\n{timezone}")
-                    message = f"🔔 *{self.status_uploader_name}* has a new status!\n📅 {timezone}"
-                    message = self.format_message(message)
-                    send_message(message, self.phone_number, self.api_key)
-                else:
-                    start = calculate_next_reminder_time(time_diff, start, reminder_time)
-            except (TimeoutException, NoSuchElementException):
-                continue
-    
-    def auto_view_status(self, message: str = "") -> Optional[str]:
-        """Main function to automatically view and process WhatsApp statuses"""
-        self.whatsapp_ops.open_whatsapp()
-        self.whatsapp_ops.search_contact(self.status_uploader_name)
-        
-        while True:
-            # Wait for status and click profile picture
-            while True:
-                try:
-                    self.whatsapp_ops.wait_for_status_and_click()
-                    break
-                except (TimeoutException, NoSuchElementException): 
-                    continue
-            
-            # Get status information
-            status_info = self.whatsapp_ops.get_status_info()
-            total_status = status_info['total_status']
-            unviewed_status = status_info['unviewed_status']
-            viewed_status = status_info['viewed_status']
-            
-            block_line = "-" * 38
-            loop_range = range(1, unviewed_status + 1)
-            is_more_than_one_status = unviewed_status > 1
+        self.profile = None
+        self.browser = None
+        self.page = None
+        self.wapi: Optional[WapiSession] = None
+        self.interaction: Optional[InteractionController] = None
+        self.uploader_jid: Optional[str] = None
+        self.notification_jid: Optional[str] = None
+        self.rate_limiter = RateLimiter(min_interval=10.0)
+        self.ops: Optional[WhatsAppOperations] = None
 
-            message += f'{self.status_uploader_name}\nUnviewed Status update' + \
-                ("s are " if is_more_than_one_status else " is ") + \
-                f'{unviewed_status} out of {total_status}.\n'
-            
-            status_type_xpaths = self.whatsapp_ops.get_status_type_xpaths()
-            
-            for status_idx in loop_range:
-                if status_idx == 1: 
-                    tprint(message[:-1])
-                
-                # Detect status type and handle it
-                check_status = self._detect_status_type(status_type_xpaths)
-                
-                if check_status:
-                    message += self._handle_status(check_status, status_idx, total_status, viewed_status)
-                else:
-                    tprint(f'Failed to detect status type for status {status_idx}')
-                
-                # Handle status navigation
-                if status_idx != loop_range[-1]:
-                    viewed_status += 1
-                    check_status = None
-                    self.whatsapp_ops.navigate_to_next_status(viewed_status)
-                else:  # Status view completed, Exit status
-                    self.whatsapp_ops.exit_status_view(self.status_uploader_name)
-                    tprint(block_line)
+    async def initialize(self):
+        """Initialize Camoufox and Wapi Bridge"""
+        tprint("Initializing...", "small")
         
-            # Send to Self
-            message = self.format_message(message)
-            send_message(message, self.phone_number, self.api_key)
-                        
-            message = "" # Reset message
-    
-    def format_message(self, message: str) -> str:
-        """Format message to bold the contact name"""
-        return message.replace(self.status_uploader_name, f"*{self.status_uploader_name}*")
+        # 1. Setup Profile & Browser
+        pm = ProfileManager()
+        self.profile = pm.create_profile(
+            platform=Platform.WHATSAPP,
+            profile_id="status_checker_testingprofile"
+        )
 
-    def run(self):
-        """Main application run method"""
+        # Headless mode is more stable for background monitoring
+        is_headless = os.getenv("HEADLESS", "true").lower() == "true"
+        
+        config = BrowserConfig.from_dict({
+            "platform": Platform.WHATSAPP,
+            "headless": is_headless,
+        })
+
+        self.browser = CamoufoxBrowser(config=config, profile=self.profile)
+        self.page = await self.browser.get_page()
+
+        # 2. Login Flow
+        login = Login(page=self.page, profile=self.profile)
+        # Use method=0 for QR scan (default in camouchat-whatsapp is 1/Code)
+        await login.login(method=0)
+
+        # 3. Start Wapi Session
+        print("Initializing Wapi Session...")
+        self.wapi = WapiSession(page=self.page)
+        
+        # Apply monkey-patch for status_get to fix bridge timeout
+        apply_status_get_patch()
+        
         try:
-            self.initialize()
-            answer, reminder_time = self.get_user_choice()
-            
-            if answer in ["Y", "YES"]: 
-                self.monitor_notifications(reminder_time)
-            elif answer in ["N", "NO"]: 
-                self.auto_view_status()
-                
-        except KeyboardInterrupt:
-            print("Keyboard Interrupt!")
-        except NoSuchElementException as e:
-            print(f"Element not found!: {e}")
-        except WebDriverException as e:
-            print(f"Webdriver Chrome Browser Closed!: {e}")
-        except ProtocolError as e:
-            print(f"Protocol Error!: {e}")
+            print("Starting Wapi bridge (injecting wa-js)...")
+            await asyncio.wait_for(self.wapi.start(), timeout=60)
+            print("✅ Wapi bridge started.")
+        except asyncio.TimeoutError:
+            print("⚠️ Wapi start timed out. This often happens if the page reloaded. Retrying once...")
+            await asyncio.sleep(2)
+            await self.wapi.start()
         except Exception as e:
-            print(f"An error occurred: {e}")
-        finally:
-            if self.bot:
-                self.bot.quit()
-            print("Program ended!")
+            print(f"⚠️ Wapi start error: {e}. Proceeding with caution.")
 
-    def _detect_status_type(self, status_type_xpaths: list) -> Optional[str]:
-        """Detect status type"""
-        self.stop_event.clear()
-        with ThreadPoolExecutor(max_workers=5) as executor:
-            tasks = [executor.submit(self.whatsapp_ops.check_status_type, xpath, self.stop_event) 
-                    for xpath in status_type_xpaths]
+        print("Waiting for WhatsApp Web to be ready...")
+        # Max wait 60s for readiness
+        for _ in range(30):
+            if await self.wapi.bridge.conn_is_main_ready():
+                print("✅ WhatsApp Web is fully ready.")
+                break
+            await asyncio.sleep(2)
+        else:
+            print("⚠️ WhatsApp Web readiness check timed out. Some features may not work.")
+        
+        self.interaction = InteractionController(page=self.page, wapi=self.wapi)
+        self.media = MediaController(page=self.page, wapi=self.wapi, profile=self.profile)
+        self.ops = WhatsAppOperations(wapi=self.wapi, media_controller=self.media)
+
+        # 3.5 Warm up the session
+        print("Warming up session (waiting for data sync)...")
+        await asyncio.sleep(15)
+        
+        try:
+            # Force a click on the status tab to wake up the store
+            print("Waking up status store...")
+            await self.interaction.click_status_tab()
+            await asyncio.sleep(5)
+            # Click back to chats
+            await self.interaction.click_chats_tab()
+        except:
+            pass
+
+        # 4. Resolve JIDs
+        if self.phone_number:
+            clean_number = "".join(filter(str.isdigit, self.phone_number))
+            self.notification_jid = f"{clean_number}@c.us"
+        
+        print(f"Resolving JID for {self.status_uploader_name}...")
+        self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
+        
+        if self.uploader_jid:
+            print(f"✅ Target resolved: {self.uploader_jid}")
+        else:
+            print(f"⚠️ Could not resolve JID for {self.status_uploader_name}. Ensure you have an active chat with them.")
+
+    async def _get_jid_by_name(self, name: str) -> Optional[str]:
+        """Resolve name to JID using Chat and Contact stores, prioritizing @c.us"""
+        try:
+            potential_jids = []
             
-            for future in as_completed(tasks):
-                result = future.result()
-                if result is not None:
-                    return result
+            # 1. Check Chat Store
+            chats = await self.wapi.chat_manager.get_chat_list(only_users=True)
+            for chat in chats:
+                if chat.name == name or chat.id_serialized.split('@')[0] == name:
+                    potential_jids.append(chat.id_serialized)
+            
+            # 2. Check Contact Store
+            contacts = await self.wapi.bridge.contact_list(count=500)
+            for contact in contacts:
+                if contact.get('name') == name or contact.get('pushname') == name:
+                    jid = contact.get('id_serialized')
+                    if jid:
+                        potential_jids.append(jid)
+            
+            if not potential_jids:
+                return None
+            
+            # Prioritize @c.us JIDs as they are more reliable for Status API
+            c_us_jids = [j for j in potential_jids if j.endswith('@c.us')]
+            if c_us_jids:
+                return c_us_jids[0]
+            
+            # Fallback to whatever we found (e.g. @lid)
+            return potential_jids[0]
+            
+        except Exception as e:
+            print(f"Resolution error: {e}")
         return None
 
-    def _handle_status(self, check_status, status_idx, total_status, viewed_status):
-        """Handle status with unified parameter passing"""
-        status_handler_kwargs = {
-            "check_status": check_status,
-            "bot": self.bot,
-            "phone_number": self.phone_number,
-            "api_key": self.api_key,
-            "contact_name": self.status_uploader_name
-        }
-        handler = status_handler(**status_handler_kwargs)
+    def get_user_choice(self) -> tuple[str, Optional[int]]:
+        """Rich terminal UI for mode selection"""
+        tprint("Status Checker", "rectangles")
+        print("\n[Y] Notification Mode - Get alerted when they post.")
+        print("[N] Auto-View Mode - Automatically 'watch' their stories.")
         
-        if not handler:
-            tprint(f'Unknown status type detected: {check_status}')
-            return ''
+        answer = "N" # Defaulting for now or input if interactive
+        # answer = input("Choice: ").upper()
         
-        # Unified parameter passing - all handlers get same kwargs
-        handler_kwargs = {
-            'total_status': total_status,
-            'viewed_status': viewed_status
-        }
-        
-        return handler.handle(status_idx, **handler_kwargs)
+        reminder_time = 1 # 30 mins
+        return answer, reminder_time
 
+    async def check_status(self) -> list:
+        if not self.ops or not self.uploader_jid:
+            return []
+        return await self.ops.get_unviewed_statuses(self.uploader_jid)
 
+    async def send_notification(self, message: str):
+        """Send notification via CallMeBot or Direct WhatsApp"""
+        # 1. Attempt Direct WhatsApp Notification if possible
+        if self.interaction and self.notification_jid:
+            try:
+                await self.rate_limiter.wait()
+                await self.interaction.send_api_text(
+                    chat_id=self.notification_jid,
+                    text=message
+                )
+                return
+            except Exception:
+                pass
+        
+        # 2. Fallback to CallMeBot (Original behavior)
+        try:
+            from callmebot import send_message
+            send_message(message, self.phone_number, self.api_key)
+        except Exception as e:
+            print(f"Notification error: {e}")
+
+    async def monitor_notifications(self, reminder_time_idx: int):
+        """Notification Mode loop"""
+        interval_map = {1: 30, 2: 60, 3: 180, 4: 360}
+        minutes = interval_map.get(reminder_time_idx, 30)
+        
+        print(f"Monitoring {self.status_uploader_name} (Notifications every {minutes}m)...")
+        while True:
+            try:
+                unviewed = await self.check_status()
+                if unviewed:
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    msg = f"🔔 *{self.status_uploader_name}* has {len(unviewed)} new status update(s)!\n📅 {timestamp}"
+                    # await self.send_notification(msg)
+                    print(msg)
+                
+                await asyncio.sleep(minutes * 60)
+            except Exception as e:
+                print(f"Monitor error: {e}")
+                await asyncio.sleep(60)
+
+    async def auto_view_status(self):
+        """Auto-View Mode loop"""
+        print(f"Monitoring {self.status_uploader_name} (Auto-View)...")
+        while True:
+            try:
+                if not self.uploader_jid:
+                    self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
+
+                unviewed = await self.check_status()
+                if unviewed:
+                    print(f"Found {len(unviewed)} new status(es). Watching...")
+                    await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed)
+                    
+                    timestamp = datetime.now().strftime("%H:%M:%S")
+                    msg = f"✅ Viewed {len(unviewed)} new status update(s) from *{self.status_uploader_name}*\n📅 {timestamp}"
+                    # await self.send_notification(msg)
+                    print(msg)
+
+                await asyncio.sleep(60)
+            except Exception as e:
+                print(f"Auto-view error: {e}")
+                await asyncio.sleep(60)
+
+    async def run_async(self):
+        """Async entry point"""
+        try:
+            await self.initialize()
+            answer, reminder_time = self.get_user_choice()
+            
+            if answer in ["Y", "YES"]:
+                await self.monitor_notifications(reminder_time)
+            else:
+                await self.auto_view_status()
+        except KeyboardInterrupt:
+            print("\nStopped by user.")
+        finally:
+            if self.browser:
+                # Cleanup if needed
+                pass
+
+    def run(self):
+        """Synchronous wrapper for entry points"""
+        asyncio.run(self.run_async())

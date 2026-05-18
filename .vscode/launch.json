@@ -2,13 +2,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: WhatsApp Status Checker (Module)",
+            "name": "`debug`: WSC (Module)",
             "type": "debugpy",
             "request": "launch",
-            "module": "whatsapp_status_checker",
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}/src"
-            },
+            // "module": "wsc",
+            "program": "${workspaceFolder}/.venv/bin/wsc",
+            "python": "${workspaceFolder}/.venv/bin/python",
             "console": "integratedTerminal",
             "justMyCode": false
         }
