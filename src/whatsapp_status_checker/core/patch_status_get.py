@@ -10,12 +10,9 @@ This module applies patches automatically when imported.
 import os
 from typing import Any
 
-# Load .env into os.environ so SCREEN_WIDTH / SCREEN_HEIGHT are available
-try:
-    from dotenv import load_dotenv
-    load_dotenv()
-except ImportError:
-    pass
+
+from dotenv import load_dotenv
+load_dotenv()
 
 
 async def patched_status_get(self, contact_id: str) -> Any:

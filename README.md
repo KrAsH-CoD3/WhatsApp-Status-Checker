@@ -1,6 +1,6 @@
 # WhatsApp Status Checker
 
-[![Anti-Detection](https://img.shields.io/badge/Browser-Camoufox-orange?style=for-the-badge)](https://github.com/daijro/camoufox)
+[![Anti-Detection](https://img.shields.io/badge/CamouChat-WhatsApp-orange?style=for-the-badge)](https://github.com/CamouChat-Team/CamouChat-WhatsApp)
 [![Engine](https://img.shields.io/badge/API-WA--JS-blue?style=for-the-badge)](https://github.com/wppconnect-team/wa-js)
 [![Status](https://img.shields.io/badge/Release-v0.2.0-green?style=for-the-badge)](#)
 
@@ -90,4 +90,6 @@ For detailed engineering insights and architectural differences between the Sele
 ---
 
 ## Credits & Acknowledgments
-* **CamouChat** utilizes the excellent **[Camoufox](https://github.com/berstend/camoufox)** browser core underneath—a highly advanced, open-source, hardened anti-detect Firefox browser designed to spoof browser fingerprints and block automation detection natively.
+* **Heavy Lifter**: The bulk of the migration effort and infrastructure support was made possible by **[CamouChat-WhatsApp](https://github.com/CamouChat-Team/CamouChat-WhatsApp)**, a highly robust SDK designed for high-efficiency Webpack hijacking and anti-bot stealth.
+* **Hardened Browser Core**: **CamouChat-WhatsApp** uses **[Camoufox](https://github.com/daijro/camoufox)** which provides advanced fingerprint masking and canvas/WebGL spoofing under the hood.
+* **API Wrapper**: **[WA-JS (WPPConnect)](https://github.com/wppconnect-team/wa-js)** provides the JavaScript API hooks used to access WhatsApp Web internal stores.

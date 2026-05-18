@@ -17,7 +17,7 @@ dependencies = [
 where = ["src"]
 
 [tool.uv.sources]
-callmebot = { git = "https://github.com/KrAsH-CoD3/gabrielrih-callmebot.git" }
+callmebot = { git = "https://github.com/gabrielrih/callmebot.git" }
 
 [tool.uv]
 package = true
