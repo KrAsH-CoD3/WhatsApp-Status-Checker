@@ -1,174 +1,93 @@
 # WhatsApp Status Checker
 
-![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
+[![Anti-Detection](https://img.shields.io/badge/Browser-Camoufox-orange?style=for-the-badge)](https://github.com/daijro/camoufox)
+[![Engine](https://img.shields.io/badge/API-WA--JS-blue?style=for-the-badge)](https://github.com/wppconnect-team/wa-js)
+[![Status](https://img.shields.io/badge/Release-v0.2.0-green?style=for-the-badge)](#)
 
-WhatsApp Status Checker is a high-performance tool designed to continuously monitor and interact with WhatsApp statuses. It can automatically view a specific contact's status (Images, Videos, Text, or Audio) as soon as they are uploaded, ensuring every update is registered as "viewed" even on slow internet connections. Alternatively, it can function in a notification-only mode, alerting you via WhatsApp at your preferred intervals (30m, 1h, 3h, 6h).
+A modern, highly resilient, stealth-focused **WhatsApp Status Checker** which monitors target contacts, automatically views their status updates, and sends immediate encrypted notification alerts.
 
-> _**NOTE:** WhatsApp does not allow bots or unofficial clients on their platform, so this shouldn't be considered totally safe._
+---
 
-## Demo Video
+## Features
 
-![WhatsApp Status Checker Demo](static/images/Demo.webp)
+* **CamouChat Browser**: Advanced canvas, WebGL, screen, and user-agent spoofing to bypass modern anti-bot detection systems.
+* **WA-JS Internal Engine**: Interacts directly with WhatsApp's underlying React/Webpack context. Zero fragile XPath DOM scraping.
+* **Dual Run Modes**: Choose between Auto-View (watches updates within seconds of upload) and Notification Mode (receive alerts via CallMeBot).
+* **Smart Read Receipts**: Optimized non-blocking seen receipts utilizing accurate timestamp fallbacks for both text and media statuses.
+* **Profile Isolation**: Fully managed, encrypted session profiles to secure your login state across application runs.
+* **Organic Behavior Guardrails**: Randomized human-like action delays (2-5s) and strict rate limit checks to ensure safety.
 
-View HD Demo Video [here](static/videos/Demo.mp4)
+---
 
-## WhatsApp Messenger
+## ⚙️ Configuration (`.env`)
 
-[CallMeBot] was used for WhatsApp message, **PLEASE READ!**
+Configure the application by creating a `.env` file in the root directory:
 
-# How to use
+```env
+MY_NUMBER = 234xxxxxxxxxx              # Your WhatsApp phone number (with country code excluding the + sign)
+CALLMEBOT_APIKEY = xxxxxxx             # CallMeBot API key for notifications
+STATUS_UPLOADER_NAME = "NameOfContact" # Contact name to monitor
+HEADLESS = False                       # Set to True at first for QR login, then False after successful login to run in background
+SCREEN_WIDTH = 800                     # Spoofed viewport width (min 800) - OPTIONAL
+SCREEN_HEIGHT = 800                    # Spoofed viewport height - OPTIONAL
+```
 
-Make sure your installed Google Chrome Browser is the latest.
+---
 
-  - Create a `.env` file.
-    - Set `MY_NUMBER` to your phone number. (Your WhatsApp Number e.g: 234xxxxxxxxxx)
-    - Set `CALLMEBOT_APIKEY` to your API Key. (API Key provided by CallMeBot)
-      > See [CallMeBot] for detailed information.
-    - Set `STATUS_UPLOADER_NAME` contact you want to view their status. 
-      > NOTE: As it is saved on your phone(Case Sensitive).
-    - **Optionally**, set `TIMEZONE` to your preferred timezone. Time will be displayed in this timezone.
-      > If not set, it resolves to IP timezone.
-  
-  ## Installation
-  - <details>
-      <summary>Using UV</summary>
-      
-      - Install UV if you haven't already using `pip install uv`
-      - Initialize and create virtual environment using `uv init . && uv venv`
-      - Install package using `uv add git+https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker.git`
-    </details>
-    
-  - <details>
-      <summary>Using PIP</summary>
-      
-      - Create a Virtual Environment using `py -m venv .venv`
-      - Activate your virtual environment using `.venv\Scripts\activate`
-      - Install dependencies using `pip install git+https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker.git`
-    </details>
-  
-  ## Usage
+## Installation & Setup
 
-  ### CLI (Recommended)
-  
-  You can run the application directly from the terminal using the `wsc` alias:
+### 1. Install Dependencies
+This project uses `uv` to manage python environments and dependencies securely:
+```bash
+# Sync and install environment
+uv sync
+```
 
-  - <details>
-      <summary>Using UV</summary>
-      
-      ```bash
-      uv run wsc
-      ```
-    </details>
-    
-  - <details>
-      <summary>Using Python</summary>
-      
-      ```bash
-      python -m whatsapp_status_checker
-      ```
-      *Or if the package is already installed in your path:*
-      ```bash
-      wsc
-      ```
-    </details>
+### 2. Fetch Hardened Browser (One-Time Setup)
+Download the anti-detect CamouChat browser core engine:
+```bash
+uv run python -m camoufox fetch
+```
 
-  ### Python Script
-  
-  Alternatively, you can import and run it in your own Python script:
-  
-  ```python
-  from whatsapp_status_checker import WhatsAppStatusChecker
+### 3. Launch the Checker
+Start the application CLI:
+```bash
+uv run wsc
+```
 
-  def main():
-      # Create and run application
-      app = WhatsAppStatusChecker()
-      app.run()
+---
 
-  if __name__ == "__main__":
-      main()
-  ```
-  </details>
+## Running Modes
 
+Upon executing `wsc`, you will configure the checking sequence interactively:
 
-## Screenshots
+```
+[Y] Notification Mode - Get alerted when they post.
+[N] Auto-View Mode - Automatically 'watch' their stories.
+```
 
-### Terminal | First Time Logging In
-![WhatsApp first time log in](static/images/WhatsApp%20first%20time%20log%20in.png)
-#
-### Terminal | Viewed Contact Status 
-![WhatsApp subsequent log in view status 2](static/images/WhatsApp%20subsequent%20log%20in%20view%20status%202.png)
-#
-### WhatsApp Message | Status Notification
-![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
-### See other Screenshots, [Click here](static/images)
+### 1. Notification Mode (`Y`)
+Checks the status feed of the target contact at scheduled intervals (30m, 1h, 3h, 6h). If updates are found, it triggers a CallMeBot alert directly to your WhatsApp without marking their status as read.
 
-<details>
-<summary><b><font size="4">AI Auto-Healing (Deprecation)</font></b></summary>
+### 2. Auto-View Mode (`N`)
+Monitors the target feed continuously in the background (polling every 60 seconds). When a new story is uploaded, it views it automatically and registers your profile on the uploader's viewer list instantly.
 
-While we explored implementing an AI-powered "Auto-Healing" mechanism to dynamically resolve broken XPaths, it has been intentionally deprecated. WhatsApp Web is a "heavy" application with highly dynamic DOM structures, making automated path resolution unreliable and performance-heavy. 
+---
 
-To ensure the bot remains stable and reliable, we manually maintain and update the XPaths using an **accessibility-first** approach (targeting ARIA labels and attributes). This makes the locators significantly more resilient to UI updates and provides the consistency required for heavy applications like WhatsApp.
-</details>
+## Stealth & Anti-Ban Measures
 
-## Errors and Fixes
+To keep automated accounts highly secure, the runtime implements:
+* **Humanized View Delays**: Random pauses (2,000ms to 5,000ms) before clicking or marking updates read.
+* **Strict Message Rate Limiting**: Minimum 10-second spacing between any outgoing message calls.
+* **Min Viewport Size**: Spoofs realistic standard layout screens (800x800 minimum) to prevent responsive layout detection.
+* **Hidden Global Namespace**: Deletes injected handles from `window.WPP` to ensure total code isolation.
 
-- **Timeout When Logging in:** The application now uses an efficient 3-minute (180s) polling loop that handles QR code scanning and transient loading screens automatically.
-  > If you consistently timeout, ensure your internet connection is stable.
-- **Not Receiving WhatsApp Message:** Make sure you follow [CallMeBot] instructions carefully.
-  > Also confirm your `.env` values are correct.
+---
 
-## Support and Contribute
-- Please [![⭐ Star Project](https://img.shields.io/badge/Star-Project-blue?logo=github)]() to encourage developer(s).
-- [Fork], do your thing and create a PR.
+## Migration History
+For detailed engineering insights and architectural differences between the Selenium codebase and the CamouChat version, see [MIGRATION.md](MIGRATION.md).
 
-## Issues and Bug Reports
+---
 
-Found a bug or have a feature request? Please:
-
-1. **Check existing issues**: [Browse issues] to see if it’s already reported.
-2. **Open a new issue**: [Create one here] with:
-   - A clear title
-   - Description (and steps to reproduce, if a bug)
-   - Expected vs actual behavior
-   - Screenshots or error logs, if relevant
-   - Environment (OS, Python, Chrome version)
-3. **Use the template**: Please use the provided bug report template.
-4. **Feature requests**: Explain what you want, why it’s useful, and any suggestions.
-
-
-## Discussion
-
-Have feedback or suggestions? Open an [issue] or join [dicussions] on new features, improvements, and use cases. Your input helps shape the project!
-
-## TODO
-- [ ] PyPi Package.
-    - [x] Convert to a package.
-    - [x] pip install package.
-    - [ ] publish to PyPi.
-- [ ] Automatically
-  - [x] Use specified timezone othwerwise automatically get it.
-  - [ ] Check first time activity.
-    - [ ] Make sure it is completely synced with phone (Loading messages).
-  - [x] Handle Chromedriver
-    - [x] Check if Chrome browser is updated (same version as latest chromedriver release)
-    - [x] Download latest chromedriver.
-    - [x] Extract and move to `driver` directory.
-  - [x] Handle dedicated Chrome profile 
-    - [x] Create a new chrome profile(if not previously done).
-    - [x] Use the newly chrome profile(if just created for the first time).
-    - [x] Use existing chrome profile(if already created).
-
-[WhatsApp Web]: <https://web.whatsapp.com/>
-[Fork]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/fork/>
-[CallMeBot]: <https://www.callmebot.com/blog/free-api-whatsapp-messages/>
-[ChromeDriver]: <https://googlechromelabs.github.io/chrome-for-testing/>
-[WhatsApp Business Cloud API]: <https://developers.facebook.com/products/whatsapp/>
-[WhatsApp Business Cloud API Dashboard]: <README.md#WhatsApp-Business-Cloud-API-Dashboard>
-[Create one here]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues/new>
-[Browse issues]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues>
-[issue]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues>
-[REPO]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker>
-[Dicussions]: <https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/discussions>
-
-[Todo]: <README.md#TODO>
-
+## Credits & Acknowledgments
+* **CamouChat** utilizes the excellent **[Camoufox](https://github.com/berstend/camoufox)** browser core underneath—a highly advanced, open-source, hardened anti-detect Firefox browser designed to spoof browser fingerprints and block automation detection natively.
