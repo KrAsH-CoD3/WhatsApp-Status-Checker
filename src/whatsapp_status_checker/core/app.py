@@ -1,7 +1,3 @@
-"""
-Modern WhatsApp Status Checker - Powered by CamouChat & wa-js
-"""
-
 import asyncio
 import os
 import time
@@ -61,6 +57,9 @@ class WhatsAppStatusChecker:
         self.notification_jid: Optional[str] = None
         self.rate_limiter = RateLimiter(min_interval=10.0)
         self.ops: Optional[WhatsAppOperations] = None
+        self.active_mode = None
+        self._last_realtime_action: float = 0  # Timestamp of last real-time event handled
+        self._health_interval = int(os.getenv("HEALTH_CHECK_MINUTES", "15")) * 60
 
     async def initialize(self):
         """Initialize Camoufox and Wapi Bridge"""
@@ -83,7 +82,10 @@ class WhatsAppStatusChecker:
 
         self.browser = CamoufoxBrowser(config=config, profile=self.profile)
         self.page = await self.browser.get_page()
-
+        
+        # Route browser console messages to our terminal and intercept custom bridge events
+        self.page.on("console", self._handle_browser_console)
+        
         # 2. Login Flow
         login = Login(page=self.page, profile=self.profile)
         # Use method=0 for QR scan (default in camouchat-whatsapp is 1/Code)
@@ -220,48 +222,147 @@ class WhatsAppStatusChecker:
         except Exception as e:
             print(f"Notification error: {e}")
 
-    async def monitor_notifications(self, reminder_time_idx: int):
-        """Notification Mode loop"""
-        interval_map = {1: 30, 2: 60, 3: 180, 4: 360}
-        minutes = interval_map.get(reminder_time_idx, 30)
+    # ── Real-time event path ───────────────────────────────────────────
+
+    def _handle_browser_console(self, msg):
+        """Intercepts specific console logs from the Main World as a bridge for real-time events."""
+        text = msg.text
+            
+        if text.startswith("[StatusCheckerEvent]:"):
+            try:
+                jid = text.split(":", 1)[1].strip()
+                # Run the async callback without blocking the Playwright event loop
+                asyncio.create_task(self._handle_realtime_status_event(jid))
+            except Exception as e:
+                pass
+
+    async def _handle_realtime_status_event(self, jid: str):
+        """Python callback fired by JS when WhatsApp's native WebSocket pushes a status update"""
+        # Debounce: WhatsApp fires multiple events (add, change) across multiple stores 
+        # for a single status. We only need to process once every few seconds.
+        now = time.time()
+        if hasattr(self, '_last_realtime_trigger') and now - self._last_realtime_trigger < 5:
+            return
+        self._last_realtime_trigger = now
+
+        if not self.uploader_jid:
+            return
         
-        print(f"Monitoring {self.status_uploader_name} (Notifications every {minutes}m)...")
+        # Compare phone-number prefix to support both @c.us and @lid JIDs
+        incoming_prefix = jid.split('@')[0]
+        expected_prefix = self.uploader_jid.split('@')[0]
+        
+        if incoming_prefix != expected_prefix:
+            return
+
+        print(f"✨ Status update detected from {self.status_uploader_name}...")
+        self._last_realtime_action = now
+        await self._process_statuses()
+
+    # ── Unified status processing (used by both real-time and health loop) ─
+
+    async def _process_statuses(self):
+        """Fetch unviewed statuses and act on them based on active mode"""
+        if getattr(self, '_processing_lock', False):
+            return
+        self._processing_lock = True
+        try:
+            if not self.uploader_jid:
+                self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
+
+            unviewed = await self.check_status()
+            if not unviewed:
+                return
+
+            timestamp = datetime.now().strftime("%H:%M:%S")
+
+            if self.active_mode == "autoview":
+                print(f"Watching {len(unviewed)} status(es)...")
+                await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed)
+                print(f"✅ Viewed {len(unviewed)} status update(s) from *{self.status_uploader_name}*\n📅 {timestamp}")
+            elif self.active_mode == "notification":
+                msg = f"🔔 *{self.status_uploader_name}* has {len(unviewed)} new status update(s)!\n📅 {timestamp}"
+                # await self.send_notification(msg)
+                print(msg)
+
+        except Exception as e:
+            print(f"Status processing error: {e}")
+        finally:
+            self._processing_lock = False
+
+    # ── Health monitoring loop ────────────────────────────────────────
+
+    async def _verify_listeners(self) -> bool:
+        """Check if real-time JS listeners are still bound; re-inject if page reloaded"""
+        try:
+            if not hasattr(self.wapi, 'bridge') or not self.wapi.bridge:
+                return False
+                
+            # Check for the Main World handler injected in patch_status_get.py
+            alive = await self.wapi.bridge._evaluate_stealth("return typeof window.__statusStoreAddHandler === 'function'")
+            if alive:
+                return True
+
+            # Listeners lost (page reload). Re-inject via wapi.start() which triggers our patch.
+            print("⚠️ Listeners lost (page reload detected). Re-injecting...")
+            await self.wapi.start()
+            await asyncio.sleep(3)
+            return await self.wapi.bridge._evaluate_stealth("return typeof window.__statusStoreAddHandler === 'function'")
+        except Exception as e:
+            print(f"Health check error: {e}")
+            return False
+
+    async def _health_loop(self):
+        """
+        Keepalive loop that serves three purposes:
+        1. Keeps the asyncio event loop alive so real-time callbacks can fire
+        2. Periodically verifies JS listeners are still bound (self-healing)
+        3. Falls back to polling ONLY when real-time hasn't fired recently
+        """
+        print(f"Monitoring {self.status_uploader_name} (real-time active, health check every {self._health_interval // 60}m)...")
+
+        # Initial catch-up for statuses posted while offline
+        try:
+            await self._process_statuses()
+        except Exception as e:
+            print(f"Initial catch-up failed: {e}")
+
         while True:
             try:
-                unviewed = await self.check_status()
-                if unviewed:
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    msg = f"🔔 *{self.status_uploader_name}* has {len(unviewed)} new status update(s)!\n📅 {timestamp}"
-                    # await self.send_notification(msg)
-                    print(msg)
+                await asyncio.sleep(self._health_interval)
+
+                # 1. Verify listeners are alive
+                listeners_ok = await self._verify_listeners()
+
+                # 2. If real-time fired recently, listeners are working — skip polling
+                seconds_since_last = time.time() - self._last_realtime_action
+                if self._last_realtime_action > 0 and seconds_since_last < self._health_interval:
+                    continue
+
+                # 3. Real-time hasn't fired in a while — either no new statuses, 
+                #    or listeners died silently. Poll once as reconciliation.
+                if not listeners_ok:
+                    print("⚠️ Real-time listeners unresponsive. Polling as fallback...")
                 
-                await asyncio.sleep(minutes * 60)
+                await self._process_statuses()
+
             except Exception as e:
-                print(f"Monitor error: {e}")
+                print(f"Health loop error: {e}")
                 await asyncio.sleep(60)
+
+    # ── Mode entry points ─────────────────────────────────────────────
+
+    async def monitor_notifications(self, reminder_time_idx: int):
+        """Notification Mode — real-time alerts, health-monitored"""
+        self.active_mode = "notification"
+        await self._health_loop()
 
     async def auto_view_status(self):
-        """Auto-View Mode loop"""
-        print(f"Monitoring {self.status_uploader_name} (Auto-View)...")
-        while True:
-            try:
-                if not self.uploader_jid:
-                    self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
+        """Auto-View Mode — real-time viewing, health-monitored"""
+        self.active_mode = "autoview"
+        await self._health_loop()
 
-                unviewed = await self.check_status()
-                if unviewed:
-                    print(f"Found {len(unviewed)} new status(es). Watching...")
-                    await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed)
-                    
-                    timestamp = datetime.now().strftime("%H:%M:%S")
-                    msg = f"✅ Viewed {len(unviewed)} new status update(s) from *{self.status_uploader_name}*\n📅 {timestamp}"
-                    # await self.send_notification(msg)
-                    print(msg)
-
-                await asyncio.sleep(60)
-            except Exception as e:
-                print(f"Auto-view error: {e}")
-                await asyncio.sleep(60)
+    # ── Lifecycle ─────────────────────────────────────────────────────
 
     async def run_async(self):
         """Async entry point"""

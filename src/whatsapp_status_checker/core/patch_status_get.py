@@ -154,6 +154,104 @@ async def patched_status_send_read(self, participant_jid: str, msg_id: str = "")
     return result
 
 
+original_wapi_session_start = None
+
+async def patched_wapi_session_start(self, *args, **kwargs) -> Any:
+    """
+    Patched WapiSession.start to automatically inject real-time WhatsApp status listeners
+    whenever the bridge starts or restarts.
+    
+    CRITICAL: 
+    Camoufox/Playwright strictly isolates execution contexts. page.expose_function()
+    and postMessage() are intercepted or fail due to the heavy anti-bot sandbox.
+    
+    However, Playwright natively intercepts all console logs via CDP. We use
+    console.log("[StatusCheckerEvent]: " + jid) as a 100% reliable cross-context bridge.
+    """
+    global original_wapi_session_start
+    res = await original_wapi_session_start(self, *args, **kwargs)
+
+    # Inject real-time status change listeners via stealth bridge (Main World)
+    try:
+        js_code = """
+            (async () => {
+                if (!wpp || !wpp.whatsapp) {
+                    console.warn('[StatusChecker] wpp.whatsapp not available for listener injection');
+                    return 'no_wpp';
+                }
+                
+                // Handler: extract JID and log it to the console bridge
+                const handleNewStatus = (model) => {
+                    try {
+                        const jid = model.id?._serialized 
+                            || model.id?.participant?._serialized 
+                            || model.from?._serialized;
+                        
+                        if (jid) {
+                            // This is intercepted by Playwright's page.on("console") in app.py
+                            console.log('[StatusCheckerEvent]: ' + jid);
+                        }
+                    } catch (e) {
+                        console.warn('[StatusChecker] handleNewStatus error:', e.message);
+                    }
+                };
+                
+                let bound = 0;
+                
+                // 1. StatusV3Store
+                if (wpp.whatsapp.StatusV3Store) {
+                    if (window.__statusStoreAddHandler) {
+                        wpp.whatsapp.StatusV3Store.off('add', window.__statusStoreAddHandler);
+                    }
+                    if (window.__statusStoreChangeHandler) {
+                        wpp.whatsapp.StatusV3Store.off('change', window.__statusStoreChangeHandler);
+                    }
+                    
+                    window.__statusStoreAddHandler = handleNewStatus;
+                    window.__statusStoreChangeHandler = handleNewStatus;
+                    
+                    wpp.whatsapp.StatusV3Store.on('add', window.__statusStoreAddHandler);
+                    wpp.whatsapp.StatusV3Store.on('change', window.__statusStoreChangeHandler);
+                    bound++;
+                }
+                
+                // 2. MsgStore
+                if (wpp.whatsapp.MsgStore) {
+                    if (window.__statusMsgStoreHandler) {
+                        wpp.whatsapp.MsgStore.off('add', window.__statusMsgStoreHandler);
+                    }
+                    
+                    window.__statusMsgStoreHandler = (msg) => {
+                        try {
+                            const remote = msg.id?.remote?._serialized || msg.id?.remote;
+                            if (remote === 'status@broadcast') {
+                                const author = msg.author?._serialized || msg.from?._serialized;
+                                if (author) {
+                                    console.log('[StatusCheckerEvent]: ' + author);
+                                }
+                            }
+                        } catch (e) {}
+                    };
+                    
+                    wpp.whatsapp.MsgStore.on('add', window.__statusMsgStoreHandler);
+                    bound++;
+                }
+                
+                console.log('[StatusChecker] Real-time listeners injected: ' + bound + ' store(s) bound');
+                return 'listeners_bound_' + bound;
+            })()
+        """
+        if hasattr(self, 'bridge') and self.bridge:
+            result = await self.bridge._evaluate_stealth(js_code)
+            print(f"🔌 Real-time listeners: {result}")
+        elif hasattr(self, 'page') and self.page:
+            print("⚠️ Bridge not available, cannot inject Main World listeners")
+    except Exception as e:
+        print(f"Failed to inject real-time listeners: {e}")
+        
+    return res
+
+
 original_get_screen_size = None
 
 def patched_get_screen_size() -> tuple[int, int]:
@@ -262,6 +360,14 @@ def _apply_patches():
                 
             camoufox.async_api.AsyncNewBrowser = patched_AsyncNewBrowser
             patched_AsyncNewBrowser._patched = True
+            
+        # Patch WapiSession.start to automatically inject real-time listeners
+        from camouchat_whatsapp import WapiSession
+        global original_wapi_session_start
+        if not hasattr(WapiSession.start, '_patched'):
+            original_wapi_session_start = WapiSession.start
+            WapiSession.start = patched_wapi_session_start
+            patched_wapi_session_start._patched = True
             
         return True
     except Exception as e:
