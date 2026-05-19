@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import Optional
 
 from camouchat_browser import BrowserConfig, CamoufoxBrowser, ProfileManager
-from camouchat_core import Platform
+from camouchat_core import Platform, LoggerFactory
 from camouchat_whatsapp import (
     Login,
     WapiSession,
@@ -19,6 +19,8 @@ from .patch_status_get import _apply_patches as apply_status_get_patch
 from ..config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
 from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
 from art import tprint, text2art
+
+logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
 
 
 class RateLimiter:
@@ -69,7 +71,7 @@ class WhatsAppStatusChecker:
         pm = ProfileManager()
         self.profile = pm.create_profile(
             platform=Platform.WHATSAPP,
-            profile_id="status_checker_testingprofile"
+            profile_id="status_checker"#_testingprofile"
         )
 
         # Headless mode is more stable for background monitoring
@@ -92,44 +94,44 @@ class WhatsAppStatusChecker:
         await login.login(method=0)
 
         # 3. Start Wapi Session
-        print("Initializing Wapi Session...")
+        logger.info("Initializing Wapi Session...")
         self.wapi = WapiSession(page=self.page)
         
         # Apply monkey-patch for status_get to fix bridge timeout
         apply_status_get_patch()
         
         try:
-            print("Starting Wapi bridge (injecting wa-js)...")
+            logger.info("Starting Wapi bridge (injecting wa-js)...")
             await asyncio.wait_for(self.wapi.start(), timeout=60)
-            print("✅ Wapi bridge started.")
+            logger.info("Wapi bridge started.")
         except asyncio.TimeoutError:
-            print("⚠️ Wapi start timed out. This often happens if the page reloaded. Retrying once...")
+            logger.warning("Wapi start timed out. This often happens if the page reloaded. Retrying once...")
             await asyncio.sleep(2)
             await self.wapi.start()
         except Exception as e:
-            print(f"⚠️ Wapi start error: {e}. Proceeding with caution.")
+            logger.error(f"Wapi start error: {e}. Proceeding with caution.")
 
-        print("Waiting for WhatsApp Web to be ready...")
+        logger.info("Waiting for WhatsApp Web to be ready...")
         # Max wait 60s for readiness
         for _ in range(30):
             if await self.wapi.bridge.conn_is_main_ready():
-                print("✅ WhatsApp Web is fully ready.")
+                logger.info("WhatsApp Web is fully ready.")
                 break
             await asyncio.sleep(2)
         else:
-            print("⚠️ WhatsApp Web readiness check timed out. Some features may not work.")
+            logger.warning("WhatsApp Web readiness check timed out. Some features may not work.")
         
         self.interaction = InteractionController(page=self.page, wapi=self.wapi)
         self.media = MediaController(page=self.page, wapi=self.wapi, profile=self.profile)
         self.ops = WhatsAppOperations(wapi=self.wapi, media_controller=self.media)
 
         # 3.5 Warm up the session
-        print("Warming up session (waiting for data sync)...")
+        logger.info("Warming up session (waiting for data sync)...")
         await asyncio.sleep(15)
         
         try:
             # Force a click on the status tab to wake up the store
-            print("Waking up status store...")
+            logger.info("Waking up status store...")
             await self.interaction.click_status_tab()
             await asyncio.sleep(5)
             # Click back to chats
@@ -142,13 +144,13 @@ class WhatsAppStatusChecker:
             clean_number = "".join(filter(str.isdigit, self.phone_number))
             self.notification_jid = f"{clean_number}@c.us"
         
-        print(f"Resolving JID for {self.status_uploader_name}...")
+        logger.info(f"Resolving JID for {self.status_uploader_name}...")
         self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
         
         if self.uploader_jid:
-            print(f"✅ Target resolved: {self.uploader_jid}")
+            logger.info(f"Target resolved: {self.uploader_jid}")
         else:
-            print(f"⚠️ Could not resolve JID for {self.status_uploader_name}. Ensure you have an active chat with them.")
+            logger.warning(f"Could not resolve JID for {self.status_uploader_name}. Ensure you have an active chat with them.")
 
     async def _get_jid_by_name(self, name: str) -> Optional[str]:
         """Resolve name to JID using Chat and Contact stores, prioritizing @c.us"""
@@ -181,7 +183,7 @@ class WhatsAppStatusChecker:
             return potential_jids[0]
             
         except Exception as e:
-            print(f"Resolution error: {e}")
+            logger.error(f"Resolution error: {e}")
         return None
 
     def get_user_choice(self) -> tuple[str, Optional[int]]:
@@ -220,7 +222,7 @@ class WhatsAppStatusChecker:
             from callmebot import send_message
             send_message(message, self.phone_number, self.api_key)
         except Exception as e:
-            print(f"Notification error: {e}")
+            logger.error(f"Notification error: {e}")
 
     # ── Real-time event path ───────────────────────────────────────────
 
@@ -255,7 +257,7 @@ class WhatsAppStatusChecker:
         if incoming_prefix != expected_prefix:
             return
 
-        print(f"✨ Status update detected from {self.status_uploader_name}...")
+        logger.info(f"Status update detected from {self.status_uploader_name}...")
         self._last_realtime_action = now
         await self._process_statuses()
 
@@ -277,16 +279,16 @@ class WhatsAppStatusChecker:
             timestamp = datetime.now().strftime("%H:%M:%S")
 
             if self.active_mode == "autoview":
-                print(f"Watching {len(unviewed)} status(es)...")
+                logger.info(f"Watching {len(unviewed)} status(es)...")
                 await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed)
-                print(f"✅ Viewed {len(unviewed)} status update(s) from *{self.status_uploader_name}*\n📅 {timestamp}")
+                logger.info(f"Viewed {len(unviewed)} status update(s) from *{self.status_uploader_name}* at {timestamp}")
             elif self.active_mode == "notification":
                 msg = f"🔔 *{self.status_uploader_name}* has {len(unviewed)} new status update(s)!\n📅 {timestamp}"
                 # await self.send_notification(msg)
-                print(msg)
+                logger.info(msg)
 
         except Exception as e:
-            print(f"Status processing error: {e}")
+            logger.error(f"Status processing error: {e}")
         finally:
             self._processing_lock = False
 
@@ -304,12 +306,12 @@ class WhatsAppStatusChecker:
                 return True
 
             # Listeners lost (page reload). Re-inject via wapi.start() which triggers our patch.
-            print("⚠️ Listeners lost (page reload detected). Re-injecting...")
+            logger.warning("Listeners lost (page reload detected). Re-injecting...")
             await self.wapi.start()
             await asyncio.sleep(3)
             return await self.wapi.bridge._evaluate_stealth("return typeof window.__statusStoreAddHandler === 'function'")
         except Exception as e:
-            print(f"Health check error: {e}")
+            logger.error(f"Health check error: {e}")
             return False
 
     async def _health_loop(self):
@@ -319,13 +321,13 @@ class WhatsAppStatusChecker:
         2. Periodically verifies JS listeners are still bound (self-healing)
         3. Falls back to polling ONLY when real-time hasn't fired recently
         """
-        print(f"Monitoring {self.status_uploader_name} (real-time active, health check every {self._health_interval // 60}m)...")
+        logger.info(f"Monitoring {self.status_uploader_name} (real-time active, health check every {self._health_interval // 60}m)...")
 
         # Initial catch-up for statuses posted while offline
         try:
             await self._process_statuses()
         except Exception as e:
-            print(f"Initial catch-up failed: {e}")
+            logger.error(f"Initial catch-up failed: {e}")
 
         while True:
             try:
@@ -342,12 +344,12 @@ class WhatsAppStatusChecker:
                 # 3. Real-time hasn't fired in a while — either no new statuses, 
                 #    or listeners died silently. Poll once as reconciliation.
                 if not listeners_ok:
-                    print("⚠️ Real-time listeners unresponsive. Polling as fallback...")
+                    logger.warning("Real-time listeners unresponsive. Polling as fallback...")
                 
                 await self._process_statuses()
 
             except Exception as e:
-                print(f"Health loop error: {e}")
+                logger.error(f"Health loop error: {e}")
                 await asyncio.sleep(60)
 
     # ── Mode entry points ─────────────────────────────────────────────
@@ -375,7 +377,7 @@ class WhatsAppStatusChecker:
             else:
                 await self.auto_view_status()
         except KeyboardInterrupt:
-            print("\nStopped by user.")
+            logger.info("Stopped by user.")
         finally:
             if self.browser:
                 # Cleanup if needed

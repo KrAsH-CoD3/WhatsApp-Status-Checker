@@ -8,6 +8,9 @@ import random
 import contextlib
 from typing import Optional, Dict, List, Any
 from camouchat_whatsapp import WapiSession, MediaController
+from camouchat_core import LoggerFactory
+
+logger = LoggerFactory.get_logger(name="status_checker.operations", platform="WHATSAPP")
 
 class WhatsAppOperations:
     """Handles WhatsApp operations and status detection using camouchat-whatsapp"""
@@ -43,7 +46,7 @@ class WhatsAppOperations:
                     'viewed_status': viewed_status
                 }
             except (asyncio.TimeoutError, Exception) as e:
-                print(f"Attempt {attempt + 1} failed: {e}")
+                logger.error(f"Attempt {attempt + 1} failed: {e}")
                 if attempt == 2:
                     break
                 await asyncio.sleep(2)
@@ -56,11 +59,11 @@ class WhatsAppOperations:
             try:
                 # Ensure bridge is ready
                 if not await self.wapi.bridge.conn_is_main_ready():
-                    print(f"Bridge not ready, waiting... (attempt {attempt + 1})")
+                    logger.warning(f"Bridge not ready, waiting... (attempt {attempt + 1})")
                     await asyncio.sleep(5)
                     continue
 
-                print(f"Fetching statuses for {uploader_jid}...")
+                logger.info(f"Fetching statuses for {uploader_jid}...")
                 statuses = await asyncio.wait_for(
                     self.wapi.bridge.status_get(uploader_jid),
                     timeout=45.0
@@ -68,15 +71,15 @@ class WhatsAppOperations:
                 
                 if statuses is not None:
                     unviewed = [s for s in statuses if isinstance(s, dict) and not s.get('isViewed')]
-                    print(f"Successfully fetched {len(unviewed)} unviewed statuses.")
+                    logger.info(f"Successfully fetched {len(unviewed)} unviewed statuses.")
                     return unviewed
                     
             except Exception as e:
                 err_msg = str(e).lower()
-                print(f"Attempt {attempt + 1} failed: {e}")
+                logger.error(f"Attempt {attempt + 1} failed: {e}")
                 
                 if "timeout" in err_msg or "bridge" in err_msg:
-                    print("Bridge issue detected. Trying global fallback...")
+                    logger.warning("Bridge issue detected. Trying global fallback...")
                     try:
                         # Fallback: Fetch ALL statuses and filter manually
                         all_statuses = await asyncio.wait_for(
@@ -91,15 +94,15 @@ class WhatsAppOperations:
                                 not s.get('isViewed')
                             ]
                             if unviewed:
-                                print(f"Fallback successful: found {len(unviewed)} statuses in global list.")
+                                logger.info(f"Fallback successful: found {len(unviewed)} statuses in global list.")
                                 return unviewed
                             else:
-                                print("Fallback succeeded but no statuses found for this contact.")
+                                logger.info("Fallback succeeded but no statuses found for this contact.")
                     except Exception as fallback_e:
-                        print(f"Fallback fetch failed: {fallback_e}")
+                        logger.error(f"Fallback fetch failed: {fallback_e}")
                 
                 if attempt == 1: # On second failure, try refreshing the bridge
-                    print("Refreshing Wapi bridge...")
+                    logger.info("Refreshing Wapi bridge...")
                     try:
                         await self.wapi.start()
                         await asyncio.sleep(5)
@@ -108,7 +111,7 @@ class WhatsAppOperations:
                 
             await asyncio.sleep(3)
             
-        print("Failed to fetch statuses after all attempts. Bridge might be stuck.")
+        logger.error("Failed to fetch statuses after all attempts. Bridge might be stuck.")
         return []
 
     async def view_status(self, status_id: str, participant_jid: str = "") -> bool:
@@ -118,7 +121,7 @@ class WhatsAppOperations:
             await self.wapi.bridge.status_send_read(participant_jid, status_id)
             return True
         except Exception as e:
-            print(f"Failed to view status {status_id}: {e}")
+            logger.error(f"Failed to view status {status_id}: {e}")
             return False
 
     async def view_all_unviewed_statuses(self, uploader_jid: str, unviewed: Optional[List[dict]] = None, humanize_delay: bool = True) -> int:
@@ -161,12 +164,12 @@ class WhatsAppOperations:
     async def download_status_media(self, status_msg: Any) -> Optional[str]:
         """Download media from a status if available"""
         if not self.media_controller:
-            print("MediaController not provided")
+            logger.warning("MediaController not provided")
             return None
         
         try:
             path = await self.media_controller.save_media(message=status_msg)
             return path
         except Exception as e:
-            print(f"Failed to download status media: {e}")
+            logger.error(f"Failed to download status media: {e}")
             return None

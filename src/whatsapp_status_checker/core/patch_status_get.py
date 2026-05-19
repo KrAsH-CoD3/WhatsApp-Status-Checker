@@ -9,10 +9,12 @@ This module applies patches automatically when imported.
 
 import os
 from typing import Any
-
-
+from camouchat_core import LoggerFactory
 from dotenv import load_dotenv
+
 load_dotenv()
+
+logger = LoggerFactory.get_logger(name="status_checker.patches", platform="WHATSAPP")
 
 
 async def patched_status_get(self, contact_id: str) -> Any:
@@ -243,11 +245,11 @@ async def patched_wapi_session_start(self, *args, **kwargs) -> Any:
         """
         if hasattr(self, 'bridge') and self.bridge:
             result = await self.bridge._evaluate_stealth(js_code)
-            print(f"🔌 Real-time listeners: {result}")
+            logger.info(f"Real-time listeners: {result}")
         elif hasattr(self, 'page') and self.page:
-            print("⚠️ Bridge not available, cannot inject Main World listeners")
+            logger.warning("Bridge not available, cannot inject Main World listeners")
     except Exception as e:
-        print(f"Failed to inject real-time listeners: {e}")
+        logger.error(f"Failed to inject real-time listeners: {e}")
         
     return res
 
@@ -371,7 +373,7 @@ def _apply_patches():
             
         return True
     except Exception as e:
-        print(f"Failed to apply patches: {e}")
+        logger.error(f"Failed to apply patches: {e}")
         return False
 
 # Auto-apply on import
