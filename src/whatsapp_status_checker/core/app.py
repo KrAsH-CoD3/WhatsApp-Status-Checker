@@ -187,17 +187,18 @@ class WhatsAppStatusChecker:
             logger.error(f"Resolution error: {e}")
         return None
 
-    def get_user_choice(self) -> tuple[str, Optional[int]]:
-        """Rich terminal UI for mode selection"""
-        tprint("WhatsApp Status Checker", "rectangles")
-        print("\n[Y] Notification Mode - Get alerted when they post.")
-        print("[N] Auto-View Mode - Automatically 'watch' their stories.")
+    def get_user_choice(self) -> tuple[bool, Optional[int]]:
+        """Determine running mode from environment or default"""
+        auto_view_env = os.getenv("AUTO_VIEW", "TRUE").strip().lower()
+        auto_view = auto_view_env in ["true", "1", "yes", "y", "t"]
         
-        answer = "N" # Defaulting for now or input if interactive
-        # answer = input("Choice: ").upper()
-        
+        if auto_view:
+            logger.info("Mode resolved from environment: Auto-View Mode")
+        else:
+            logger.info("Mode resolved from environment: Notification Mode")
+            
         reminder_time = 1 # 30 mins
-        return answer, reminder_time
+        return auto_view, reminder_time
 
     async def check_status(self) -> list:
         if not self.ops or not self.uploader_jid:
@@ -369,14 +370,18 @@ class WhatsAppStatusChecker:
 
     async def run_async(self):
         """Async entry point"""
+        tprint("WhatsApp Status Checker", "rectangles")
+        print("Active Modes:")
+        print("• Auto-View Mode      - Automatically 'watch' their stories (Configure: AUTO_VIEW=True)")
+        print("• Notification Mode   - Get alerted when they post          (Configure: AUTO_VIEW=False)\n")
         try:
             await self.initialize()
-            answer, reminder_time = self.get_user_choice()
+            auto_view, reminder_time = self.get_user_choice()
             
-            if answer in ["Y", "YES"]:
-                await self.monitor_notifications(reminder_time)
-            else:
+            if auto_view:
                 await self.auto_view_status()
+            else:
+                await self.monitor_notifications(reminder_time)
         except KeyboardInterrupt:
             logger.info("Stopped by user.")
         finally:
