@@ -53,8 +53,9 @@ class WhatsAppOperations:
         
         return {'total_status': 0, 'unviewed_status': 0, 'viewed_status': 0}
 
-    async def get_unviewed_statuses(self, uploader_jid: str) -> List[dict]:
+    async def get_unviewed_statuses(self, uploader_jid: str, name: Optional[str] = None) -> List[dict]:
         """Get list of unviewed status objects with retry logic, fallback, and page refresh"""
+        display_name = name or uploader_jid
         for attempt in range(3):
             try:
                 # Ensure bridge is ready
@@ -63,7 +64,7 @@ class WhatsAppOperations:
                     await asyncio.sleep(5)
                     continue
 
-                logger.info(f"Fetching statuses for {uploader_jid}...")
+                logger.info(f"Fetching statuses for {display_name}...")
                 statuses = await asyncio.wait_for(
                     self.wapi.bridge.status_get(uploader_jid),
                     timeout=45.0
@@ -71,7 +72,11 @@ class WhatsAppOperations:
                 
                 if statuses is not None:
                     unviewed = [s for s in statuses if isinstance(s, dict) and not s.get('isViewed')]
-                    logger.info(f"Successfully fetched {len(unviewed)} unviewed statuses.")
+                    unviewed_len = len(unviewed)
+                    if unviewed_len == 1:
+                        logger.info("Successfully fetched 1 unviewed status.")
+                    else:
+                        logger.info(f"Successfully fetched {unviewed_len} unviewed statuses.")
                     return unviewed
                     
             except Exception as e:
@@ -93,8 +98,12 @@ class WhatsAppOperations:
                                 (s.get('id', {}).get('remote') == uploader_jid or s.get('from') == uploader_jid) and
                                 not s.get('isViewed')
                             ]
-                            if unviewed:
-                                logger.info(f"Fallback successful: found {len(unviewed)} statuses in global list.")
+                            unviewed_len = len(unviewed)
+                            if unviewed_len:
+                                if unviewed_len == 1:
+                                    logger.info("Fallback successful: found 1 status in global list.")
+                                else:
+                                    logger.info(f"Fallback successful: found {unviewed_len} statuses in global list.")
                                 return unviewed
                             else:
                                 logger.info("Fallback succeeded but no statuses found for this contact.")
@@ -124,14 +133,14 @@ class WhatsAppOperations:
             logger.error(f"Failed to view status {status_id}: {e}")
             return False
 
-    async def view_all_unviewed_statuses(self, uploader_jid: str, unviewed: Optional[List[dict]] = None, humanize_delay: bool = True) -> int:
+    async def view_all_unviewed_statuses(self, uploader_jid: str, unviewed: Optional[List[dict]] = None, humanize_delay: bool = True, name: Optional[str] = None) -> int:
         """View all unviewed statuses for a contact and return count viewed.
         
         If unviewed list is provided, uses it directly (avoids double fetch).
         Otherwise fetches fresh.
         """
         if unviewed is None:
-            unviewed = await self.get_unviewed_statuses(uploader_jid)
+            unviewed = await self.get_unviewed_statuses(uploader_jid, name=name)
         
         count = 0
         

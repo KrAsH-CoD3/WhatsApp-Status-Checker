@@ -203,7 +203,7 @@ class WhatsAppStatusChecker:
     async def check_status(self) -> list:
         if not self.ops or not self.uploader_jid:
             return []
-        return await self.ops.get_unviewed_statuses(self.uploader_jid)
+        return await self.ops.get_unviewed_statuses(self.uploader_jid, name=self.status_uploader_name)
 
     async def send_notification(self, message: str):
         """Send notification via CallMeBot or Direct WhatsApp"""
@@ -275,18 +275,28 @@ class WhatsAppStatusChecker:
                 self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
 
             unviewed = await self.check_status()
-            if not unviewed:
+            unviewed_len = len(unviewed)
+            if not unviewed_len:
                 return
 
             timestamp = datetime.now().strftime("%H:%M:%S")
 
             if self.active_mode == "autoview":
-                logger.info(f"Watching {len(unviewed)} status(es)...")
-                await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed)
-                logger.info(f"Viewed {len(unviewed)} status update(s) from *{self.status_uploader_name}* at {timestamp}")
+                if unviewed_len == 1:
+                    logger.info("Watching 1 status...")
+                else:
+                    logger.info(f"Watching {unviewed_len} statuses...")
+                await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed, name=self.status_uploader_name)
+                
+                if unviewed_len == 1:
+                    logger.info(f"Viewed 1 status update from *{self.status_uploader_name}* at {timestamp}")
+                else:
+                    logger.info(f"Viewed {unviewed_len} status updates from *{self.status_uploader_name}* at {timestamp}")
             elif self.active_mode == "notification":
-                msg = f"🔔 *{self.status_uploader_name}* has {len(unviewed)} new status update(s)!\n📅 {timestamp}"
-                # await self.send_notification(msg)
+                if unviewed_len == 1:
+                    msg = f"🔔 *{self.status_uploader_name}* has 1 new status update!\n📅 {timestamp}"
+                else:
+                    msg = f"🔔 *{self.status_uploader_name}* has {unviewed_len} new status updates!\n📅 {timestamp}"
                 logger.info(msg)
 
         except Exception as e:
