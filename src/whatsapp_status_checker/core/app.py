@@ -19,6 +19,106 @@ from .patch_status_get import _apply_patches as apply_status_get_patch
 from ..config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
 from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
 from art import tprint, text2art
+import logging
+
+class ConsoleNoiseFilter(logging.Filter):
+    """Filter out excessive framework integration noise from the console."""
+    
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        suppress_keywords = [
+            "WapiSession initialized",
+            "WapiSession starting",
+            "Injecting WPP engine",
+            "window.WPP annihilated",
+            "Stealth DOM Bridge active",
+            "MessageApiManager",
+            "WapiSession is ready",
+            "Wapi bridge started",
+            "Resolving JID",
+            "Target resolved:"
+        ]
+        for kw in suppress_keywords:
+            if kw in msg:
+                return False
+        return True
+
+
+class FriendlyFormatter(logging.Formatter):
+    """Sleek, user-friendly formatter for CLI display."""
+    
+    def __init__(self, use_color: bool = True):
+        super().__init__()
+        self.use_color = use_color
+        self.COLORS = {
+            "DEBUG": "\033[36m",      # Cyan
+            "INFO": "\033[32m",       # Green
+            "WARNING": "\033[33m",    # Yellow
+            "ERROR": "\033[31m",      # Red
+            "CRITICAL": "\033[41m\033[37m", # White on Red
+            "RESET": "\033[0m"
+        }
+
+    def format(self, record: logging.LogRecord) -> str:
+        level = record.levelname
+        msg = record.getMessage()
+        
+        # Translate framework logs to be extremely user-friendly
+        if "Skiping, profile exists" in msg:
+            msg = "Using existing browser profile: status_checker"
+        elif "No locale provided" in msg:
+            msg = "Headless browser initialized (locale: en-US)"
+        elif "No proxy provided" in msg:
+            msg = "Connecting directly to network (no proxy)"
+        elif "Waiting for QR scan" in msg:
+            msg = "Please scan the QR code to log in..."
+        elif "WhatsApp login session stored" in msg:
+            msg = "Session loaded successfully!"
+        elif "Initializing Wapi Session" in msg:
+            msg = "Initializing secure connection to WhatsApp..."
+        elif "Real-time listeners:" in msg:
+            msg = "Real-time status listeners bound."
+        elif "Waiting for WhatsApp Web" in msg:
+            msg = "Waiting for WhatsApp Web connection..."
+        elif "WhatsApp Web is fully ready" in msg:
+            msg = "WhatsApp connection established."
+        elif "Warming up session" in msg:
+            msg = "Syncing in-memory status database..."
+        elif "Waking up status store" in msg:
+            msg = "Ready to receive status updates."
+        elif "Bridge timeout (30s)" in msg or "Main World did not respond" in msg:
+            msg = "Browser connection temporarily unresponsive. Retrying sync..."
+        
+        # Customize message prefix/icon based on level
+        if level == "INFO":
+            prefix = "✨ "
+        elif level == "WARNING":
+            prefix = "⚠️  "
+        elif level == "ERROR":
+            prefix = "❌ "
+        elif level == "CRITICAL":
+            prefix = "🚨 "
+        else:
+            prefix = ""
+            
+        color_start = self.COLORS.get(level, "") if self.use_color else ""
+        color_end = self.COLORS.get("RESET", "") if self.use_color else ""
+        
+        return f"{color_start}{prefix}{msg}{color_end}"
+
+
+# Monkey patch LoggerFactory to use our sleek FriendlyFormatter and ConsoleNoiseFilter
+_orig_setup = LoggerFactory._setup_root_handlers
+
+@classmethod
+def _patched_setup(cls, log_file=None):
+    _orig_setup(log_file)
+    if "console" in cls._handlers:
+        console_handler = cls._handlers["console"]
+        console_handler.setFormatter(FriendlyFormatter())
+        console_handler.addFilter(ConsoleNoiseFilter())
+
+LoggerFactory._setup_root_handlers = _patched_setup
 
 logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
 
