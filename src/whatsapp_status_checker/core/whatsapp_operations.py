@@ -2,13 +2,11 @@
 WhatsApp-specific operations and status detection logic using CamouChat
 """
 
-import asyncio
-import time
-import random
-import contextlib
-from typing import Optional, Dict, List, Any
 from camouchat_whatsapp import WapiSession, MediaController
+from typing import Optional, Dict, List, Any
 from camouchat_core import LoggerFactory
+import asyncio
+import random
 
 logger = LoggerFactory.get_logger(name="status_checker.operations", platform="WHATSAPP")
 

@@ -1,8 +1,8 @@
-import asyncio
-import os
-import time
 from datetime import datetime
 from typing import Optional
+import asyncio
+import time
+import os
 
 from camouchat_browser import BrowserConfig, CamoufoxBrowser, ProfileManager
 from camouchat_core import Platform, LoggerFactory
@@ -65,6 +65,7 @@ class WhatsAppStatusChecker:
         self.active_mode = None
         self._last_realtime_action: float = 0  # Timestamp of last real-time event handled
         self._health_interval = int(os.getenv("HEALTH_CHECK_MINUTES", "15")) * 60
+        self.notified_status_ids = set()
 
     async def initialize(self):
         """Initialize Camoufox and Wapi Bridge"""
@@ -275,6 +276,18 @@ class WhatsAppStatusChecker:
                 self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
 
             unviewed = await self.check_status()
+            if not unviewed:
+                return
+
+            # In notification mode, filter out already notified statuses
+            if self.active_mode == "notification":
+                new_unviewed = []
+                for status in unviewed:
+                    sid = status.get('id_id') or status.get('id_serialized') or status.get('id', {}).get('_serialized')
+                    if sid and sid not in self.notified_status_ids:
+                        new_unviewed.append(status)
+                unviewed = new_unviewed
+
             unviewed_len = len(unviewed)
             if not unviewed_len:
                 return
@@ -297,7 +310,15 @@ class WhatsAppStatusChecker:
                     msg = f"🔔 *{self.status_uploader_name}* has 1 new status update!\n📅 {timestamp}"
                 else:
                     msg = f"🔔 *{self.status_uploader_name}* has {unviewed_len} new status updates!\n📅 {timestamp}"
+                
+                await self.send_notification(msg)
                 logger.info(msg)
+                
+                # Mark as notified so we do not repeat
+                for status in unviewed:
+                    sid = status.get('id_id') or status.get('id_serialized') or status.get('id', {}).get('_serialized')
+                    if sid:
+                        self.notified_status_ids.add(sid)
 
         except Exception as e:
             logger.error(f"Status processing error: {e}")
@@ -395,9 +416,13 @@ class WhatsAppStatusChecker:
         except KeyboardInterrupt:
             logger.info("Stopped by user.")
         finally:
-            if self.browser:
-                # Cleanup if needed
-                pass
+            if self.browser and self.profile:
+                logger.info("Cleaning up browser context...")
+                try:
+                    await self.browser.close_browser_by_profile(self.profile.profile_id)
+                    logger.info("Browser cleanup completed.")
+                except Exception as e:
+                    logger.error(f"Error during browser cleanup: {e}")
 
     def run(self):
         """Synchronous wrapper for entry points"""

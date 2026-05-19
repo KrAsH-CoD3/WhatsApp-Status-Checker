@@ -138,16 +138,13 @@ async def patched_qr_login(self, wait_time: int) -> bool:
     """Custom QR login handler that renders QR code in the terminal using qrcode library."""
     self.log.info("Waiting for secure QR code from WhatsApp...")
     
-    qr_selector = "[data-ref]"
-    chat_selector = "div[data-testid='chat-list'], [data-testid='default-user-profile']"
-    
     last_ref = None
     printed_height = 0
     start_time = time.time()
     
     while time.time() - start_time < (wait_time / 1000.0):
         # 1. Check if chat list is visible (login successful)
-        chats = self.page.locator(chat_selector)
+        chats = self.ui_config.chat_list()
         if await chats.count() > 0 and await chats.first.is_visible():
             if last_ref is not None and printed_height > 0:
                 import sys
@@ -158,9 +155,10 @@ async def patched_qr_login(self, wait_time: int) -> bool:
             return True
             
         # 2. Check if QR code is visible
-        qr_el = self.page.locator(qr_selector)
-        if await qr_el.count() > 0:
-            ref = await qr_el.first.get_attribute("data-ref")
+        qr_canvas = self.ui_config.qr_canvas()
+        if await qr_canvas.count() > 0:
+            qr_el = qr_canvas.locator("xpath=./ancestor-or-self::*[@data-ref]").first
+            ref = await qr_el.get_attribute("data-ref")
             if ref and ref != last_ref:
                 if last_ref is not None and printed_height > 0:
                     import sys
