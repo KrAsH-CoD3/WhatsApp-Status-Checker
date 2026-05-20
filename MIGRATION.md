@@ -1,28 +1,25 @@
 # Legacy(Selenium) to CamouChat-WhatsApp Migration
 
-This document details the architectural migration of the **WhatsApp Status Checker** from its legacy Selenium-based DOM automation to **[CamouChat-WhatsApp](https://github.com/CamouChat-Team/CamouChat-WhatsApp)** — A powerful WhatsApp automation SDK — paired with custom core optimization patches.
-
----
 
 ## Architectural Overview
 
-The legacy application relied on Selenium WebDriver to automate Google Chrome, using complex XPath selectors to scrape the WhatsApp Web DOM. This approach was highly fragile, prone to breaking on minor WhatsApp UI updates, and easily detectable by anti-bot systems.
+The legacy application relied on Selenium WebDriver to automate Google Chrome, using complex XPath selectors to navigate the WhatsApp Web DOM. This approach was highly fragile, prone to breaking on minor WhatsApp UI updates, and easily detectable by anti-bot systems.
 
 The migrated system shifts to an **API-driven stealth model** powered by **CamouChat**:
-1. **CamouChat-WhatsApp** does the heavy lifting: orchestrating the under-the-hood **Camoufox** browser engine, applying realistic browser fingerprints, and injecting the WA-JS library directly into the WhatsApp Webpack context.
+1. **[CamouChat-WhatsApp](https://github.com/CamouChat-Team/CamouChat-WhatsApp)** does the heavy lifting: orchestrating the under-the-hood **Camoufox** browser engine, applying realistic browser fingerprints, and injecting the WA-JS library directly into the WhatsApp Webpack context.
 2. Direct API interaction bypasses the DOM entirely, executing native Backbone.js actions on in-memory stores (`StatusV3Store`).
 3. We introduced a **custom surgical patch layer** over CamouChat where default behaviors fell short for continuous background monitoring.
 
 ```mermaid
 graph TD
-    subgraph Legacy Architecture
+    subgraph legacy [Legacy Architecture]
         A[Selenium Script] -->|XPath Scraping| B[WhatsApp Web DOM]
         B -->|Unstable UI Poll| C[Detect and Click UI Elements]
     end
 
-    subgraph CamouChat + Patch Layer
+    subgraph modern [CamouChat and Patch Layer]
         D[WhatsApp Status Checker] -->|Framework Control| E[CamouChat SDK]
-        E -->|Fingerprint & Sandbox| F[Camoufox Browser Core]
+        E -->|Fingerprint and Sandbox| F[Camoufox Browser Core]
         D -->|Custom Patches| G[Surgical Patch Layer]
         G -->|Accurate Receipt Handshake| H[WA-JS Webpack context]
     end
@@ -34,7 +31,7 @@ graph TD
 
 | Feature | Legacy System (Selenium) | Migrated System (CamouChat & Patch Layer) |
 | :--- | :--- | :--- |
-| **Orchestration SDK** | Custom Selenium wrappers | **[CamouChat-WhatsApp](https://github.com/CamouChat-Team/CamouChat-WhatsApp)** (Direct WhatsApp API) |
+| **Orchestration SDK** | Custom Selenium wrappers | **CamouChat-WhatsApp** (Direct WhatsApp API) |
 | **Automation Driver** | Selenium WebDriver (Chrome) | Hardened Camoufox Firefox engine managed by CamouChat |
 | **Data Extraction** | UI/DOM XPath selectors (`//div[...]`) | Native memory queries via `WapiSession` interface |
 | **Mark Viewed** | Simulating physical page clicks | Backbone seen receipt stanza transmission |
@@ -61,6 +58,49 @@ Marking a status as read in WhatsApp Web requires a strict two-way handshake wit
 
 ### 2. Viewport & Screen Sizing Override
 WhatsApp Web dynamically modifies its structural layout if screen resolutions drop below standard bounds. To ensure layout stability while spoofing realistic devices, our patch repairs browser engine sizing to support the custom `.env` dimensions securely.
+
+---
+
+## Migration Phases (Completed)
+
+### ✅ Phase 1: Proof of Concept
+- [x] Set up CamouChat-WhatsApp plugin
+- [x] Implement single status viewer using internal API
+- [x] Basic notification logic
+
+### ✅ Phase 2: Core Features
+- [x] Replace all XPath-based operations with wa-js API calls
+- [x] Implement notification modes (30m, 1h, 3h, 6h intervals) via `.env`
+- [x] Add ProfileManager for session persistence
+- [x] Integrate CallMeBot for external notifications
+
+### ✅ Phase 3: Hardening & Cleanup
+- [x] Refactor patches for QR Code injection and session management fixes
+- [x] Remove all redundant Selenium `vars.py` and old dependencies
+- [x] Modularize test suite (`test_realtime.py`, `test_status_processing.py`, `test_health.py`, `test_modes.py`)
+- [x] Validate anti-ban measures (humanized delays, proper headers)
+
+---
+
+## Risk Mitigation (Implemented)
+
+### WhatsApp ToS Compliance
+- **Mitigation Active**: 
+  - Humanized delays (randomized 2-5s between actions)
+  - Rate limiting logic embedded in the `whatsapp_operations.py` core
+  - Safe, stealth-first viewport configurations
+
+### Technical Risks Handled
+- **API changes**: Handled via centralized `patches.py` which dynamically injects fixes to `wa-js` and `camoufox` runtime behavior without waiting for upstream package updates.
+- **Profile corruption**: Handled securely via `ProfileManager`.
+
+---
+
+## Success Metrics Achieved
+- [x] Zero XPath selectors in codebase
+- [x] Headless and Headful modes successfully tested
+- [x] Legacy code completely purged from the repository
+- [x] Test coverage ensures core polling/notification loop resilience
 
 ---
 
