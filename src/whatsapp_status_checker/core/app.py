@@ -23,12 +23,11 @@ from ..config import (
     NUMBER,
     CALLMEBOT_APIKEY,
     STATUS_UPLOADER_NAME,
-    TIMEZONE,
     HEADLESS,
     AUTO_VIEW,
     REMINDER_TIME,
 )
-from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
+from ..utils import calculate_next_reminder_time
 from art import tprint
 
 logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
@@ -53,13 +52,11 @@ class WhatsAppStatusChecker:
     def __init__(self, 
         phone_number: Optional[str] = None,
         api_key: Optional[str] = None,
-        status_uploader_name: Optional[str] = None,
-        timezone: Optional[str] = None
+        status_uploader_name: Optional[str] = None
     ):
         self.phone_number = phone_number or NUMBER
         self.api_key = api_key or CALLMEBOT_APIKEY
         self.status_uploader_name = status_uploader_name or STATUS_UPLOADER_NAME
-        self.timezone = timezone or TIMEZONE
         
         self.profile = None
         self.browser = None

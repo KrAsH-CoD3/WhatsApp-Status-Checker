@@ -7,7 +7,6 @@ requires-python = ">=3.12"
 dependencies = [
     "camouchat-whatsapp==0.7.3",
     "python-dotenv==1.2.2",
-    "pytz==2026.2",
     "art==6.5",
     "callmebot>=1.0.2",
     "qrcode==7.4.2"
