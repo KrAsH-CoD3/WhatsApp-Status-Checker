@@ -232,7 +232,7 @@ class WhatsAppStatusChecker:
             return []
         return await self.ops.get_unviewed_statuses(self.uploader_jid, name=self.status_uploader_name, prefix_logs=prefix_logs)
 
-    async def send_notification(self, message: str):
+    async def notify_self(self, message: str):
         """Send notification via CallMeBot or Direct WhatsApp"""
         # 1. Attempt Direct WhatsApp Notification if possible
         if self.interaction and self.notification_jid:
@@ -341,20 +341,20 @@ class WhatsAppStatusChecker:
                 await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed, name=self.status_uploader_name)
                 
                 if unviewed_len == 1:
-                    logger.info(f"Viewed 1 status update from *{self.status_uploader_name}* at {timestamp}")
+                    msg = f"*{self.status_uploader_name}*: 1 new status update viewed automatically!\n📅 {timestamp}"
                 else:
-                    logger.info(f"Viewed {unviewed_len} status updates from *{self.status_uploader_name}* at {timestamp}")
+                    msg = f"*{self.status_uploader_name}*: {unviewed_len} new status updates viewed automatically!\n📅 {timestamp}"
             elif self.active_mode == "notification":
                 is_reminder = not has_new_status
                 reminder_suffix = " (Reminder)" if is_reminder else ""
                 
                 if unviewed_len == 1:
-                    msg = f"🔔 *{self.status_uploader_name}* has 1 new status update{reminder_suffix}!\n📅 {timestamp}"
+                    msg = f"*{self.status_uploader_name}* has 1 new status update{reminder_suffix}!\n📅 {timestamp}"
                 else:
-                    msg = f"🔔 *{self.status_uploader_name}* has {unviewed_len} new status updates{reminder_suffix}!\n📅 {timestamp}"
+                    msg = f"*{self.status_uploader_name}* has {unviewed_len} new status updates{reminder_suffix}!\n📅 {timestamp}"
                 
-                await self.send_notification(msg)
-                logger.info(msg)
+            await self.notify_self(msg)
+            logger.info(msg.replace("*", ""))
 
         except Exception as e:
             logger.error(f"Status processing error: {e}")
