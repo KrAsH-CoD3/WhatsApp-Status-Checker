@@ -51,7 +51,11 @@ class WhatsAppOperations:
         
         return {'total_status': 0, 'unviewed_status': 0, 'viewed_status': 0}
 
-    async def get_unviewed_statuses(self, uploader_jid: str, name: Optional[str] = None) -> List[dict]:
+    async def get_unviewed_statuses(
+        self, uploader_jid: str, 
+        name: Optional[str] = None, 
+        prefix_logs: Optional[List[str]] = None
+    ) -> List[dict]:
         """Get list of unviewed status objects with retry logic, fallback, and page refresh"""
         display_name = name or uploader_jid
         for attempt in range(3):
@@ -62,7 +66,6 @@ class WhatsAppOperations:
                     await asyncio.sleep(5)
                     continue
 
-                logger.info(f"Fetching statuses for {display_name}...")
                 statuses = await asyncio.wait_for(
                     self.wapi.bridge.status_get(uploader_jid),
                     timeout=45.0
@@ -71,10 +74,15 @@ class WhatsAppOperations:
                 if statuses is not None:
                     unviewed = [s for s in statuses if isinstance(s, dict) and not s.get('isViewed')]
                     unviewed_len = len(unviewed)
-                    if unviewed_len == 1:
-                        logger.info("Successfully fetched 1 unviewed status.")
-                    else:
-                        logger.info(f"Successfully fetched {unviewed_len} unviewed statuses.")
+                    if unviewed_len > 0:
+                        if prefix_logs:
+                            for log_msg in prefix_logs:
+                                logger.info(log_msg)
+                        logger.info(f"Fetching statuses for {display_name}...")
+                        if unviewed_len == 1:
+                            logger.info("Successfully fetched 1 unviewed status.")
+                        else:
+                            logger.info(f"Successfully fetched {unviewed_len} unviewed statuses.")
                     return unviewed
                     
             except Exception as e:
@@ -131,7 +139,12 @@ class WhatsAppOperations:
             logger.error(f"Failed to view status {status_id}: {e}")
             return False
 
-    async def view_all_unviewed_statuses(self, uploader_jid: str, unviewed: Optional[List[dict]] = None, humanize_delay: bool = True, name: Optional[str] = None) -> int:
+    async def view_all_unviewed_statuses(
+        self, uploader_jid: str, 
+        unviewed: Optional[List[dict]] = None, 
+        humanize_delay: bool = True,
+        name: Optional[str] = None
+    ) -> int:
         """View all unviewed statuses for a contact and return count viewed.
         
         If unviewed list is provided, uses it directly (avoids double fetch).

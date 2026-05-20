@@ -12,6 +12,26 @@ import logging
 from typing import Any
 from camouchat_core import LoggerFactory
 from dotenv import load_dotenv
+from ..config import SCREEN_WIDTH as _RAW_SCREEN_WIDTH, SCREEN_HEIGHT as _RAW_SCREEN_HEIGHT
+
+
+try:
+    if _RAW_SCREEN_WIDTH:
+        _clean_width = _RAW_SCREEN_WIDTH.split('#')[0].strip()
+        SCREEN_WIDTH = int(_clean_width) if _clean_width else None
+    else:
+        SCREEN_WIDTH = None
+except ValueError:
+    SCREEN_WIDTH = None
+
+try:
+    if _RAW_SCREEN_HEIGHT:
+        _clean_height = _RAW_SCREEN_HEIGHT.split('#')[0].strip()
+        SCREEN_HEIGHT = int(_clean_height) if _clean_height else None
+    else:
+        SCREEN_HEIGHT = None
+except ValueError:
+    SCREEN_HEIGHT = None
 
 load_dotenv()
 
@@ -91,6 +111,17 @@ class FriendlyFormatter(logging.Formatter):
         elif "Bridge timeout (30s)" in msg or "Main World did not respond" in msg:
             msg = "Browser connection temporarily unresponsive. Retrying sync..."
         
+        if "Mode resolved from environment: Auto-View Mode" in msg:
+            if self.use_color:
+                msg = "Mode resolved from environment: \033[1;36m⚡ Auto-View Mode\033[22;32m"
+            else:
+                msg = "Mode resolved from environment: [Auto-View Mode]"
+        elif "Mode resolved from environment: Notification Mode" in msg:
+            if self.use_color:
+                msg = msg.replace("Notification Mode", "\033[1;33m🔔 Notification Mode\033[22;32m")
+            else:
+                msg = msg.replace("Notification Mode", "[Notification Mode]")
+        
         # Customize message prefix/icon based on level
         if level == "INFO":
             prefix = "• "
@@ -136,7 +167,7 @@ def _apply_logging_patches():
 
 async def patched_qr_login(self, wait_time: int) -> bool:
     """Custom QR login handler that renders QR code in the terminal using qrcode library."""
-    self.log.info("Waiting for secure QR code from WhatsApp...")
+    self.log.info("Logging into WhatsApp...")
     
     last_ref = None
     printed_height = 0
@@ -407,21 +438,15 @@ original_get_screen_size = None
 
 def patched_get_screen_size() -> tuple[int, int]:
     """Return custom screen dimensions from env vars SCREEN_WIDTH / SCREEN_HEIGHT."""
-    env_w = os.getenv("SCREEN_WIDTH")
-    env_h = os.getenv("SCREEN_HEIGHT")
-    if env_w and env_h:
-        try:
-            w, h = int(env_w.strip()), int(env_h.strip())
-            if w > 0 and h > 0:
-                return w, h
-        except ValueError:
-            pass
+    if SCREEN_WIDTH and SCREEN_HEIGHT:
+        if SCREEN_WIDTH > 0 and SCREEN_HEIGHT > 0:
+            return SCREEN_WIDTH, SCREEN_HEIGHT
     if original_get_screen_size:
         try:
             return original_get_screen_size()
         except Exception:
             pass
-    return 720, 720
+    return 800, 800
 
 
 def _apply_stealth_patches():
@@ -447,7 +472,12 @@ def _apply_stealth_patches():
     if not hasattr(BrowserForge.__gen_fg__, '_patched'):
         def patched_gen_fg(self, avoid=None) -> Any:
             from browserforge.fingerprints import FingerprintGenerator
-            gen = FingerprintGenerator(browser='firefox', os=('linux', 'macos', 'windows'))
+            from browserforge.headers import Browser
+            gen = FingerprintGenerator(
+                browser=[Browser(name='firefox', min_version=120)],
+                os=('macos', 'windows'),
+                device='desktop'
+            )
             return gen.generate()
             
         BrowserForge.__gen_fg__ = patched_gen_fg
@@ -458,49 +488,31 @@ def _apply_stealth_patches():
         
         def patched_get_fg(self, profile) -> Any:
             fg = original_get_fg(self, profile)
-            env_w = os.getenv("SCREEN_WIDTH")
-            env_h = os.getenv("SCREEN_HEIGHT")
-            if env_w and env_h:
-                try:
-                    w, h = int(env_w.strip()), int(env_h.strip())
-                    if w > 0 and h > 0:
-                        if hasattr(fg, "screen") and fg.screen:
-                            fg.screen.width = w
-                            fg.screen.height = h
-                            fg.screen.availWidth = w
-                            fg.screen.availHeight = h
-                            fg.screen.innerWidth = w
-                            fg.screen.innerHeight = h
-                            fg.screen.outerWidth = w
-                            fg.screen.outerHeight = h
-                            fg.screen.clientWidth = w
-                            fg.screen.clientHeight = h
-                except ValueError:
-                    pass
+            if SCREEN_WIDTH and SCREEN_HEIGHT:
+                w, h = SCREEN_WIDTH, SCREEN_HEIGHT
+                if w > 0 and h > 0:
+                    if hasattr(fg, "screen") and fg.screen:
+                        # Realistic proportions for a desktop browser
+                        # Inner width/height must be smaller than outer to pass anti-bot checks
+                        chrome_width = 16  # 8px left and right border
+                        chrome_height = 88  # title bar + address bar + bookmarks bar
+                        
+                        fg.screen.width = w
+                        fg.screen.height = h
+                        fg.screen.availWidth = w
+                        fg.screen.availHeight = h - 40  # typical taskbar height
+                        fg.screen.outerWidth = w
+                        fg.screen.outerHeight = h
+                        fg.screen.innerWidth = w - chrome_width
+                        fg.screen.innerHeight = h - chrome_height
+                        fg.screen.clientWidth = w - chrome_width
+                        fg.screen.clientHeight = h - chrome_height
             return fg
             
         BrowserForge.get_fg = patched_get_fg
         patched_get_fg._patched = True
 
-    import camoufox.async_api
-    if not hasattr(camoufox.async_api.AsyncNewBrowser, '_patched'):
-        original_AsyncNewBrowser = camoufox.async_api.AsyncNewBrowser
-        
-        async def patched_AsyncNewBrowser(playwright, *args, **kwargs):
-            env_w = os.getenv("SCREEN_WIDTH")
-            env_h = os.getenv("SCREEN_HEIGHT")
-            if env_w and env_h:
-                try:
-                    w, h = int(env_w.strip()), int(env_h.strip())
-                    if w > 0 and h > 0:
-                        kwargs["viewport"] = {"width": w, "height": h}
-                except ValueError:
-                    pass
-            return await original_AsyncNewBrowser(playwright, *args, **kwargs)
-            
-        camoufox.async_api.AsyncNewBrowser = patched_AsyncNewBrowser
-        patched_AsyncNewBrowser._patched = True
-        
+
     from camouchat_whatsapp import WapiSession
     if not hasattr(WapiSession.start, '_patched'):
         original_wapi_session_start = WapiSession.start

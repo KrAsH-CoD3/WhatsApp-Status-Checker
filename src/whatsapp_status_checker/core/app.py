@@ -19,9 +19,17 @@ from .patches import apply_all_patches
 # Apply all unified framework patches dynamically on startup
 apply_all_patches()
 
-from ..config import NUMBER, CALLMEBOT_APIKEY, STATUS_UPLOADER_NAME, TIMEZONE
+from ..config import (
+    NUMBER,
+    CALLMEBOT_APIKEY,
+    STATUS_UPLOADER_NAME,
+    TIMEZONE,
+    HEADLESS,
+    AUTO_VIEW,
+    REMINDER_TIME,
+)
 from ..utils import get_time, calculate_next_reminder_time, initialize_timezone
-from art import tprint, text2art
+from art import tprint
 
 logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
 
@@ -66,6 +74,8 @@ class WhatsAppStatusChecker:
         self._last_realtime_action: float = 0  # Timestamp of last real-time event handled
         self._health_interval = int(os.getenv("HEALTH_CHECK_MINUTES", "15")) * 60
         self.notified_status_ids = set()
+        self.reminder_time = 1
+        self._last_notification_time = 0.0
 
     async def initialize(self):
         """Initialize Camoufox and Wapi Bridge"""
@@ -75,11 +85,11 @@ class WhatsAppStatusChecker:
         pm = ProfileManager()
         self.profile = pm.create_profile(
             platform=Platform.WHATSAPP,
-            profile_id="status_checker"#_testingprofile"
+            profile_id="status_checker"
         )
 
         # Headless mode is more stable for background monitoring
-        is_headless = os.getenv("HEADLESS", "true").lower() == "true"
+        is_headless = (HEADLESS or "true").lower() == "true"
         
         config = BrowserConfig.from_dict({
             "platform": Platform.WHATSAPP,
@@ -98,14 +108,17 @@ class WhatsAppStatusChecker:
         await login.login(method=0)
 
         # 3. Start Wapi Session
-        logger.info("Initializing Wapi Session...")
+        # logger.info("Initializing Wapi Session...")
         self.wapi = WapiSession(page=self.page)
         
         
         try:
-            logger.info("Starting Wapi bridge (injecting wa-js)...")
+            # logger.info("Starting Wapi bridge (injecting wa-js)...")
             await asyncio.wait_for(self.wapi.start(), timeout=60)
-            logger.info("Wapi bridge started.")
+            # logger.info("Wapi bridge started.")
+        except asyncio.TimeoutError:
+            await asyncio.wait_for(self.wapi.start(), timeout=60)
+            # logger.info("Wapi bridge started.")
         except asyncio.TimeoutError:
             logger.warning("Wapi start timed out. This often happens if the page reloaded. Retrying once...")
             await asyncio.sleep(2)
@@ -113,11 +126,11 @@ class WhatsAppStatusChecker:
         except Exception as e:
             logger.error(f"Wapi start error: {e}. Proceeding with caution.")
 
-        logger.info("Waiting for WhatsApp Web to be ready...")
+        # logger.info("Waiting for WhatsApp Web to be ready...")
         # Max wait 60s for readiness
         for _ in range(30):
             if await self.wapi.bridge.conn_is_main_ready():
-                logger.info("WhatsApp Web is fully ready.")
+                # logger.info("WhatsApp Web is fully ready.")
                 break
             await asyncio.sleep(2)
         else:
@@ -190,21 +203,34 @@ class WhatsAppStatusChecker:
 
     def get_user_choice(self) -> tuple[bool, Optional[int]]:
         """Determine running mode from environment or default"""
-        auto_view_env = os.getenv("AUTO_VIEW", "TRUE").strip().lower()
-        auto_view = auto_view_env in ["true", "1", "yes", "y", "t"]
+        auto_view_str = AUTO_VIEW
+        auto_view = (auto_view_str or "true").lower() == "true"
+        try:
+            reminder_time = int(REMINDER_TIME) if REMINDER_TIME else 1
+        except ValueError:
+            reminder_time = 1
+        
+        if reminder_time not in [1, 2, 3, 4]:
+            reminder_time = 1
+            
+        reminder_intervals = {
+            1: "30 Minutes",
+            2: "1 Hour",
+            3: "3 Hours",
+            4: "6 Hours"
+        }
         
         if auto_view:
             logger.info("Mode resolved from environment: Auto-View Mode")
         else:
-            logger.info("Mode resolved from environment: Notification Mode")
+            logger.info(f"Mode resolved from environment: Notification Mode (Reminder Interval: {reminder_intervals.get(reminder_time)})")
             
-        reminder_time = 1 # 30 mins
         return auto_view, reminder_time
 
-    async def check_status(self) -> list:
+    async def check_status(self, prefix_logs: Optional[list[str]] = None) -> list:
         if not self.ops or not self.uploader_jid:
             return []
-        return await self.ops.get_unviewed_statuses(self.uploader_jid, name=self.status_uploader_name)
+        return await self.ops.get_unviewed_statuses(self.uploader_jid, name=self.status_uploader_name, prefix_logs=prefix_logs)
 
     async def send_notification(self, message: str):
         """Send notification via CallMeBot or Direct WhatsApp"""
@@ -260,13 +286,13 @@ class WhatsAppStatusChecker:
         if incoming_prefix != expected_prefix:
             return
 
-        logger.info(f"Status update detected from {self.status_uploader_name}...")
         self._last_realtime_action = now
-        await self._process_statuses()
+        prefix = [f"Status update detected from {self.status_uploader_name}..."]
+        await self._process_statuses(prefix_logs=prefix)
 
     # ── Unified status processing (used by both real-time and health loop) ─
 
-    async def _process_statuses(self):
+    async def _process_statuses(self, prefix_logs: Optional[list[str]] = None):
         """Fetch unviewed statuses and act on them based on active mode"""
         if getattr(self, '_processing_lock', False):
             return
@@ -275,23 +301,36 @@ class WhatsAppStatusChecker:
             if not self.uploader_jid:
                 self.uploader_jid = await self._get_jid_by_name(self.status_uploader_name)
 
-            unviewed = await self.check_status()
+            unviewed = await self.check_status(prefix_logs=prefix_logs)
             if not unviewed:
                 return
 
-            # In notification mode, filter out already notified statuses
+            # In notification mode, calculate if we should alert the user
             if self.active_mode == "notification":
-                new_unviewed = []
+                has_new_status = False
                 for status in unviewed:
                     sid = status.get('id_id') or status.get('id_serialized') or status.get('id', {}).get('_serialized')
                     if sid and sid not in self.notified_status_ids:
-                        new_unviewed.append(status)
-                unviewed = new_unviewed
+                        has_new_status = True
+                        self.notified_status_ids.add(sid)
+                
+                should_notify = has_new_status
+                if not should_notify and unviewed:
+                    now_perf = time.perf_counter()
+                    last_time = getattr(self, '_last_notification_time', 0.0)
+                    if last_time == 0.0:
+                        should_notify = True
+                    else:
+                        new_time = calculate_next_reminder_time(now_perf - last_time, last_time, self.reminder_time)
+                        if new_time != last_time:
+                            should_notify = True
+                
+                if not should_notify:
+                    return
+                
+                self._last_notification_time = time.perf_counter()
 
             unviewed_len = len(unviewed)
-            if not unviewed_len:
-                return
-
             timestamp = datetime.now().strftime("%H:%M:%S")
 
             if self.active_mode == "autoview":
@@ -306,19 +345,16 @@ class WhatsAppStatusChecker:
                 else:
                     logger.info(f"Viewed {unviewed_len} status updates from *{self.status_uploader_name}* at {timestamp}")
             elif self.active_mode == "notification":
+                is_reminder = not has_new_status
+                reminder_suffix = " (Reminder)" if is_reminder else ""
+                
                 if unviewed_len == 1:
-                    msg = f"🔔 *{self.status_uploader_name}* has 1 new status update!\n📅 {timestamp}"
+                    msg = f"🔔 *{self.status_uploader_name}* has 1 new status update{reminder_suffix}!\n📅 {timestamp}"
                 else:
-                    msg = f"🔔 *{self.status_uploader_name}* has {unviewed_len} new status updates!\n📅 {timestamp}"
+                    msg = f"🔔 *{self.status_uploader_name}* has {unviewed_len} new status updates{reminder_suffix}!\n📅 {timestamp}"
                 
                 await self.send_notification(msg)
                 logger.info(msg)
-                
-                # Mark as notified so we do not repeat
-                for status in unviewed:
-                    sid = status.get('id_id') or status.get('id_serialized') or status.get('id', {}).get('_serialized')
-                    if sid:
-                        self.notified_status_ids.add(sid)
 
         except Exception as e:
             logger.error(f"Status processing error: {e}")
@@ -326,6 +362,19 @@ class WhatsAppStatusChecker:
             self._processing_lock = False
 
     # ── Health monitoring loop ────────────────────────────────────────
+
+    async def is_online(self) -> bool:
+        """Verify the page is connected and WhatsApp Web is loaded"""
+        try:
+            if not self.page:
+                return False
+            url = self.page.url
+            if "web.whatsapp.com" not in url:
+                return False
+            online = await self.page.evaluate("navigator.onLine")
+            return bool(online)
+        except Exception:
+            return False
 
     async def _verify_listeners(self) -> bool:
         """Check if real-time JS listeners are still bound; re-inject if page reloaded"""
@@ -358,13 +407,18 @@ class WhatsAppStatusChecker:
 
         # Initial catch-up for statuses posted while offline
         try:
-            await self._process_statuses()
+            if await self.is_online():
+                await self._process_statuses()
         except Exception as e:
             logger.error(f"Initial catch-up failed: {e}")
 
         while True:
             try:
                 await asyncio.sleep(self._health_interval)
+
+                if not await self.is_online():
+                    logger.warning("Internet connection offline or browser disconnected. Waiting to reconnect...")
+                    continue
 
                 # 1. Verify listeners are alive
                 listeners_ok = await self._verify_listeners()

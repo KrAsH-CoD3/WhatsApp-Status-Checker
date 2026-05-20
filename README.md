@@ -10,9 +10,9 @@ A modern, highly resilient, stealth-focused **WhatsApp Status Checker** which mo
 
 ## Features
 
-* **CamouChat Browser**: Advanced canvas, WebGL, screen, and user-agent spoofing to bypass modern anti-bot detection systems.
+* **Camoufox Browser**: Advanced canvas, WebGL, screen, and user-agent spoofing to bypass modern anti-bot at the lowest levels.
 * **WA-JS Internal Engine**: Interacts directly with WhatsApp's underlying React/Webpack context. Zero fragile XPath DOM scraping.
-* **Dual Run Modes**: Choose between Auto-View (watches updates within seconds of upload) and Notification Mode (receive alerts via CallMeBot).
+* **Dual Run Modes**: Choose between Auto-View (watches updates within seconds of upload) and Notification Mode (receive alerts via [CallMeBot](https://github.com/gabrielrih/callmebot)).
 * **Smart Read Receipts**: Optimized non-blocking seen receipts utilizing accurate timestamp fallbacks for both text and media statuses.
 * **Profile Isolation**: Fully managed, encrypted session profiles to secure your login state across application runs.
 * **Organic Behavior Guardrails**: Randomized human-like action delays (2-5s) and strict rate limit checks to ensure safety.
@@ -67,7 +67,7 @@ Upon executing `wsc`, you will configure the checking sequence interactively:
 ```
 
 ### 1. Notification Mode (`Y`)
-Checks the status feed of the target contact at scheduled intervals (30m, 1h, 3h, 6h). If updates are found, it triggers a CallMeBot alert directly to your WhatsApp without marking their status as read.
+Checks the status feed of the target contact at scheduled intervals (30m, 1h, 3h, 6h). If updates are found, it triggers a [CallMeBot](https://github.com/KrAsH-CoD3/gabrielrih-callmebot) alert directly to your WhatsApp without marking their status as read.
 
 ### 2. Auto-View Mode (`N`)
 Monitors the target feed continuously in the background (polling every 60 seconds). When a new story is uploaded, it views it automatically and registers your profile on the uploader's viewer list instantly.
