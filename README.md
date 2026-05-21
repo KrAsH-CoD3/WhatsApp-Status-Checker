@@ -174,6 +174,9 @@ src/whatsapp_status_checker/
     └── helpers.py                 # Scheduler and notification reminder helper functions
 tests/
 ├── conftest.py                    # Shared fixtures, external dependency mocking
+├── test_realtime.py               # Real-time event callback and integration tests
+├── test_status_processing.py      # Status fetch, view, and error handling tests
+├── test_health.py                 # Listener verification and health loop tests
 └── test_modes.py                  # Mode entry point tests
 ```
 
