@@ -35,16 +35,28 @@ class WhatsAppOperations:
         print(text2art("\nLogging in..."), "💿")
         
         start_time = time.time()
-        timeout = 180  # 3 minutes max
+        timeout = 30  # Initial 30 seconds
         qr_shown = False
+        double_attempts = 0
+        max_doubles = 3
 
         try:
-            # Endless loop with 3-minute cap
-            while (time.time() - start_time) < timeout:
+            # Loop with exponential timeout doubling (up to 3 times)
+            while True:
                 # 1. Check if we are already logged in (Chat list visible)
                 if self.bot.find_elements(By.XPATH, pane_xpath):
                     break
                 
+                # Check if we hit the current timeout
+                if (time.time() - start_time) > timeout:
+                    if double_attempts < max_doubles:
+                        double_attempts += 1
+                        timeout *= 2
+                        print(f"⚠️ Login taking longer than expected. Doubling timeout to {timeout}s (Double {double_attempts}/{max_doubles})")
+                        continue
+                    else:
+                        raise TimeoutException(f"Login sequence timed out after {max_doubles} doubling attempts ({timeout}s total)")
+
                 # 2. Check if we need to scan the QR code
                 if self.bot.find_elements(By.XPATH, qr_xpath) and not qr_shown:
                     print(text2art("Please scan the QRCODE to log in"), "🔑")
@@ -52,9 +64,6 @@ class WhatsAppOperations:
                 
                 # Poll every second to keep responsiveness high but CPU low
                 sleep(1)
-            else:
-                # If the loop finishes without a 'break', it means we timed out
-                raise TimeoutException("Login sequence timed out")
 
             # Handle transient loading screen if it appears after scan or during load
             with contextlib.suppress(TimeoutException):

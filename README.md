@@ -12,6 +12,14 @@ WhatsApp Status Checker is a high-performance tool designed to continuously moni
 
 View HD Demo Video [here](static/videos/Demo.mp4)
 
+<details>
+<summary><b><font size="4">AI Auto-Healing (Deprecation)</font></b></summary>
+
+While we explored implementing an AI-powered "Auto-Healing" mechanism to dynamically resolve broken XPaths, it has been intentionally deprecated. WhatsApp Web is a "heavy" application with highly dynamic DOM structures, making automated path resolution unreliable and performance-heavy. 
+
+To ensure the bot remains stable and reliable, we manually maintain and update the XPaths using an **accessibility-first** approach (targeting ARIA labels and attributes). This makes the locators significantly more resilient to UI updates and provides the consistency required for heavy applications like WhatsApp.
+</details>
+
 ## WhatsApp Messenger
 
 [CallMeBot] was used for WhatsApp message, **PLEASE READ!**
@@ -101,14 +109,6 @@ Make sure your installed Google Chrome Browser is the latest.
 ### WhatsApp Message | Status Notification
 ![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
 ### See other Screenshots, [Click here](static/images)
-
-<details>
-<summary><b><font size="4">AI Auto-Healing (Deprecation)</font></b></summary>
-
-While we explored implementing an AI-powered "Auto-Healing" mechanism to dynamically resolve broken XPaths, it has been intentionally deprecated. WhatsApp Web is a "heavy" application with highly dynamic DOM structures, making automated path resolution unreliable and performance-heavy. 
-
-To ensure the bot remains stable and reliable, we manually maintain and update the XPaths using an **accessibility-first** approach (targeting ARIA labels and attributes). This makes the locators significantly more resilient to UI updates and provides the consistency required for heavy applications like WhatsApp.
-</details>
 
 ## Errors and Fixes
 
