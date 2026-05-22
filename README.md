@@ -1,6 +1,6 @@
 # WhatsApp Status Checker
 
-![WhatsApp Status Checker](static/images/WhatsApp%20Status%20Checker.png)
+![WhatsApp Status Checker](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/images/WhatsApp%20Status%20Checker.png)
 
 WhatsApp Status Checker is a high-performance tool designed to continuously monitor and interact with WhatsApp statuses. It can automatically view a specific contact's status (Images, Videos, Text, or Audio) as soon as they are uploaded, ensuring every update is registered as "viewed" even on slow internet connections. Alternatively, it can function in a notification-only mode, alerting you via WhatsApp at your preferred intervals (30m, 1h, 3h, 6h).
 
@@ -8,9 +8,9 @@ WhatsApp Status Checker is a high-performance tool designed to continuously moni
 
 ## Demo Video
 
-![WhatsApp Status Checker Demo](static/images/Demo.webp)
+![WhatsApp Status Checker Demo](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/images/Demo.webp)
 
-View HD Demo Video [here](static/videos/Demo.mp4)
+View HD Demo Video [here](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/videos/Demo.mp4)
 
 <details>
 <summary><b><font size="4">AI Auto-Healing (Deprecation)</font></b></summary>
@@ -101,14 +101,14 @@ Make sure your installed Google Chrome Browser is the latest.
 ## Screenshots
 
 ### Terminal | First Time Logging In
-![WhatsApp first time log in](static/images/WhatsApp%20first%20time%20log%20in.png)
+![WhatsApp first time log in](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/images/WhatsApp%20first%20time%20log%20in.png)
 #
 ### Terminal | Viewed Contact Status 
-![WhatsApp subsequent log in view status 2](static/images/WhatsApp%20subsequent%20log%20in%20view%20status%202.png)
+![WhatsApp subsequent log in view status 2](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/images/WhatsApp%20subsequent%20log%20in%20view%20status%202.png)
 #
 ### WhatsApp Message | Status Notification
-![WhatsApp first time log in](static/images/WhatsApp%20Notification%20Status%20Message.png)
-### See other Screenshots, [Click here](static/images)
+![WhatsApp first time log in](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/images/WhatsApp%20Notification%20Status%20Message.png)
+### See other Screenshots, [Click here](https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/tree/main/static/images)
 
 ## Errors and Fixes
 
@@ -141,10 +141,10 @@ Found a bug or have a feature request? Please:
 Have feedback or suggestions? Open an [issue] or join [dicussions] on new features, improvements, and use cases. Your input helps shape the project!
 
 ## TODO
-- [ ] PyPi Package.
+- [x] PyPi Package.
     - [x] Convert to a package.
     - [x] pip install package.
-    - [ ] publish to PyPi.
+    - [x] publish to PyPi.
 - [ ] Automatically
   - [x] Use specified timezone othwerwise automatically get it.
   - [ ] Check first time activity.
