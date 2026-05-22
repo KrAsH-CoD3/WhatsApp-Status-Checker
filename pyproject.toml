@@ -1,8 +1,9 @@
 [project]
 name = "whatsapp-status-checker"
 version = "0.1.0"
-description = "Add your description here"
+description = "This package continously view a specific WhatsApp contact status as soon as it is uploaded OR get notified every 30mins, 1hour, 3hours or 6hours."
 readme = "README.md"
+license = "AGPL-3.0-only"
 requires-python = ">=3.12"
 dependencies = [
     "art>=5.9",
@@ -13,6 +14,42 @@ dependencies = [
     "pytz>=2021.3",
     "selenium>=4.8.2",
 ]
+authors = [
+  { name="Krash-c0d3", email="samuealewi@protonmail.com" }
+]
+keywords = [
+  "whatsapp",
+  "automation",
+  "playwright",
+  "scraping",
+  "bot",
+  "whatsapp automation",
+  "browser automation",
+]
+
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet :: WWW/HTTP :: Browsers",
+    "Topic :: System :: Monitoring",
+    "Topic :: Utilities",
+
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker"
+Documentation = "https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/wiki"
+Repository = "https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker"
+Issues = "https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/issues"
+Changelog = "https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/releases"
 
 [tool.setuptools.packages.find]
 where = ["src"]

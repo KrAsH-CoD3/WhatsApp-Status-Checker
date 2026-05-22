@@ -629,7 +629,7 @@ to attach them to the start of each source file to most effectively
 state the exclusion of warranty; and each file should have at least
 the "copyright" line and a pointer to where the full notice is found.
 
-    <one line to give the program's name and a brief idea of what it does.>
+    WhatsApp Status Checker - A high-performance tool to continuously monitor and interact with WhatsApp statuses.
     Copyright (C) 2026  Krash-Cod3
 
     This program is free software: you can redistribute it and/or modify
@@ -645,7 +645,7 @@ the "copyright" line and a pointer to where the full notice is found.
     You should have received a copy of the GNU Affero General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-Also add information on how to contact you by electronic and paper mail.
+Contact: Krash-c0d3 <samuealewi@protonmail.com>
 
   If your software can interact with users remotely through a computer
 network, you should also make sure that it provides a way for users to

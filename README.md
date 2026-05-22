@@ -1,6 +1,20 @@
+<div align="center">
+
 # WhatsApp Status Checker
 
+*A high-performance, automated tool to continuously monitor and interact with WhatsApp statuses.*
+
+<!-- [![Test PyPI](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Fwhatsapp-status-checker%2Fjson&query=%24.info.version&label=Test%20PyPI&color=blue&logo=pypi)](https://test.pypi.org/project/whatsapp-status-checker/) -->
+[![PyPI](https://img.shields.io/pypi/v/WhatsApp-Status-Checker)](https://pypi.org/project/WhatsApp-Status-Checker/)
+[![Python Version](https://img.shields.io/badge/Python-3.12+-blue.svg?logo=python&logoColor=white)](https://python.org)
+[![License](https://img.shields.io/github/license/KrAsH-CoD3/WhatsApp-Status-Checker?color=blue)](https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/blob/main/LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/KrAsH-CoD3/WhatsApp-Status-Checker)](https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker)
+
+<br/>
+
 ![WhatsApp Status Checker](https://raw.githubusercontent.com/KrAsH-CoD3/WhatsApp-Status-Checker/main/static/images/WhatsApp%20Status%20Checker.png)
+
+</div>
 
 WhatsApp Status Checker is a high-performance tool designed to continuously monitor and interact with WhatsApp statuses. It can automatically view a specific contact's status (Images, Videos, Text, or Audio) as soon as they are uploaded, ensuring every update is registered as "viewed" even on slow internet connections. Alternatively, it can function in a notification-only mode, alerting you via WhatsApp at your preferred intervals (30m, 1h, 3h, 6h).
 
@@ -43,7 +57,7 @@ Make sure your installed Google Chrome Browser is the latest.
       
       - Install UV if you haven't already using `pip install uv`
       - Initialize and create virtual environment using `uv init . && uv venv`
-      - Install package using `uv add git+https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker.git`
+      - Install package using `uv add whatsapp-status-checker`
     </details>
     
   - <details>
@@ -51,7 +65,7 @@ Make sure your installed Google Chrome Browser is the latest.
       
       - Create a Virtual Environment using `py -m venv .venv`
       - Activate your virtual environment using `.venv\Scripts\activate`
-      - Install dependencies using `pip install git+https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker.git`
+      - Install dependencies using `pip install whatsapp-status-checker`
     </details>
   
   ## Usage
