@@ -1,162 +1,195 @@
 """
-WhatsApp-specific operations and status detection logic
+WhatsApp-specific operations and status detection logic using CamouChat
 """
 
-from selenium.common.exceptions import TimeoutException, NoSuchElementException
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.remote.webelement import WebElement
-from selenium.webdriver.remote.webdriver import WebDriver
-from selenium.webdriver.common.keys import Keys
-from ..utils.helpers import wait_for, get_time
-from selenium.webdriver.common.by import By
-from typing import Optional, Dict, List
-from art import tprint, text2art
-from time import sleep
-from ..vars import (
-    profile_picture_status_xpath, profile_picture_img_xpath,
-    default_profile_picture_xpath, search_field_xpath, bars_xpath, unviewed_status_xpath,
-    status_exit_xpath, img_status_xpath, video_status_xpath, text_status_xpath,
-    audio_status_xpath, oldMessage_status_xpath, pane_xpath, qr_xpath, loading_xpath
-)
+from camouchat_whatsapp import WapiSession, MediaController
+from typing import Optional, Dict, List, Any
+from camouchat_core import LoggerFactory
+import asyncio
+import random
 
-import contextlib
-
+logger = LoggerFactory.get_logger(name="status_checker.operations", platform="WHATSAPP")
 
 class WhatsAppOperations:
-    """Handles WhatsApp web operations and status detection"""
+    """Handles WhatsApp operations and status detection using camouchat-whatsapp"""
     
-    def __init__(self, bot: WebDriver):
-        self.bot = bot
+    def __init__(self, wapi: WapiSession, media_controller: Optional[MediaController] = None):
+        self.wapi = wapi
+        self.media_controller = media_controller
     
-    def open_whatsapp(self) -> None:
-        """Open WhatsApp Web and handle login process with a 3-minute timeout"""
-        import time
-        self.bot.get("https://web.whatsapp.com/")
-        print(text2art("\nLogging in..."), "💿")
-        
-        start_time = time.time()
-        timeout = 30  # Initial 30 seconds
-        qr_shown = False
-        double_attempts = 0
-        max_doubles = 3
+    async def get_status_info(self, uploader_jid: str) -> Dict[str, int]:
+        """Get information about statuses (total, unviewed, viewed) with retry logic"""
+        for attempt in range(3):
+            try:
+                # Ensure bridge is ready
+                if not await self.wapi.bridge.conn_is_main_ready():
+                    await asyncio.sleep(2)
+                    continue
 
-        try:
-            # Loop with exponential timeout doubling (up to 3 times)
-            while True:
-                # 1. Check if we are already logged in (Chat list visible)
-                if self.bot.find_elements(By.XPATH, pane_xpath):
+                statuses = await asyncio.wait_for(
+                    self.wapi.bridge.status_get(uploader_jid),
+                    timeout=35.0
+                )
+                
+                if not statuses:
+                    return {'total_status': 0, 'unviewed_status': 0, 'viewed_status': 0}
+                    
+                total_status = len(statuses)
+                unviewed_status = len([s for s in statuses if isinstance(s, dict) and not s.get('isViewed')])
+                viewed_status = total_status - unviewed_status
+                
+                return {
+                    'total_status': total_status,
+                    'unviewed_status': unviewed_status,
+                    'viewed_status': viewed_status
+                }
+            except (asyncio.TimeoutError, Exception) as e:
+                logger.error(f"Attempt {attempt + 1} failed: {e}")
+                if attempt == 2:
                     break
+                await asyncio.sleep(2)
+        
+        return {'total_status': 0, 'unviewed_status': 0, 'viewed_status': 0}
+
+    async def get_unviewed_statuses(
+        self, uploader_jid: str, 
+        name: Optional[str] = None, 
+        prefix_logs: Optional[List[str]] = None
+    ) -> List[dict]:
+        """Get list of unviewed status objects with retry logic, fallback, and page refresh"""
+        display_name = name or uploader_jid
+        for attempt in range(3):
+            try:
+                # Ensure bridge is ready
+                if not await self.wapi.bridge.conn_is_main_ready():
+                    logger.warning(f"Bridge not ready, waiting... (attempt {attempt + 1})")
+                    await asyncio.sleep(5)
+                    continue
+
+                statuses = await asyncio.wait_for(
+                    self.wapi.bridge.status_get(uploader_jid),
+                    timeout=45.0
+                )
                 
-                # Check if we hit the current timeout
-                if (time.time() - start_time) > timeout:
-                    if double_attempts < max_doubles:
-                        double_attempts += 1
-                        timeout *= 2
-                        print(f"⚠️ Login taking longer than expected. Doubling timeout to {timeout}s (Double {double_attempts}/{max_doubles})")
-                        continue
-                    else:
-                        raise TimeoutException(f"Login sequence timed out after {max_doubles} doubling attempts ({timeout}s total)")
-
-                # 2. Check if we need to scan the QR code
-                if self.bot.find_elements(By.XPATH, qr_xpath) and not qr_shown:
-                    print(text2art("Please scan the QRCODE to log in"), "🔑")
-                    qr_shown = True
+                if statuses is not None:
+                    unviewed = [s for s in statuses if isinstance(s, dict) and not s.get('isViewed')]
+                    unviewed_len = len(unviewed)
+                    if unviewed_len > 0:
+                        if prefix_logs:
+                            for log_msg in prefix_logs:
+                                logger.info(log_msg)
+                        logger.info(f"Fetching statuses for {display_name}...")
+                        if unviewed_len == 1:
+                            logger.info("Successfully fetched 1 unviewed status.")
+                        else:
+                            logger.info(f"Successfully fetched {unviewed_len} unviewed statuses.")
+                    return unviewed
+                    
+            except Exception as e:
+                err_msg = str(e).lower()
+                logger.error(f"Attempt {attempt + 1} failed: {e}")
                 
-                # Poll every second to keep responsiveness high but CPU low
-                sleep(1)
+                if "timeout" in err_msg or "bridge" in err_msg:
+                    logger.warning("Bridge issue detected. Trying global fallback...")
+                    try:
+                        # Fallback: Fetch ALL statuses and filter manually
+                        all_statuses = await asyncio.wait_for(
+                            self.wapi.bridge.status_get("status@broadcast"),
+                            timeout=45.0
+                        )
+                        if all_statuses:
+                            unviewed = [
+                                s for s in all_statuses 
+                                if isinstance(s, dict) and 
+                                (s.get('id', {}).get('remote') == uploader_jid or s.get('from') == uploader_jid) and
+                                not s.get('isViewed')
+                            ]
+                            unviewed_len = len(unviewed)
+                            if unviewed_len:
+                                if unviewed_len == 1:
+                                    logger.info("Fallback successful: found 1 status in global list.")
+                                else:
+                                    logger.info(f"Fallback successful: found {unviewed_len} statuses in global list.")
+                                return unviewed
+                            else:
+                                logger.info("Fallback succeeded but no statuses found for this contact.")
+                    except Exception as fallback_e:
+                        logger.error(f"Fallback fetch failed: {fallback_e}")
+                
+                if attempt == 1: # On second failure, try refreshing the bridge
+                    logger.info("Refreshing Wapi bridge...")
+                    try:
+                        await self.wapi.start()
+                        await asyncio.sleep(5)
+                    except:
+                        pass
+                
+            await asyncio.sleep(3)
+            
+        logger.error("Failed to fetch statuses after all attempts. Bridge might be stuck.")
+        return []
 
-            # Handle transient loading screen if it appears after scan or during load
-            with contextlib.suppress(TimeoutException):
-                wait_for(self.bot, 30).until(EC.invisibility_of_element_located((By.XPATH, loading_xpath)))
-
-            print(text2art("Logged in successfully."), "✌")
-            tprint(f'Logged in at {get_time()}\n')
-
-        except TimeoutException:
-            print('\nTook too long to login. Operation timed out after 3 minutes.\n'
-                'Check your internet connection.')
-            self.bot.quit()
-            raise  # Re-raise to inform the caller (app.py) that initialization failed
-    
-    def search_contact(self, contact_name: str) -> None:
-        """Search for a specific contact"""
-        search_field: WebElement = self.bot.find_element(By.XPATH, search_field_xpath)
-        search_field.send_keys(contact_name)
-    
-    def wait_for_status_and_click(self) -> None:
-        """Wait for status circle to appear and click profile picture"""
-        wait_for(self.bot, 60).until(EC.visibility_of_element_located(
-            (By.XPATH, profile_picture_status_xpath)))
-        self.bot.find_element(By.XPATH, profile_picture_status_xpath)
-        sleep(5)
-        self._click_profile_picture()
-    
-    def _click_profile_picture(self) -> None:
-        """Click profile picture to view status"""
+    async def view_status(self, status_id: str, participant_jid: str = "") -> bool:
+        """Mark a specific status as viewed"""
         try:
-            self.bot.find_element(By.XPATH, profile_picture_img_xpath).click()
-        except NoSuchElementException: 
-            self.bot.find_element(By.XPATH, default_profile_picture_xpath).click()
-    
-    def get_status_info(self) -> Dict[str, int]:
-        """Get information about statuses (total, unviewed, viewed)"""
-        bars: List[WebElement] = self.bot.find_elements(By.XPATH, bars_xpath)
-        unviewed_status: int = len(self.bot.find_elements(By.XPATH, unviewed_status_xpath)) + 1
-        total_status: int = len(bars)
-        viewed_status: int = total_status - unviewed_status
+            # patched_status_send_read needs participant_jid and optionally msg_id
+            await self.wapi.bridge.status_send_read(participant_jid, status_id)
+            return True
+        except Exception as e:
+            logger.error(f"Failed to view status {status_id}: {e}")
+            return False
+
+    async def view_all_unviewed_statuses(
+        self, uploader_jid: str, 
+        unviewed: Optional[List[dict]] = None, 
+        humanize_delay: bool = True,
+        name: Optional[str] = None
+    ) -> int:
+        """View all unviewed statuses for a contact and return count viewed.
+        
+        If unviewed list is provided, uses it directly (avoids double fetch).
+        Otherwise fetches fresh.
+        """
+        if unviewed is None:
+            unviewed = await self.get_unviewed_statuses(uploader_jid, name=name)
+        
+        count = 0
+        
+        for status in unviewed:
+            sid = status.get('id_id') or status.get('id_serialized')
+            participant = status.get('id_participant') or uploader_jid
+            if sid:
+                success = await self.view_status(sid, participant)
+                if success:
+                    count += 1
+                if humanize_delay:
+                    await asyncio.sleep(random.uniform(2.0, 5.0))
+        
+        return count
+
+    async def check_status_type(self, status_obj: dict) -> Dict[str, bool]:
+        """Check what type of status is currently displayed"""
+        # WA-JS status objects usually identify type natively
+        msg_type = status_obj.get('type', '')
+        mimetype = status_obj.get('mimetype', '')
         
         return {
-            'total_status': total_status,
-            'unviewed_status': unviewed_status,
-            'viewed_status': viewed_status
+            "videoStatusValue": msg_type == 'video' or 'video' in mimetype,
+            "imgStatusValue": msg_type == 'image' or 'image' in mimetype,
+            "txtStatusValue": msg_type == 'chat' or msg_type == 'ciphertext' or 'text' in mimetype,
+            "audioStatusValue": msg_type == 'audio' or msg_type == 'ptt' or 'audio' in mimetype,
+            "old_messageValue": False
         }
-    
-    def navigate_to_next_status(self, viewed_status: int) -> None:
-        """Navigate to the next status"""
-        self.bot.find_elements(By.XPATH, bars_xpath)[viewed_status].click()
-    
-    def exit_status_view(self, contact_name: str) -> None:
-        """Exit from status viewing mode"""
-        try:
-            self.bot.find_element(By.XPATH, status_exit_xpath).click()
-        except NoSuchElementException: # Status already exited
-            sleep(3)
-            with contextlib.suppress(NoSuchElementException): 
-                # Check if it has truely exited by confirming if the page is on 'contact_name' search page
-                self.bot.find_element(By.XPATH, f'//span[@title="{contact_name}"]//span')
-                self.bot.find_element(By.XPATH, '//div[@title="Status"]').send_keys(Keys.ESCAPE)
-    
-    def check_status_type(self, xpath: str, stop_event) -> Optional[Dict[str, bool]]:
-        """Check what type of status is currently displayed"""
-        while not stop_event.is_set():
-            with contextlib.suppress(NoSuchElementException, TimeoutException):
-                wait_for(self.bot, .1).until(EC.presence_of_element_located((By.XPATH, xpath)))
 
-                if '//video' in xpath:
-                    stop_event.set()
-                    return {"videoStatusValue": True}
-                elif '//img' in xpath:
-                    element: WebElement = self.bot.find_element(By.XPATH, xpath)
-                    if element.get_attribute('alt') == '':
-                        stop_event.set()
-                        return {"imgStatusValue": True}
-                elif 'background-color: rgb' in xpath:
-                    stop_event.set()
-                    return {"txtStatusValue": True}
-                elif 'FixMeAudio' in xpath:
-                    stop_event.set()
-                    return {"audioStatusValue": True}
-                elif 'x1vvkbs x47corl")]' in xpath:
-                    stop_event.set()
-                    return {"old_messageValue": True}  # Very rare
-        return None
-    
-    def get_status_type_xpaths(self) -> List[str]:
-        """Get list of XPath expressions for different status types"""
-        return [
-            img_status_xpath, 
-            video_status_xpath, 
-            text_status_xpath, 
-            audio_status_xpath, 
-            oldMessage_status_xpath
-        ]
+    async def download_status_media(self, status_msg: Any) -> Optional[str]:
+        """Download media from a status if available"""
+        if not self.media_controller:
+            logger.warning("MediaController not provided")
+            return None
+        
+        try:
+            path = await self.media_controller.save_media(message=status_msg)
+            return path
+        except Exception as e:
+            logger.error(f"Failed to download status media: {e}")
+            return None

@@ -17,3 +17,4 @@ build
 
 # Hidden files like .gitignore and .python-version are tracked by default
 # because .*/ only ignores directories.
+.gitnexus
