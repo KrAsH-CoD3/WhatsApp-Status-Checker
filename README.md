@@ -1,9 +1,16 @@
+<div align="center">
+
 # WhatsApp Status Checker
 
-[![CamouChat](https://img.shields.io/badge/CamouChat-WhatsApp-orange?style=for-the-badge)](https://github.com/CamouChat-Team/CamouChat-WhatsApp)
-[![Engine](https://img.shields.io/badge/API-WA--JS-blue?style=for-the-badge)](https://github.com/wppconnect-team/wa-js)
-[![Python](https://img.shields.io/badge/Python-3.12+-yellow?style=for-the-badge)](https://python.org)
-[![Release](https://img.shields.io/badge/Release-v0.2.0-green?style=for-the-badge)](#)
+<!-- [![Test PyPI](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Ftest.pypi.org%2Fpypi%2Fwhatsapp-status-checker%2Fjson&query=%24.info.version&label=Test%20PyPI&color=blue&logo=pypi&style=for-the-badge)](https://test.pypi.org/project/whatsapp-status-checker/) -->
+[![PyPI](https://img.shields.io/pypi/v/WhatsApp-Status-Checker?style=for-the-badge)](https://pypi.org/project/WhatsApp-Status-Checker/)
+[![Python Version](https://img.shields.io/badge/Python-3.12+-blue.svg?logo=python&logoColor=white&style=for-the-badge)](https://python.org)
+[![License](https://img.shields.io/github/license/KrAsH-CoD3/WhatsApp-Status-Checker?color=white&style=for-the-badge)](https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker/blob/main/LICENSE)
+[![GitHub last commit](https://img.shields.io/github/last-commit/KrAsH-CoD3/WhatsApp-Status-Checker?style=for-the-badge)](https://github.com/KrAsH-CoD3/WhatsApp-Status-Checker)
+
+*A high-performance, automated tool to continuously monitor and interact with WhatsApp statuses.*
+
+</div>
 
 A stealth-first **WhatsApp Status Checker** that monitors target contacts using a real-time event-driven architecture. It automatically views status updates the instant they are posted, and sends you a WhatsApp message notification confirming the action — all without the target ever knowing.
 
@@ -73,8 +80,6 @@ Built on the [CamouChat-WhatsApp](https://github.com/CamouChat-Team/CamouChat-Wh
 
 ---
 
-## ⚙️ Configuration (`.env`)
-
 Create a `.env` file in the project root:
 
 ```env
@@ -99,9 +104,23 @@ SCREEN_HEIGHT = 800                    # Spoofed viewport height (min 800) — o
 - [uv](https://docs.astral.sh/uv/) package manager
 
 ### 1. Install Dependencies
-```bash
-uv sync
-```
+
+- <details open>
+    <summary>Using UV(Recommended)</summary>
+    
+    - Install UV if you haven't using `pip install uv`
+    - Initialize and create virtual environment using `uv init . && uv venv`
+    - Install package using `uv add whatsapp-status-checker`
+  </details>
+  
+- <details>
+    <summary>Using PIP</summary>
+    
+    - Create a Virtual Environment using `py -m venv .venv`
+    - Activate your virtual environment using `.venv\Scripts\activate`
+    - Install dependencies using `pip install whatsapp-status-checker`
+  </details>
+
 
 ### 2. Fetch Anti-Detect Browser (One-Time)
 Download the hardened Camoufox browser engine:
