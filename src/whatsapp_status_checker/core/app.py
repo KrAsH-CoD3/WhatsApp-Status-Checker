@@ -12,23 +12,6 @@ import camoufox.utils as camoufox_utils
 from pathlib import Path
 import sys
 
-_original_load_properties = camoufox_utils._load_properties
-
-def _patched_load_properties(path=None):
-    if path and sys.platform == 'darwin' and 'MacOS' in str(path):
-        # On macOS, if path points to MacOS executable, look in Resources instead
-        # Remove the executable name (camoufox) from the path
-        resources_dir = Path(str(path).replace('/MacOS/camoufox', '/Resources'))
-        prop_file = str(resources_dir / "properties.json")
-        if Path(prop_file).exists():
-            import orjson
-            with open(prop_file, "rb") as f:
-                prop_dict = orjson.loads(f.read())
-            return {prop['property']: prop['type'] for prop in prop_dict}
-    return _original_load_properties(path)
-
-camoufox_utils._load_properties = _patched_load_properties
-
 from camouchat_browser import BrowserConfig, CamoufoxBrowser, ProfileManager
 from camouchat_core import Platform, LoggerFactory
 from camouchat_whatsapp import (
@@ -56,6 +39,25 @@ from ..utils import calculate_next_reminder_time
 from art import tprint
 
 logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
+
+
+_original_load_properties = camoufox_utils._load_properties
+
+def _patched_load_properties(path=None):
+    if path and sys.platform == 'darwin' and 'MacOS' in str(path):
+        # On macOS, if path points to MacOS executable, look in Resources instead
+        # Remove the executable name (camoufox) from the path
+        resources_dir = Path(str(path).replace('/MacOS/camoufox', '/Resources'))
+        prop_file = str(resources_dir / "properties.json")
+        if Path(prop_file).exists():
+            import orjson
+            with open(prop_file, "rb") as f:
+                prop_dict = orjson.loads(f.read())
+            return {prop['property']: prop['type'] for prop in prop_dict}
+    return _original_load_properties(path)
+
+camoufox_utils._load_properties = _patched_load_properties
+
 
 
 class RateLimiter:
