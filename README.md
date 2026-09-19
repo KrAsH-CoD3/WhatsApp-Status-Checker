@@ -96,15 +96,12 @@ pip install whatsapp-status-checker
 ```
 </details>
 
-### 2. Fetch Anti-Detect Browser (One-Time)
-```bash
-uv run python -m camoufox fetch
-```
-
-### 3. Run the Application
+### 2. Run the Application
 ```bash
 uv run wsc
 ```
+
+No manual browser setup is needed. On the first run, `uv run wsc` automatically downloads the anti-detect browser binary if it isn't already present, then launches the program. Later runs detect the existing binary and start immediately.
 
 On first run, scan the QR code in your terminal with WhatsApp on your phone. Subsequent runs reuse the saved session.
 
