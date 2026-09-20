@@ -1,6 +1,9 @@
 from datetime import datetime
 from typing import Optional
 import asyncio
+import contextlib
+import signal
+import threading
 import time
 import os
 
@@ -59,6 +62,32 @@ def _patched_load_properties(path=None):
 camoufox_utils._load_properties = _patched_load_properties
 
 
+@contextlib.contextmanager
+def _defer_sigint():
+    """
+    Swallow Ctrl+C for the duration of the block.
+
+    A second SIGINT landing mid-teardown would abort the browser close halfway
+    and can leave the persistent profile in a broken state (forcing a re-login),
+    so we mask it while shutting down and restore the previous handler after.
+    Only valid on the main thread.
+    """
+    if threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
+    try:
+        previous = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    except (ValueError, OSError):
+        # No signal support in this interpreter (e.g. embedded / non-main thread)
+        yield
+        return
+
+    try:
+        yield
+    finally:
+        signal.signal(signal.SIGINT, previous)
+
 
 class RateLimiter:
     """Rate limiter to prevent spam"""
@@ -100,6 +129,9 @@ class WhatsAppStatusChecker:
         self.notified_status_ids = set()
         self.reminder_time = 1
         self._last_notification_time = 0.0
+        # Fire-and-forget real-time handlers, tracked so shutdown can drain them
+        self._bg_tasks: set[asyncio.Task] = set()
+        self._shutdown_timeout = int(os.getenv("SHUTDOWN_TIMEOUT_SECONDS", "15"))
 
     async def initialize(self):
         """Initialize Camoufox and Wapi Bridge"""
@@ -288,8 +320,12 @@ class WhatsAppStatusChecker:
         if text.startswith("[StatusCheckerEvent]:"):
             try:
                 jid = text.split(":", 1)[1].strip()
-                # Run the async callback without blocking the Playwright event loop
-                asyncio.create_task(self._handle_realtime_status_event(jid))
+                # Run the async callback without blocking the Playwright event loop.
+                # Keep a strong reference: the event loop only holds weak ones, so an
+                # untracked task can be garbage-collected mid-flight.
+                task = asyncio.create_task(self._handle_realtime_status_event(jid))
+                self._bg_tasks.add(task)
+                task.add_done_callback(self._bg_tasks.discard)
             except Exception as e:
                 pass
 
@@ -479,8 +515,40 @@ class WhatsAppStatusChecker:
 
     # ── Lifecycle ─────────────────────────────────────────────────────
 
-    async def run_async(self):
-        """Async entry point"""
+    async def _shutdown(self):
+        """Best-effort teardown: drain background handlers, then close the browser.
+
+        Deliberately never raises — this runs on the way out, and a failure here
+        must not turn a clean Ctrl+C into a traceback.
+        """
+        pending = [t for t in getattr(self, "_bg_tasks", set()) if not t.done()]
+        if pending:
+            for task in pending:
+                task.cancel()
+            await asyncio.gather(*pending, return_exceptions=True)
+
+        if not (self.browser and self.profile):
+            return
+
+        timeout = getattr(self, "_shutdown_timeout", 15)
+        logger.info("Cleaning up browser context...")
+        try:
+            with _defer_sigint():
+                await asyncio.wait_for(
+                    self.browser.close_browser_by_profile(self.profile.profile_id),
+                    timeout=timeout,
+                )
+            logger.info("Browser cleanup completed.")
+        except asyncio.TimeoutError:
+            logger.warning(f"Browser cleanup timed out after {timeout}s; leaving it to the OS.")
+        except asyncio.CancelledError:
+            # Only reachable if the surrounding task is cancelled a second time.
+            logger.warning("Browser cleanup was interrupted.")
+        except Exception as e:
+            logger.error(f"Error during browser cleanup: {e}")
+
+    async def run_async(self) -> int:
+        """Async entry point. Returns the process exit code."""
         tprint("WhatsApp Status Checker", "rectangles")
         print("Active Modes:")
         print("• Auto-View Mode      - Automatically 'watch' their stories (Configure: AUTO_VIEW=True)")
@@ -488,22 +556,27 @@ class WhatsAppStatusChecker:
         try:
             await self.initialize()
             auto_view, reminder_time = self.get_user_choice()
-            
+
             if auto_view:
                 await self.auto_view_status()
             else:
                 await self.monitor_notifications(reminder_time)
-        except KeyboardInterrupt:
+        except (KeyboardInterrupt, asyncio.CancelledError):
+            # Ctrl+C makes asyncio cancel the main task, so a user-initiated stop
+            # arrives here as CancelledError rather than KeyboardInterrupt.
+            # Treat it as a normal shutdown instead of letting it unwind as an error.
             logger.info("Stopped by user.")
+            return 130
         finally:
-            if self.browser and self.profile:
-                logger.info("Cleaning up browser context...")
-                try:
-                    await self.browser.close_browser_by_profile(self.profile.profile_id)
-                    logger.info("Browser cleanup completed.")
-                except Exception as e:
-                    logger.error(f"Error during browser cleanup: {e}")
+            await self._shutdown()
+        return 0
 
-    def run(self):
-        """Synchronous wrapper for entry points"""
-        asyncio.run(self.run_async())
+    def run(self) -> int:
+        """Synchronous wrapper for entry points. Returns the process exit code."""
+        try:
+            return asyncio.run(self.run_async())
+        except KeyboardInterrupt:
+            # Fallback path: a SIGINT that lands before asyncio installs its own
+            # handler, or a second Ctrl+C arriving after the first was handled.
+            logger.info("Stopped by user.")
+            return 130
