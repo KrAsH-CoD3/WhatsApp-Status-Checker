@@ -1,12 +1,14 @@
 """WhatsApp Status Checker - Main entry point"""
 
+import sys
+
 from .core import WhatsAppStatusChecker
 
 
-def main():
+def main() -> int:
     app = WhatsAppStatusChecker()
-    app.run()
+    return app.run()
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
