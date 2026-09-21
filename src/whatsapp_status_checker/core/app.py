@@ -38,7 +38,7 @@ from ..config import (
     AUTO_VIEW,
     REMINDER_TIME,
 )
-from ..utils import calculate_next_reminder_time
+from ..utils import calculate_next_reminder_time, parse_bool_env
 from art import tprint
 
 logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
@@ -108,11 +108,14 @@ class WhatsAppStatusChecker:
     def __init__(self, 
         phone_number: Optional[str] = None,
         api_key: Optional[str] = None,
-        status_uploader_name: Optional[str] = None
+        status_uploader_name: Optional[str] = None,
+        headless: Optional[bool] = None
     ):
         self.phone_number = phone_number or NUMBER
         self.api_key = api_key or CALLMEBOT_APIKEY
         self.status_uploader_name = status_uploader_name or STATUS_UPLOADER_NAME
+        # Browser mode: explicit argument > HEADLESS env setting > headless (True)
+        self.headless = parse_bool_env(HEADLESS, default=True) if headless is None else bool(headless)
         
         self.profile = None
         self.browser = None
@@ -146,12 +149,13 @@ class WhatsAppStatusChecker:
             profile_id="status_checker"
         )
 
-        # Headless mode is more stable for background monitoring
-        is_headless = (HEADLESS or "true").lower() == "true"
-        
+        # Headless mode is more stable for background monitoring.
+        # Set HEADLESS=False in .env (or pass headless=False) to watch the browser.
+        logger.info(f"Browser mode: {'headless' if self.headless else 'headful (visible window)'}")
+
         config = BrowserConfig.from_dict({
             "platform": Platform.WHATSAPP,
-            "headless": is_headless,
+            "headless": self.headless,
         })
 
         self.browser = CamoufoxBrowser(config=config, profile=self.profile)
@@ -261,8 +265,7 @@ class WhatsAppStatusChecker:
 
     def get_user_choice(self) -> tuple[bool, Optional[int]]:
         """Determine running mode from environment or default"""
-        auto_view_str = AUTO_VIEW
-        auto_view = (auto_view_str or "true").lower() == "true"
+        auto_view = parse_bool_env(AUTO_VIEW, default=True)
         try:
             reminder_time = int(REMINDER_TIME) if REMINDER_TIME else 1
         except ValueError:
