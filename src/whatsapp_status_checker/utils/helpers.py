@@ -2,6 +2,40 @@
 Utility functions and helper methods
 """
 
+from typing import Optional
+
+# Spellings accepted for boolean environment variables.
+_TRUTHY = frozenset({"1", "true", "yes", "y", "on", "t"})
+_FALSY = frozenset({"0", "false", "no", "n", "off", "f"})
+
+
+def parse_bool_env(value: Optional[str], default: bool = True) -> bool:
+    """Parse a boolean-ish environment variable into a real ``bool``.
+
+    Values in a ``.env`` file arrive as strings and are written by hand, so this
+    accepts the spellings people actually type — ``true``/``false``, ``1``/``0``,
+    ``yes``/``no``, ``on``/``off`` — in any case, and tolerates surrounding
+    whitespace, surrounding quotes and an inline ``# comment``
+    (e.g. ``HEADLESS=false  # show the window``).
+
+    Args:
+        value: Raw value read from the environment, or ``None`` when unset.
+        default: Returned when the value is missing, empty or unrecognised.
+
+    Returns:
+        The parsed boolean, or ``default`` when the value cannot be understood.
+    """
+    if value is None:
+        return default
+
+    cleaned = str(value).split("#", 1)[0].strip().strip("\"'").strip().lower()
+
+    if cleaned in _TRUTHY:
+        return True
+    if cleaned in _FALSY:
+        return False
+    return default
+
 
 def calculate_next_reminder_time(ttime_diff: float, sstart: float, reminder_time: int) -> float:
     """Calculate next reminder time based on configured interval"""

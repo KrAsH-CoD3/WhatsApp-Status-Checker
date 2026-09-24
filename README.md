@@ -60,9 +60,11 @@ Create a `.env` file in the project root:
 | `CALLMEBOT_APIKEY` | Fallback notification API key | Optional |
 | `AUTO_VIEW` | `True` = auto-view, `False` = notify only | Optional (Default: `True`) |
 | `REMINDER_TIME` | Reminder interval: `1`=30m, `2`=1h, `3`=3h, `4`=6h | Optional (Default: `1`) |
-| `HEADLESS` | Run browser headless (`True` / `False`) | Optional (Default: `True`) |
+| `HEADLESS` | Run browser without a visible window (`True`) or show it (`False`) | Optional (Default: `True`) |
 | `SCREEN_WIDTH` | Spoofed viewport width (min 800) | Optional (Default: `800`) |
 | `SCREEN_HEIGHT` | Spoofed viewport height (min 800) | Optional (Default: `800`) |
+
+> **Boolean values** (`HEADLESS`, `AUTO_VIEW`): `true`/`false`, `1`/`0`, `yes`/`no` and `on`/`off` are all accepted, in any case. Surrounding whitespace, quotes and a trailing `# comment` are ignored (e.g. `HEADLESS=false  # watch the browser`). Anything unrecognised falls back to the default above.
 
 > **Note:** The contact in `STATUS_UPLOADER_NAME` must have an existing chat thread on your WhatsApp for the lookup to work.
 
