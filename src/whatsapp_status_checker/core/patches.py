@@ -253,12 +253,12 @@ async def patched_status_get(self, contact_id: str) -> Any:
                 const msgs = statusObj.msgs._models || [];
                 
                 return msgs.map(m => ({{
-                    id_serialized: m.id?._serialized || 'unknown',
+                    id_serialized: m.id ? String(m.id) : 'unknown',
                     id_id: m.id?.id || 'unknown',
-                    id_participant: m.id?.participant?._serialized || '',
-                    id_remote: m.id?.remote?._serialized || 'status@broadcast',
+                    id_participant: m.id?.participant ? String(m.id.participant) : '',
+                    id_remote: m.id?.remote ? String(m.id.remote) : 'status@broadcast',
                     isViewed: m.isViewed === true || m.isPlayed === true,
-                    author: m.author?._serialized || m.from?._serialized || '',
+                    author: m.author ? String(m.author) : (m.from ? String(m.from) : ''),
                     t: m.t || Date.now(),
                     mediaType: m.type || 'unknown',
                     mimeType: m.mimetype || (m.mediaKey ? 'media' : 'text')
@@ -293,11 +293,11 @@ async def patched_status_send_read(self, participant_jid: str, msg_id: str = "")
                 
                 let msgObj = msgs[0];
                 if ('{msg_id}') {{
-                    const found = msgs.find(m => m.id?.id === '{msg_id}' || m.id?._serialized === '{msg_id}');
+                    const found = msgs.find(m => m.id?.id === '{msg_id}' || (m.id ? String(m.id) === '{msg_id}' : false));
                     if (found) msgObj = found;
                 }}
                 
-                if (!msgObj || !msgObj.id || !msgObj.id._serialized) {{
+                if (!msgObj || !msgObj.id) {{
                     throw new Error('Status message object not found');
                 }}
                 
@@ -320,8 +320,8 @@ async def patched_status_send_read(self, participant_jid: str, msg_id: str = "")
                     if (typeof wpp.status.sendReadStatus === 'function') {{
                         try {{
                             await Promise.race([
-                                wpp.status.sendReadStatus('{participant_jid}', msgObj.id._serialized),
-                                new Promise((resolve, reject) => setTimeout(() => reject(new Error('sendReadStatus timed out')), 4000))
+                                wpp.status.sendReadStatus('{participant_jid}', String(msgObj.id)),
+                                new Promise((resolve) => setTimeout(resolve, 4000))
                             ]);
                             methodUsed = 'wpp.status.sendReadStatus';
                         }} catch (e) {{
@@ -338,8 +338,8 @@ async def patched_status_send_read(self, participant_jid: str, msg_id: str = "")
                     method: methodUsed, 
                     error: acknowledged ? undefined : 'read receipt was not acknowledged',
                     ack: msgObj.ack,
-                    msg_id: msgObj.id?._serialized,
-                    msg_participant: msgObj.id?.participant?._serialized || msgObj.author?._serialized,
+                    msg_id: String(msgObj.id),
+                    msg_participant: msgObj.id?.participant ? String(msgObj.id.participant) : (msgObj.author ? String(msgObj.author) : ''),
                     passed_jid: '{participant_jid}'
                 }};
             }} catch (e) {{
