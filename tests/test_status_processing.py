@@ -23,6 +23,7 @@ class TestProcessStatuses:
             {"id_id": "s1", "isViewed": False},
             {"id_id": "s2", "isViewed": False},
         ]
+        mock_ops.view_all_unviewed_statuses.return_value = 2
 
         await checker._process_statuses()
 
@@ -31,6 +32,43 @@ class TestProcessStatuses:
         # Verify both statuses were passed
         call_args = mock_ops.view_all_unviewed_statuses.call_args
         assert len(call_args.kwargs.get("unviewed", call_args[1].get("unviewed", []))) == 2
+
+    @pytest.mark.asyncio
+    async def test_autoview_reports_actual_viewed_count(self, checker, mock_ops):
+        """The notification must quote the number actually viewed, not the number found"""
+        checker.active_mode = "autoview"
+        mock_ops.get_unviewed_statuses.return_value = [
+            {"id_id": "s1", "isViewed": False},
+            {"id_id": "s2", "isViewed": False},
+            {"id_id": "s3", "isViewed": False},
+        ]
+        mock_ops.view_all_unviewed_statuses.return_value = 1
+
+        with patch("whatsapp_status_checker.core.app.logger.info") as mock_log_info:
+            await checker._process_statuses()
+
+        log_messages = [c[0][0] for c in mock_log_info.call_args_list]
+        notification = next((m for m in log_messages if "viewed automatically" in m), "")
+        assert "1 new status update viewed" in notification
+        assert "3 new status updates" not in notification
+
+    @pytest.mark.asyncio
+    async def test_autoview_does_not_claim_success_when_nothing_viewed(self, checker, mock_ops):
+        """A run where no status could be marked read must not report success"""
+        checker.active_mode = "autoview"
+        mock_ops.get_unviewed_statuses.return_value = [
+            {"id_id": "s1", "isViewed": False},
+            {"id_id": "s2", "isViewed": False},
+        ]
+        mock_ops.view_all_unviewed_statuses.return_value = 0
+
+        with patch("whatsapp_status_checker.core.app.logger.info") as mock_log_info, \
+             patch("whatsapp_status_checker.core.app.logger.error") as mock_log_err:
+            await checker._process_statuses()
+
+        log_messages = [c[0][0] for c in mock_log_info.call_args_list]
+        assert not any("viewed automatically" in m for m in log_messages)
+        assert any("Failed to view any of the 2" in c[0][0] for c in mock_log_err.call_args_list)
 
     @pytest.mark.asyncio
     async def test_notification_mode_does_not_view(self, checker, mock_ops):

@@ -403,12 +403,19 @@ class WhatsAppStatusChecker:
                     logger.info("Watching 1 status...")
                 else:
                     logger.info(f"Watching {unviewed_len} statuses...")
-                await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed, name=self.status_uploader_name)
-                
-                if unviewed_len == 1:
+                viewed_count = await self.ops.view_all_unviewed_statuses(self.uploader_jid, unviewed=unviewed, name=self.status_uploader_name)
+
+                if viewed_count == 0:
+                    logger.error(
+                        f"Failed to view any of the {unviewed_len} unviewed status(es) "
+                        f"from {self.status_uploader_name}."
+                    )
+                    return
+
+                if viewed_count == 1:
                     msg = f"*{self.status_uploader_name}*: 1 new status update viewed automatically!\n📅 {timestamp}"
                 else:
-                    msg = f"*{self.status_uploader_name}*: {unviewed_len} new status updates viewed automatically!\n📅 {timestamp}"
+                    msg = f"*{self.status_uploader_name}*: {viewed_count} new status updates viewed automatically!\n📅 {timestamp}"
             elif self.active_mode == "notification":
                 is_reminder = not has_new_status
                 reminder_suffix = " (Reminder)" if is_reminder else ""
