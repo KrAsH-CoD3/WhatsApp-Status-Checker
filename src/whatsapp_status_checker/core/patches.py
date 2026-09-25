@@ -314,7 +314,7 @@ async def patched_status_send_read(self, participant_jid: str, msg_id: str = "")
                 try {{
                     await Promise.race([
                         collection.sendReadStatus(msgObj, timestamp),
-                        new Promise((resolve) => setTimeout(resolve, 4000))
+                        new Promise((resolve, reject) => setTimeout(() => reject(new Error('sendReadStatus timed out')), 4000))
                     ]);
                 }} catch (err) {{
                     if (typeof wpp.status.sendReadStatus === 'function') {{
@@ -332,9 +332,11 @@ async def patched_status_send_read(self, participant_jid: str, msg_id: str = "")
                     }}
                 }}
                 
+                const acknowledged = methodUsed !== 'failed';
                 return {{ 
-                    success: true, 
+                    success: acknowledged, 
                     method: methodUsed, 
+                    error: acknowledged ? undefined : 'read receipt was not acknowledged',
                     ack: msgObj.ack,
                     msg_id: String(msgObj.id),
                     msg_participant: msgObj.id?.participant ? String(msgObj.id.participant) : (msgObj.author ? String(msgObj.author) : ''),
