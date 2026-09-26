@@ -272,6 +272,55 @@ async def patched_status_get(self, contact_id: str) -> Any:
     return data or []
 
 
+async def patched_status_get_all(self) -> Any:
+    """Return every status currently held by the in-memory StatusV3 store.
+
+    ``wpp.status.get(contact_id)`` is keyed by the *poster's* wid
+    (``StatusV3Store.get(assertWid(contact_id))``), so no contact id yields
+    "all statuses": asking for ``status@broadcast`` resolves to a wid that is
+    never a store key, which is why the recovery path always came back empty.
+    Walking the store's own models is the only way to enumerate them.
+
+    Deliberately maps to the same dict shape as patched_status_get so callers
+    can treat the two interchangeably.
+    """
+    js_code = """
+        (async () => {
+            try {
+                if (!wpp || !wpp.whatsapp || !wpp.whatsapp.StatusV3Store) {
+                    return [];
+                }
+
+                const modelsOf = (coll) => (coll && typeof coll.getModelsArray === 'function')
+                    ? coll.getModelsArray()
+                    : ((coll && coll._models) || []);
+
+                const out = [];
+                for (const entry of modelsOf(wpp.whatsapp.StatusV3Store)) {
+                    for (const m of modelsOf(entry && entry.msgs)) {
+                        out.push({
+                            id_serialized: m.id ? String(m.id) : 'unknown',
+                            id_id: m.id?.id || 'unknown',
+                            id_participant: m.id?.participant ? String(m.id.participant) : '',
+                            id_remote: m.id?.remote ? String(m.id.remote) : 'status@broadcast',
+                            isViewed: m.isViewed === true || m.isPlayed === true,
+                            author: m.author ? String(m.author) : (m.from ? String(m.from) : ''),
+                            t: m.t || Date.now(),
+                            mediaType: m.type || 'unknown',
+                            mimeType: m.mimetype || (m.mediaKey ? 'media' : 'text')
+                        });
+                    }
+                }
+                return out;
+            } catch (e) {
+                return [];
+            }
+        })()
+    """
+    data = await self._evaluate_stealth(js_code)
+    return data or []
+
+
 async def patched_status_send_read(self, participant_jid: str, msg_id: str = "") -> Any:
     """Patched status_send_read using correct WPP APIs."""
     js_code = f"""
@@ -463,6 +512,14 @@ def _apply_stealth_patches():
     if not hasattr(WapiWrapper.status_send_read, '_patched'):
         WapiWrapper.status_send_read = patched_status_send_read
         patched_status_send_read._patched = True
+
+    # status_get_all does not exist on the SDK class yet, so it must be looked
+    # up with getattr: hasattr(WapiWrapper.status_get_all, '_patched') would
+    # raise AttributeError and abort every patch below it (real-time listeners
+    # and the fingerprint overrides included).
+    if not getattr(getattr(WapiWrapper, 'status_get_all', None), '_patched', False):
+        WapiWrapper.status_get_all = patched_status_get_all
+        patched_status_get_all._patched = True
         
     from camouchat_browser.browserforge import BrowserForge
     
