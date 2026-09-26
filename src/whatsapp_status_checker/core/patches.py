@@ -532,13 +532,46 @@ def _apply_stealth_patches():
         def patched_gen_fg(self, avoid=None) -> Any:
             from browserforge.fingerprints import FingerprintGenerator
             from browserforge.headers import Browser
+
             gen = FingerprintGenerator(
                 browser=[Browser(name='firefox', min_version=120)],
                 os=('macos', 'windows'),
                 device='desktop'
             )
-            return gen.generate()
-            
+
+            # Keep the upstream screen-size match. Returning gen.generate()
+            # straight away dropped both the tolerance check and the `avoid`
+            # de-duplication, so the spoofed display could sit up to ~100% away
+            # from the host's — a strong headless/automation signal. Note
+            # get_screen_size() is already the patched one, so this tracks the
+            # SCREEN_WIDTH/SCREEN_HEIGHT override too.
+            real_w, real_h = BrowserForge.get_screen_size()
+            tolerance = 0.1
+            avoid = avoid or []
+            attempt = 0
+
+            while True:
+                fg = gen.generate()
+                attempt += 1
+                w, h = fg.screen.width, fg.screen.height
+
+                close_enough = (
+                    real_w > 0 and real_h > 0 and w > 0 and h > 0
+                    and abs(w - real_w) / real_w < tolerance
+                    and abs(h - real_h) / real_h < tolerance
+                )
+
+                if close_enough and fg not in avoid:
+                    break
+                if attempt >= 10:
+                    logger.warning(
+                        f"Using last generated fingerprint after {attempt} attempts "
+                        f"({w}x{h} vs host {real_w}x{real_h})."
+                    )
+                    break
+
+            return fg
+
         BrowserForge.__gen_fg__ = patched_gen_fg
         patched_gen_fg._patched = True
 

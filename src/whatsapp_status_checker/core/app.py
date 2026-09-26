@@ -186,12 +186,17 @@ class WhatsAppStatusChecker:
             await asyncio.wait_for(self.wapi.start(), timeout=60)
             # logger.info("Wapi bridge started.")
         except asyncio.TimeoutError:
-            await asyncio.wait_for(self.wapi.start(), timeout=60)
-            # logger.info("Wapi bridge started.")
-        except asyncio.TimeoutError:
+            # A duplicate `except asyncio.TimeoutError` used to sit above this
+            # one, so Python matched the first clause and this recovery never
+            # ran. The first clause retried with the same 60s budget and let a
+            # second timeout escape initialize() entirely.
             logger.warning("Wapi start timed out. This often happens if the page reloaded. Retrying once...")
             await asyncio.sleep(2)
-            await self.wapi.start()
+            try:
+                # start() is already bounded internally by wait_for_ready().
+                await self.wapi.start()
+            except Exception as e:
+                logger.error(f"Wapi start retry failed: {e}. Proceeding with caution.")
         except Exception as e:
             logger.error(f"Wapi start error: {e}. Proceeding with caution.")
 
@@ -212,16 +217,14 @@ class WhatsAppStatusChecker:
         # 3.5 Warm up the session
         logger.info("Warming up session (waiting for data sync)...")
         await asyncio.sleep(15)
-        
-        try:
-            # Force a click on the status tab to wake up the store
-            logger.info("Waking up status store...")
-            await self.interaction.click_status_tab()
-            await asyncio.sleep(5)
-            # Click back to chats
-            await self.interaction.click_chats_tab()
-        except:
-            pass
+
+        # NOTE: a "wake up the status store" step used to sit here, calling
+        # interaction.click_status_tab() / click_chats_tab(). Neither method
+        # exists on InteractionController or its protocol, so both raised
+        # AttributeError into a bare `except: pass` — a silent no-op that also
+        # burned 5s of startup. WebSelectorConfig exposes no status-tab or
+        # chats-tab selector, so there is no SDK-supported replacement; the
+        # status store is populated lazily by status_get() when it is queried.
 
         # 4. Resolve JIDs
         if self.phone_number:
