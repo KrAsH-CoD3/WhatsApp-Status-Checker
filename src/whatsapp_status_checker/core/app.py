@@ -186,12 +186,17 @@ class WhatsAppStatusChecker:
             await asyncio.wait_for(self.wapi.start(), timeout=60)
             # logger.info("Wapi bridge started.")
         except asyncio.TimeoutError:
-            await asyncio.wait_for(self.wapi.start(), timeout=60)
-            # logger.info("Wapi bridge started.")
-        except asyncio.TimeoutError:
+            # A duplicate `except asyncio.TimeoutError` used to sit above this
+            # one, so Python matched the first clause and this recovery never
+            # ran. The first clause retried with the same 60s budget and let a
+            # second timeout escape initialize() entirely.
             logger.warning("Wapi start timed out. This often happens if the page reloaded. Retrying once...")
             await asyncio.sleep(2)
-            await self.wapi.start()
+            try:
+                # start() is already bounded internally by wait_for_ready().
+                await self.wapi.start()
+            except Exception as e:
+                logger.error(f"Wapi start retry failed: {e}. Proceeding with caution.")
         except Exception as e:
             logger.error(f"Wapi start error: {e}. Proceeding with caution.")
 
