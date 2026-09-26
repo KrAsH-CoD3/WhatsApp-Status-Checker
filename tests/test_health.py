@@ -17,6 +17,20 @@ import pytest
 class TestVerifyListeners:
     """Tests for _verify_listeners"""
 
+    def test_liveness_fragment_is_an_expression(self):
+        """The fragment must be an expression, not a statement.
+
+        WapiWrapper._evaluate_stealth() embeds its argument as
+        ``await (<fragment>)``. A ``return`` statement is a syntax error there,
+        so the browser discards the whole injected script, never dispatches a
+        reply, and the call burns its full 30s bridge timeout before raising —
+        which made _verify_listeners() always report the listeners as dead.
+        """
+        from whatsapp_status_checker.core.app import _LISTENERS_ALIVE_JS
+
+        assert "return" not in _LISTENERS_ALIVE_JS
+        assert _LISTENERS_ALIVE_JS == "typeof window.__statusStoreAddHandler === 'function'"
+
     @pytest.mark.asyncio
     async def test_returns_true_when_listeners_alive(self, checker, mock_page, mock_wapi):
         """Should return True if handler exists in Main World"""
@@ -27,7 +41,7 @@ class TestVerifyListeners:
 
         assert result is True
         mock_wapi.bridge._evaluate_stealth.assert_called_once_with(
-            "return typeof window.__statusStoreAddHandler === 'function'"
+            "typeof window.__statusStoreAddHandler === 'function'"
         )
 
     @pytest.mark.asyncio

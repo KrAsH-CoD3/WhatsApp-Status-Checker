@@ -43,6 +43,13 @@ from art import tprint
 
 logger = LoggerFactory.get_logger(name="status_checker", platform="WHATSAPP")
 
+# Fragment used to check whether the real-time handlers are still bound.
+# WapiWrapper._evaluate_stealth() embeds its argument as `await (<fragment>)`,
+# so this has to be an *expression*. Passing a `return` statement is a syntax
+# error, which makes the browser discard the whole injected script and never
+# dispatch a reply — the call then burns its full 30s bridge timeout and raises.
+_LISTENERS_ALIVE_JS = "typeof window.__statusStoreAddHandler === 'function'"
+
 
 _original_load_properties = camoufox_utils._load_properties
 
@@ -455,7 +462,7 @@ class WhatsAppStatusChecker:
                 return False
                 
             # Check for the Main World handler injected in patch_status_get.py
-            alive = await self.wapi.bridge._evaluate_stealth("return typeof window.__statusStoreAddHandler === 'function'")
+            alive = await self.wapi.bridge._evaluate_stealth(_LISTENERS_ALIVE_JS)
             if alive:
                 return True
 
@@ -463,7 +470,7 @@ class WhatsAppStatusChecker:
             logger.warning("Listeners lost (page reload detected). Re-injecting...")
             await self.wapi.start()
             await asyncio.sleep(3)
-            return await self.wapi.bridge._evaluate_stealth("return typeof window.__statusStoreAddHandler === 'function'")
+            return await self.wapi.bridge._evaluate_stealth(_LISTENERS_ALIVE_JS)
         except Exception as e:
             logger.error(f"Health check error: {e}")
             return False
