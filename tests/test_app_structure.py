@@ -31,3 +31,19 @@ def test_no_duplicate_except_clauses():
             f"try at line {node.lineno} has unreachable handlers "
             f"{sorted(duplicates)}: {kinds}"
         )
+
+
+def test_no_bare_except_in_app():
+    """A bare `except:` swallows everything, CancelledError included, so it can
+    break Ctrl+C.
+
+    initialize() wrapped the status-store warm-up in one, which hid the fact
+    that both methods it called raised AttributeError.
+    """
+    tree = ast.parse(_APP.read_text())
+    bare = [
+        node.lineno
+        for node in ast.walk(tree)
+        if isinstance(node, ast.ExceptHandler) and node.type is None
+    ]
+    assert not bare, f"bare except clauses at lines {bare}"
