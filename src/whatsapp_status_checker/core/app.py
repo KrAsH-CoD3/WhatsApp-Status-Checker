@@ -516,6 +516,10 @@ class WhatsAppStatusChecker:
     async def monitor_notifications(self, reminder_time_idx: int):
         """Notification Mode — real-time alerts, health-monitored"""
         self.active_mode = "notification"
+        # Persist the parsed REMINDER_TIME: _process_statuses gates the reminder
+        # cadence on self.reminder_time, so dropping it silently pinned the
+        # interval to the __init__ default (30 min) whatever the env said.
+        self.reminder_time = reminder_time_idx
         await self._health_loop()
 
     async def auto_view_status(self):
