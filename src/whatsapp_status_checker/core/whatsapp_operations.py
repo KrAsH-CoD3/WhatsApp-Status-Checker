@@ -92,16 +92,19 @@ class WhatsAppOperations:
                 if "timeout" in err_msg or "bridge" in err_msg:
                     logger.warning("Bridge issue detected. Trying global fallback...")
                     try:
-                        # Fallback: Fetch ALL statuses and filter manually
+                        # Fallback: enumerate the whole StatusV3 store and filter
+                        # manually. status_get() is keyed by the poster's wid, so
+                        # there is no contact id that returns "everything".
                         all_statuses = await asyncio.wait_for(
-                            self.wapi.bridge.status_get("status@broadcast"),
+                            self.wapi.bridge.status_get_all(),
                             timeout=45.0
                         )
                         if all_statuses:
                             unviewed = [
-                                s for s in all_statuses 
-                                if isinstance(s, dict) and 
-                                (s.get('id', {}).get('remote') == uploader_jid or s.get('from') == uploader_jid) and
+                                s for s in all_statuses
+                                if isinstance(s, dict) and
+                                (s.get('author') == uploader_jid
+                                 or s.get('id_participant') == uploader_jid) and
                                 not s.get('isViewed')
                             ]
                             unviewed_len = len(unviewed)
